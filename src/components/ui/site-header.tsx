@@ -53,13 +53,15 @@ export function SiteHeader({ className }: { className?: string }) {
                 </nav>
 
                 {/* Right Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                     <LanguageSwitcher />
                     <ThemeToggle />
-                    <Link href="/login" className="hidden sm:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors">
+                    {/* Login - visible on medium screens and up, mobile uses hamburger menu */}
+                    <Link href="/login" className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
                         {t.nav.login}
                     </Link>
-                    <Button asChild className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-opacity-90 transition-all h-9">
+                    {/* Register button with min-width for long text */}
+                    <Button asChild className="bg-primary text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-full hover:bg-opacity-90 transition-all h-8 sm:h-9 whitespace-nowrap">
                         <Link href="/register">
                             {t.nav.register}
                         </Link>
@@ -68,7 +70,7 @@ export function SiteHeader({ className }: { className?: string }) {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setMenuState(!menuState)}
-                        className="lg:hidden block text-black/70 dark:text-white/70"
+                        className="lg:hidden block text-black/70 dark:text-white/70 ml-1"
                     >
                         {menuState ? <X className="size-5" /> : <Menu className="size-5" />}
                     </button>
