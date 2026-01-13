@@ -75,6 +75,10 @@ export function LoginForm() {
                         <span className="font-medium">Manager:</span>
                         <br />diana@example.com
                     </div>
+                    <div>
+                        <span className="font-medium">Finance:</span>
+                        <br />eko@example.com
+                    </div>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">Password: password123 (atau admin123)</p>
             </div>
