@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Search, Users } from "lucide-react";
+import { ArrowLeft, Save, Users } from "lucide-react";
 
 // Mock data for programs and cohorts
 const mockPrograms = [

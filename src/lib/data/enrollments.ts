@@ -1,6 +1,6 @@
 // Mock Enrollments & Progress Data Store
-import { courses, Course } from './courses';
-import { users, User } from './users';
+import { courses } from './courses';
+import { users } from './users';
 
 export type EnrollmentStatus = 'active' | 'completed' | 'paused' | 'cancelled';
 
@@ -25,7 +25,7 @@ export interface Enrollment {
 }
 
 // Initial mock enrollments
-export let enrollments: Enrollment[] = [
+export const enrollments: Enrollment[] = [
     {
         id: 'enroll-1',
         userId: 'user-1',

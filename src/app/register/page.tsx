@@ -70,7 +70,7 @@ export default function RegisterPage() {
                 <div className="relative z-10">
                     <blockquote className="border-l-2 border-emerald-400 pl-4">
                         <p className="text-lg font-light italic text-gray-300">
-                            "Invest in yourself. Your career is the engine of your wealth."
+                            &ldquo;Invest in yourself. Your career is the engine of your wealth.&rdquo;
                         </p>
                         <footer className="mt-2 text-sm text-gray-500">— Paul Clitheroe</footer>
                     </blockquote>

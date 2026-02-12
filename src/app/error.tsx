@@ -42,7 +42,7 @@ export default function Error({
                     Something Went Wrong
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 mb-8 text-lg">
-                    We're sorry, but something unexpected happened. Our team has been notified.
+                    We&apos;re sorry, but something unexpected happened. Our team has been notified.
                 </p>
 
                 {/* Error Details (development only) */}

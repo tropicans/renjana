@@ -32,11 +32,7 @@ const mockActivity = {
     ],
 };
 
-export default function ActivityPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
+export default function ActivityPage() {
     return (
         <div className="space-y-8">
             {/* Back button */}

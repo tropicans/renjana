@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Bell, Shield, Moon, Globe, CreditCard, Mail, Save } from "lucide-react";
+import { User, Bell, Shield, Moon, Mail, Save } from "lucide-react";
 
 export default function SettingsPage() {
     const [darkMode, setDarkMode] = React.useState(false);

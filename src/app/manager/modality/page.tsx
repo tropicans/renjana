@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { MapPin, Wifi, Shuffle, Users, TrendingUp, Calendar, CheckCircle } from "lucide-react";
+import { MapPin, Wifi, Shuffle, Users, TrendingUp, CheckCircle } from "lucide-react";
 
 // Mock modality data
 const mockModalityStats = {

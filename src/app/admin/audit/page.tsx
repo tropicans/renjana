@@ -10,6 +10,7 @@ import {
     Edit,
     CheckCircle,
     Settings,
+    type LucideIcon,
 } from "lucide-react";
 
 // Mock data
@@ -22,7 +23,7 @@ const mockAuditLogs = [
     { id: "log-6", action: "evidence.submitted", description: "Evidence submitted for 'Case Study Analysis'", user: "Budi Santoso", userRole: "Learner", timestamp: "Jan 4, 2026 03:20 PM", category: "evidence" },
 ];
 
-const categoryConfig: Record<string, { icon: any; color: string }> = {
+const categoryConfig: Record<string, { icon: LucideIcon; color: string }> = {
     program: { icon: FileText, color: "bg-blue-500" },
     enrollment: { icon: UserPlus, color: "bg-green-500" },
     activity: { icon: Edit, color: "bg-purple-500" },

@@ -1,14 +1,16 @@
 "use client";
 
 import React from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react'
+import type { Variants } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { AnimatedGroup } from '@/components/ui/animated-group'
 import { SparklesCore } from '@/components/ui/sparkles'
 import { cn } from '@/lib/utils'
 
-const transitionVariants = {
+const transitionVariants: { item: Variants } = {
     item: {
         hidden: {
             opacity: 0,
@@ -23,9 +25,46 @@ const transitionVariants = {
                 type: 'spring',
                 bounce: 0.3,
                 duration: 1.5,
-            } as any,
+            },
         },
     },
+}
+
+const heroBackgroundVariants: { container: Variants; item: Variants } = {
+    container: {
+        visible: {
+            transition: {
+                delayChildren: 1,
+            },
+        },
+    },
+    item: {
+        hidden: {
+            opacity: 0,
+            y: 20,
+        },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: 'spring',
+                bounce: 0.3,
+                duration: 2,
+            },
+        },
+    },
+}
+
+const ctaVariants: { container: Variants; item: Variants } = {
+    container: {
+        visible: {
+            transition: {
+                staggerChildren: 0.05,
+                delayChildren: 0.75,
+            },
+        },
+    },
+    item: transitionVariants.item,
 }
 
 export function HeroSection() {
@@ -56,37 +95,14 @@ export function HeroSection() {
                             />
                         </div>
                         <AnimatedGroup
-                            variants={{
-                                container: {
-                                    visible: {
-                                        transition: {
-                                            delayChildren: 1,
-                                        },
-                                    },
-                                },
-                                item: {
-                                    hidden: {
-                                        opacity: 0,
-                                        y: 20,
-                                    },
-                                    visible: {
-                                        opacity: 1,
-                                        y: 0,
-                                        transition: {
-                                            type: 'spring',
-                                            bounce: 0.3,
-                                            duration: 2,
-                                        } as any,
-                                    },
-                                },
-                            } as any}
+                            variants={heroBackgroundVariants}
                             className="absolute inset-0 -z-20">
-                            <img
+                            <Image
                                 src="https://ik.imagekit.io/lrigu76hy/tailark/night-background.jpg?updatedAt=1745733451120"
                                 alt="background"
                                 className="absolute inset-x-0 top-56 -z-20 hidden lg:top-32 dark:block"
-                                width="3276"
-                                height="4095"
+                                width={3276}
+                                height={4095}
                             />
                         </AnimatedGroup>
                         <div aria-hidden className="absolute inset-0 -z-10 size-full [background:radial-gradient(125%_125%_at_50%_100%,transparent_0%,var(--background)_75%)]" />
@@ -122,17 +138,7 @@ export function HeroSection() {
                                 </AnimatedGroup>
 
                                 <AnimatedGroup
-                                    variants={{
-                                        container: {
-                                            visible: {
-                                                transition: {
-                                                    staggerChildren: 0.05,
-                                                    delayChildren: 0.75,
-                                                },
-                                            },
-                                        },
-                                        ...transitionVariants,
-                                    } as any}
+                                    variants={ctaVariants}
                                     className="mt-12 flex flex-col items-center justify-center gap-2 md:flex-row">
                                     <div
                                         key={1}
@@ -161,36 +167,26 @@ export function HeroSection() {
                         </div>
 
                         <AnimatedGroup
-                            variants={{
-                                container: {
-                                    visible: {
-                                        transition: {
-                                            staggerChildren: 0.05,
-                                            delayChildren: 0.75,
-                                        },
-                                    },
-                                },
-                                ...transitionVariants,
-                            } as any}>
+                            variants={ctaVariants}>
                             <div className="relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
                                 <div
                                     aria-hidden
                                     className="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
                                 />
                                 <div className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
-                                    <img
+                                    <Image
                                         className="bg-background aspect-15/8 relative hidden rounded-2xl dark:block"
                                         src="https://tailark.com//_next/image?url=%2Fmail2.png&w=3840&q=75"
                                         alt="app screen"
-                                        width="2700"
-                                        height="1440"
+                                        width={2700}
+                                        height={1440}
                                     />
-                                    <img
+                                    <Image
                                         className="z-2 border-border/25 aspect-15/8 relative rounded-2xl border dark:hidden"
                                         src="https://tailark.com/_next/image?url=%2Fmail2-light.png&w=3840&q=75"
                                         alt="app screen"
-                                        width="2700"
-                                        height="1440"
+                                        width={2700}
+                                        height={1440}
                                     />
                                 </div>
                             </div>
@@ -210,16 +206,16 @@ export function HeroSection() {
                         </div>
                         <div className="group-hover:blur-xs mx-auto mt-12 grid max-w-2xl grid-cols-4 gap-x-12 gap-y-8 transition-all duration-500 group-hover:opacity-50 sm:gap-x-16 sm:gap-y-14">
                             <div className="flex">
-                                <img className="mx-auto h-5 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/nvidia.svg" alt="Nvidia" height="20" width="auto" />
+                                <Image className="mx-auto h-5 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/nvidia.svg" alt="Nvidia" height={20} width={86} />
                             </div>
                             <div className="flex">
-                                <img className="mx-auto h-4 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/github.svg" alt="GitHub" height="16" width="auto" />
+                                <Image className="mx-auto h-4 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/github.svg" alt="GitHub" height={16} width={64} />
                             </div>
                             <div className="flex">
-                                <img className="mx-auto h-5 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/nike.svg" alt="Nike" height="20" width="auto" />
+                                <Image className="mx-auto h-5 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/nike.svg" alt="Nike" height={20} width={72} />
                             </div>
                             <div className="flex">
-                                <img className="mx-auto h-6 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/openai.svg" alt="OpenAI" height="24" width="auto" />
+                                <Image className="mx-auto h-6 w-fit dark:invert" src="https://html.tailus.io/blocks/customers/openai.svg" alt="OpenAI" height={24} width={90} />
                             </div>
                         </div>
                     </div>
@@ -339,9 +335,11 @@ const HeroHeader = () => {
 export const Logo = ({ className, inverted = false, size = "default" }: { className?: string; inverted?: boolean; size?: "default" | "lg" }) => {
     return (
         <div className={cn("flex items-center gap-3", className)}>
-            <img
+            <Image
                 src="/images/logo-renjana.png"
                 alt="Renjana Logo"
+                width={300}
+                height={64}
                 className={cn(
                     "w-auto object-contain transition-all",
                     size === "default" && "h-12 max-w-[240px]",

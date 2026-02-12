@@ -142,9 +142,9 @@ export default function CareerPage() {
         {/* Contact Section */}
         <section id="contact" className="py-24 px-6 bg-white dark:bg-[#0a0f14]">
           <div className="max-w-[600px] mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Don't see the right fit?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Don&apos;t see the right fit?</h2>
             <p className="text-gray-500 mb-10">
-              We're always looking for talented individuals to join our team. Send us your CV and we'll keep you in mind for future opportunities.
+              We&apos;re always looking for talented individuals to join our team. Send us your CV and we&apos;ll keep you in mind for future opportunities.
             </p>
             <div className="bg-background-light dark:bg-[#1a242f] rounded-2xl border border-gray-100 dark:border-gray-800 p-10">
               <span className="material-symbols-outlined text-5xl text-primary mb-4">mail</span>

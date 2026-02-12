@@ -438,7 +438,7 @@ export const SparklesCore = (props: ParticlesProps) => {
                     id={id || generatedId}
                     className={cn("h-full w-full")}
                     particlesLoaded={particlesLoaded}
-                    options={options as any}
+                    options={options}
                 />
             </motion.div>
         );

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { RouteGuard } from "@/components/auth/route-guard";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ export default function DashboardLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
+        <RouteGuard allowedRoles={["learner"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (
@@ -55,5 +57,6 @@ export default function DashboardLayout({
                 </div>
             </main>
         </div>
+        </RouteGuard>
     );
 }

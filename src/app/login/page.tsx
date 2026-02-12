@@ -70,7 +70,7 @@ export default function LoginPage() {
                 <div className="relative z-10">
                     <blockquote className="border-l-2 border-primary pl-4">
                         <p className="text-lg font-light italic text-gray-300">
-                            "The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice."
+                            &ldquo;The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice.&rdquo;
                         </p>
                         <footer className="mt-2 text-sm text-gray-500">— Brian Herbert</footer>
                     </blockquote>

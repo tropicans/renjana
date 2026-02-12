@@ -2,6 +2,7 @@
 
 import React from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { RouteGuard } from "@/components/auth/route-guard";
 import { Header } from "@/components/dashboard/header";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ export default function AdminLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
+        <RouteGuard allowedRoles={["admin"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (
@@ -48,5 +50,6 @@ export default function AdminLayout({
                 <div className="p-6 lg:p-8">{children}</div>
             </main>
         </div>
+        </RouteGuard>
     );
 }

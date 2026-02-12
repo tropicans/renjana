@@ -4,9 +4,9 @@ export * from './courses';
 export * from './enrollments';
 
 // Dashboard Stats Helpers
-import { users, User, UserRole } from './users';
-import { courses, Course } from './courses';
-import { enrollments, Enrollment } from './enrollments';
+import { users } from './users';
+import { courses } from './courses';
+import { enrollments } from './enrollments';
 
 export interface DashboardStats {
     totalUsers: number;

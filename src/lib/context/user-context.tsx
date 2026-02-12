@@ -1,13 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User, validateLogin, getUserByEmail, UserRole } from '@/lib/data/users';
 
 interface UserContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
     logout: () => void;
     updateUser: (updates: Partial<User>) => void;
 }
@@ -15,30 +15,49 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'renjana_user';
+const SESSION_COOKIE = 'renjana_session';
+
+interface StoredUserSession {
+    email: string;
+}
+
+function setSessionCookie(payload: StoredUserSession & { role: UserRole }) {
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    document.cookie = `${SESSION_COOKIE}=${encoded}; path=/; max-age=2592000; samesite=lax`;
+}
+
+function clearSessionCookie() {
+    document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
+}
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Load user from localStorage on mount
-    useEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            try {
-                const parsedUser = JSON.parse(stored);
-                // Validate user still exists
-                const currentUser = getUserByEmail(parsedUser.email);
-                if (currentUser) {
-                    setUser(currentUser);
-                } else {
-                    localStorage.removeItem(STORAGE_KEY);
-                }
-            } catch {
-                localStorage.removeItem(STORAGE_KEY);
-            }
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === 'undefined') {
+            return null;
         }
-        setIsLoading(false);
-    }, []);
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+            return null;
+        }
+
+        try {
+            const parsedSession = JSON.parse(stored) as StoredUserSession;
+            const currentUser = getUserByEmail(parsedSession.email);
+            if (!currentUser) {
+                localStorage.removeItem(STORAGE_KEY);
+                clearSessionCookie();
+                return null;
+            }
+            setSessionCookie({ email: currentUser.email, role: currentUser.role });
+            return currentUser;
+        } catch {
+            localStorage.removeItem(STORAGE_KEY);
+            clearSessionCookie();
+            return null;
+        }
+    });
+    const [isLoading, setIsLoading] = useState(false);
 
     const login = async (email: string, password: string) => {
         setIsLoading(true);
@@ -50,9 +69,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         if (validatedUser) {
             setUser(validatedUser);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(validatedUser));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: validatedUser.email }));
+            setSessionCookie({ email: validatedUser.email, role: validatedUser.role });
             setIsLoading(false);
-            return { success: true };
+            return { success: true, user: validatedUser };
         }
 
         setIsLoading(false);
@@ -62,13 +82,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem(STORAGE_KEY);
+        clearSessionCookie();
     };
 
     const updateUser = (updates: Partial<User>) => {
         if (user) {
             const updatedUser = { ...user, ...updates };
             setUser(updatedUser);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: updatedUser.email }));
+            setSessionCookie({ email: updatedUser.email, role: updatedUser.role });
         }
     };
 

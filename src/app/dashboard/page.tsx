@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { ActionCard } from "@/components/dashboard/action-card";
 import { EnrolledCourses } from "@/components/course/enrolled-courses";
 import { useUser } from "@/lib/context/user-context";
 import { getLearnerStats, getUserEnrolledCourses } from "@/lib/data";
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 
 export default function DashboardPage() {
-    const { user, isAuthenticated, isLoading } = useUser();
+    const { user, isLoading } = useUser();
 
     // Get real stats from mock data
     const stats = user ? getLearnerStats(user.id) : null;
@@ -42,7 +41,7 @@ export default function DashboardPage() {
                     Welcome back, {user?.name?.split(' ')[0] || 'Learner'}! 👋
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 text-lg">
-                    Here's what's happening with your learning journey today.
+                    Here&apos;s what&apos;s happening with your learning journey today.
                 </p>
             </div>
 

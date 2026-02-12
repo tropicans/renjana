@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { getUserEnrolledCourses } from "@/lib/data/enrollments";
 import { useUser } from "@/lib/context/user-context";
-import { PlayCircle, Clock, BarChart3 } from "lucide-react";
+import { PlayCircle, Clock } from "lucide-react";
 
 export function EnrolledCourses() {
     const { user, isAuthenticated } = useUser();
@@ -63,9 +64,11 @@ export function EnrolledCourses() {
                     >
                         {enrollment.course && (
                             <>
-                                <img
+                                <Image
                                     src={enrollment.course.image}
                                     alt={enrollment.course.title}
+                                    width={80}
+                                    height={80}
                                     className="w-20 h-20 rounded-xl object-cover shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">

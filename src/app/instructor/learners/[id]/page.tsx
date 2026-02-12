@@ -59,11 +59,7 @@ const mockActivityTimeline = [
     },
 ];
 
-export default function LearnerDetailPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
+export default function LearnerDetailPage() {
     return (
         <div className="space-y-6">
             {/* Back button */}

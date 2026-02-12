@@ -51,7 +51,7 @@ export function WhatsAppWidget({
                 <div className="p-4">
                     <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-sm">
                         <p className="text-gray-600 dark:text-gray-300">
-                            👋 Hi there! Have questions about our training programs? We're here to help!
+                            👋 Hi there! Have questions about our training programs? We&apos;re here to help!
                         </p>
                     </div>
                     <a

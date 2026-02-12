@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Mail, Phone, Building, Calendar, BookOpen, Save, UserX, RefreshCw } from "lucide-react";
+import { ArrowLeft, Phone, Building, Calendar, BookOpen, Save, UserX, RefreshCw } from "lucide-react";
 
 // Mock enrollment data
 const mockEnrollments: Record<string, {

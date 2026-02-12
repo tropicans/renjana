@@ -25,14 +25,8 @@ export function LoginForm() {
         const result = await login(email, password);
 
         if (result.success) {
-            const storedUser = localStorage.getItem('renjana_user');
-            if (storedUser) {
-                const user = JSON.parse(storedUser);
-                const dashboardUrl = getDashboardUrl(user.role);
-                router.push(dashboardUrl);
-            } else {
-                router.push('/dashboard');
-            }
+            const dashboardUrl = result.user ? getDashboardUrl(result.user.role) : '/dashboard';
+            router.push(dashboardUrl);
         } else {
             setError(t.auth.invalidCredentials);
             setIsLoading(false);

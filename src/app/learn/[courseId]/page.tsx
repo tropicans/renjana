@@ -2,11 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCourseById, Course, Module, Activity } from "@/lib/data/courses";
-import { getUserEnrollment, updateActivityProgress, Enrollment } from "@/lib/data/enrollments";
+import { getCourseById, Activity } from "@/lib/data/courses";
+import { getUserEnrollment, updateActivityProgress } from "@/lib/data/enrollments";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     ArrowLeft,
     PlayCircle,
@@ -29,11 +29,50 @@ export default function LearnPage() {
     const toast = useToast();
     const courseId = params.courseId as string;
 
-    const [course, setCourse] = useState<Course | undefined>(undefined);
-    const [enrollment, setEnrollment] = useState<Enrollment | undefined>(undefined);
-    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-    const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+    const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+    const [collapsedModules, setCollapsedModules] = useState<Set<string>>(new Set());
     const [isCompleting, setIsCompleting] = useState(false);
+    const [progressVersion, setProgressVersion] = useState(0);
+    const course = useMemo(() => getCourseById(courseId), [courseId]);
+    const enrollment = useMemo(() => {
+        void progressVersion;
+        if (!user || !course) {
+            return undefined;
+        }
+        return getUserEnrollment(user.id, courseId);
+    }, [user, course, courseId, progressVersion]);
+
+    const defaultSelectedActivity = useMemo(() => {
+        if (!course || !enrollment) {
+            return null;
+        }
+
+        for (const courseModule of course.modules) {
+            for (const activity of courseModule.activities) {
+                const isCompleted = enrollment.activityProgress.some(
+                    p => p.activityId === activity.id && p.completed
+                );
+                if (!isCompleted) {
+                    return activity;
+                }
+            }
+        }
+
+        const lastModule = course.modules[course.modules.length - 1];
+        return lastModule.activities[lastModule.activities.length - 1] ?? null;
+    }, [course, enrollment]);
+
+    const selectedActivity = useMemo(() => {
+        if (!course) {
+            return null;
+        }
+
+        const selected = selectedActivityId
+            ? course.modules.flatMap(courseModule => courseModule.activities).find(activity => activity.id === selectedActivityId)
+            : null;
+
+        return selected ?? defaultSelectedActivity;
+    }, [course, defaultSelectedActivity, selectedActivityId]);
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
@@ -41,48 +80,19 @@ export default function LearnPage() {
             return;
         }
 
-        const foundCourse = getCourseById(courseId);
-        setCourse(foundCourse);
-
-        if (user && foundCourse) {
-            const foundEnrollment = getUserEnrollment(user.id, courseId);
-            if (!foundEnrollment) {
-                router.push(`/course/${courseId}`);
-                return;
-            }
-            setEnrollment(foundEnrollment);
-
-            // Expand all modules and select first uncompleted activity
-            const moduleIds = new Set(foundCourse.modules.map(m => m.id));
-            setExpandedModules(moduleIds);
-
-            // Find first uncompleted activity
-            for (const module of foundCourse.modules) {
-                for (const activity of module.activities) {
-                    const isCompleted = foundEnrollment.activityProgress.some(
-                        p => p.activityId === activity.id && p.completed
-                    );
-                    if (!isCompleted) {
-                        setSelectedActivity(activity);
-                        return;
-                    }
-                }
-            }
-            // All completed - select last activity
-            const lastModule = foundCourse.modules[foundCourse.modules.length - 1];
-            const lastActivity = lastModule.activities[lastModule.activities.length - 1];
-            setSelectedActivity(lastActivity);
+        if (user && course && !enrollment) {
+            router.push(`/course/${courseId}`);
         }
-    }, [authLoading, isAuthenticated, user, courseId, router]);
+    }, [authLoading, isAuthenticated, user, courseId, router, course, enrollment]);
 
     const toggleModule = (moduleId: string) => {
-        const newExpanded = new Set(expandedModules);
-        if (newExpanded.has(moduleId)) {
-            newExpanded.delete(moduleId);
+        const newCollapsed = new Set(collapsedModules);
+        if (newCollapsed.has(moduleId)) {
+            newCollapsed.delete(moduleId);
         } else {
-            newExpanded.add(moduleId);
+            newCollapsed.add(moduleId);
         }
-        setExpandedModules(newExpanded);
+        setCollapsedModules(newCollapsed);
     };
 
     const isActivityCompleted = (activityId: string) => {
@@ -96,18 +106,15 @@ export default function LearnPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         updateActivityProgress(enrollment.id, selectedActivity.id);
+        setProgressVersion(prev => prev + 1);
 
-        // Refresh enrollment
-        if (user) {
-            const refreshedEnrollment = getUserEnrollment(user.id, courseId);
-            setEnrollment(refreshedEnrollment);
+        const refreshedEnrollment = getUserEnrollment(enrollment.userId, courseId);
 
-            // Check if course is now complete
-            if (refreshedEnrollment?.progress === 100) {
-                toast.success("🎉 Selamat! Anda telah menyelesaikan course ini!");
-            } else {
-                toast.success("Aktivitas selesai! Lanjutkan ke aktivitas berikutnya.");
-            }
+        // Check if course is now complete
+        if (refreshedEnrollment?.progress === 100) {
+            toast.success("🎉 Selamat! Anda telah menyelesaikan course ini!");
+        } else {
+            toast.success("Aktivitas selesai! Lanjutkan ke aktivitas berikutnya.");
         }
 
         setIsCompleting(false);
@@ -115,10 +122,10 @@ export default function LearnPage() {
         // Auto-advance to next activity
         if (course) {
             let foundCurrent = false;
-            for (const module of course.modules) {
-                for (const activity of module.activities) {
+            for (const courseModule of course.modules) {
+                for (const activity of courseModule.activities) {
                     if (foundCurrent) {
-                        setSelectedActivity(activity);
+                        setSelectedActivityId(activity.id);
                         return;
                     }
                     if (activity.id === selectedActivity.id) {
@@ -191,13 +198,13 @@ export default function LearnPage() {
                                     </span>
                                     <span className="font-semibold text-sm">{module.title}</span>
                                 </div>
-                                {expandedModules.has(module.id) ? (
+                                {!collapsedModules.has(module.id) ? (
                                     <ChevronDown className="h-4 w-4 text-gray-400" />
                                 ) : (
                                     <ChevronRight className="h-4 w-4 text-gray-400" />
                                 )}
                             </button>
-                            {expandedModules.has(module.id) && (
+                            {!collapsedModules.has(module.id) && (
                                 <div className="pb-2">
                                     {module.activities.map((activity) => {
                                         const isCompleted = isActivityCompleted(activity.id);
@@ -205,7 +212,7 @@ export default function LearnPage() {
                                         return (
                                             <button
                                                 key={activity.id}
-                                                onClick={() => setSelectedActivity(activity)}
+                                                onClick={() => setSelectedActivityId(activity.id)}
                                                 className={`w-full pl-16 pr-4 py-3 flex items-center gap-3 text-left text-sm transition-colors ${isSelected
                                                     ? 'bg-primary/10 text-primary'
                                                     : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
@@ -287,7 +294,7 @@ export default function LearnPage() {
 
                                 <div className="prose dark:prose-invert max-w-none mb-8">
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        Ini adalah konten placeholder untuk aktivitas "{selectedActivity.title}".
+                                        Ini adalah konten placeholder untuk aktivitas &quot;{selectedActivity.title}&quot;.
                                         Dalam implementasi nyata, konten video, quiz, atau materi bacaan akan ditampilkan di sini.
                                     </p>
                                 </div>

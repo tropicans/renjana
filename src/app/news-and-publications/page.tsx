@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/ui/site-header";
+import Image from "next/image";
 import Link from "next/link";
 import { Calendar, User, ArrowRight } from "lucide-react";
 
@@ -81,9 +82,11 @@ export default function NewsPage() {
             <h2 className="text-2xl font-bold mb-8">Featured Article</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 items-stretch bg-background-light dark:bg-[#1a242f] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
               <div className="aspect-video lg:aspect-auto">
-                <img
+                <Image
                   src={newsItems[0].image}
                   alt={newsItems[0].title}
+                  width={1200}
+                  height={675}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -125,9 +128,11 @@ export default function NewsPage() {
                   className="group bg-white dark:bg-[#1a242f] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-primary/50 transition-all"
                 >
                   <div className="aspect-video overflow-hidden">
-                    <img
+                    <Image
                       src={news.image}
                       alt={news.title}
+                      width={800}
+                      height={450}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>

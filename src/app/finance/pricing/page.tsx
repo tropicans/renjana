@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { MapPin, Wifi, Shuffle, DollarSign, Save, Plus, Trash2 } from "lucide-react";
+import { MapPin, Wifi, Shuffle, DollarSign, Save } from "lucide-react";
 
 // Mock pricing data
 const mockPricingByModality = [

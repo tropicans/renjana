@@ -3,6 +3,7 @@
 import { SiteHeader } from "@/components/ui/site-header";
 import { EnrollButton } from "@/components/course/enroll-button";
 import { getCourseById } from "@/lib/data/courses";
+import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle, Clock, User, BookOpen, Calendar, ArrowLeft, Star, Users } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -182,9 +183,11 @@ export default function CourseDetailPage() {
                             <div className="lg:col-span-1">
                                 <div className="bg-white dark:bg-[#1a242f] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl p-8 sticky top-24">
                                     {/* Course Image */}
-                                    <img
+                                    <Image
                                         src={displayCourse.image}
                                         alt={displayCourse.title}
+                                        width={960}
+                                        height={540}
                                         className="w-full aspect-video rounded-xl object-cover mb-6"
                                     />
 
@@ -250,9 +253,11 @@ export default function CourseDetailPage() {
                                 <div>
                                     <h3 className="text-2xl font-bold mb-6">Instructor</h3>
                                     <div className="flex items-center gap-4 p-6 bg-white dark:bg-[#1a242f] rounded-xl border border-gray-100 dark:border-gray-800">
-                                        <img
+                                        <Image
                                             src={displayCourse.instructor.avatar}
                                             alt={displayCourse.instructor.name}
+                                            width={64}
+                                            height={64}
                                             className="w-16 h-16 rounded-full object-cover"
                                         />
                                         <div>

@@ -295,8 +295,8 @@ export function getActivityById(courseId: string, activityId: string): Activity 
     const course = getCourseById(courseId);
     if (!course) return undefined;
 
-    for (const module of course.modules) {
-        const activity = module.activities.find(a => a.id === activityId);
+    for (const courseModule of course.modules) {
+        const activity = courseModule.activities.find(a => a.id === activityId);
         if (activity) return activity;
     }
     return undefined;

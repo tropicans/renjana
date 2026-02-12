@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Language, translations, Translations, getTranslation } from './translations';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Language, translations, Translations } from './translations';
 
 interface LanguageContextType {
     language: Language;
@@ -15,17 +15,15 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const STORAGE_KEY = 'renjana_language';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguageState] = useState<Language>('id');
-    const [t, setT] = useState<Translations>(translations.id);
-
-    useEffect(() => {
-        // Load from localStorage
-        const stored = localStorage.getItem(STORAGE_KEY) as Language | null;
-        if (stored && (stored === 'id' || stored === 'en')) {
-            setLanguageState(stored);
-            setT(translations[stored]);
+    const [language, setLanguageState] = useState<Language>(() => {
+        if (typeof window === 'undefined') {
+            return 'id';
         }
-    }, []);
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored === 'id' || stored === 'en' ? stored : 'id';
+    });
+    const [t, setT] = useState<Translations>(() => translations[language]);
 
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);

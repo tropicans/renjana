@@ -5,7 +5,6 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    password: string; // In real app, this would be hashed
     role: UserRole;
     avatar?: string;
     title?: string;
@@ -13,7 +12,11 @@ export interface User {
     joinedAt: string;
 }
 
-export const users: User[] = [
+interface UserRecord extends User {
+    password: string; // In real app, this would be hashed and stored server-side
+}
+
+const userRecords: UserRecord[] = [
     {
         id: 'user-1',
         name: 'Ahmad Pratama',
@@ -81,20 +84,30 @@ export const users: User[] = [
     },
 ];
 
+const toUser = (record: UserRecord): User => {
+    const { password, ...user } = record;
+    void password;
+    return user;
+};
+
+export const users: User[] = userRecords.map(toUser);
+
 // Helper functions
 export function getUserById(id: string): User | undefined {
-    return users.find(user => user.id === id);
+    const record = userRecords.find(user => user.id === id);
+    return record ? toUser(record) : undefined;
 }
 
 export function getUserByEmail(email: string): User | undefined {
-    return users.find(user => user.email === email);
+    const record = userRecords.find(user => user.email === email);
+    return record ? toUser(record) : undefined;
 }
 
 export function getUsersByRole(role: UserRole): User[] {
-    return users.filter(user => user.role === role);
+    return userRecords.filter(user => user.role === role).map(toUser);
 }
 
 export function validateLogin(email: string, password: string): User | null {
-    const user = users.find(u => u.email === email && u.password === password);
-    return user || null;
+    const record = userRecords.find(user => user.email === email && user.password === password);
+    return record ? toUser(record) : null;
 }

@@ -1,4 +1,5 @@
 import { SiteHeader } from "@/components/ui/site-header";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle } from "lucide-react";
 
@@ -12,10 +13,12 @@ export default function AboutPage() {
                 <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 z-0">
                         <div className="absolute inset-0 bg-black/30 z-10"></div>
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1920&auto=format&fit=crop"
                             alt="Modern minimalist architectural interior"
-                            className="w-full h-full object-cover scale-105"
+                            fill
+                            sizes="100vw"
+                            className="object-cover scale-105"
                         />
                     </div>
                     <div className="relative z-20 text-center px-6 max-w-4xl">
@@ -44,7 +47,7 @@ export default function AboutPage() {
                         <h2 className="text-[#111418] dark:text-white text-4xl md:text-5xl font-bold tracking-tight mb-8">Our Mission</h2>
                         <div className="w-20 h-1 bg-primary mx-auto mb-12"></div>
                         <p className="text-lg md:text-2xl leading-relaxed text-gray-600 dark:text-gray-400 font-light italic">
-                            "Renjana was born from the belief that legal education should be as compelling as it is rigorous. We combine architectural precision with academic depth to create a learning experience that empowers the next generation of legal professionals."
+                            &ldquo;Renjana was born from the belief that legal education should be as compelling as it is rigorous. We combine architectural precision with academic depth to create a learning experience that empowers the next generation of legal professionals.&rdquo;
                         </p>
                     </div>
                 </section>
@@ -82,9 +85,11 @@ export default function AboutPage() {
                             </ul>
                         </div>
                         <div className="rounded-xl overflow-hidden shadow-2xl">
-                            <img
+                            <Image
                                 src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=800&auto=format&fit=crop"
                                 alt="Professional legal documents"
+                                width={800}
+                                height={1000}
                                 className="w-full h-auto aspect-[4/5] object-cover"
                             />
                         </div>
@@ -125,10 +130,12 @@ export default function AboutPage() {
                 <section className="relative h-[50vh] flex items-center justify-center">
                     <div className="absolute inset-0 z-0">
                         <div className="absolute inset-0 bg-black/50 z-10"></div>
-                        <img
+                        <Image
                             src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1920&auto=format&fit=crop"
                             alt="Abstract architectural glass patterns"
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="100vw"
+                            className="object-cover"
                         />
                     </div>
                     <div className="relative z-20 text-center px-6">

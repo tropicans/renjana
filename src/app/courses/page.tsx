@@ -2,6 +2,7 @@
 
 import { SiteHeader } from "@/components/ui/site-header";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, ArrowRight } from "lucide-react";
 import { courses } from "@/lib/data/courses";
@@ -54,9 +55,11 @@ export default function CoursesPage() {
                         <ScrollReveal key={course.id} delay={index * 100}>
                             <div className="group flex flex-col bg-white dark:bg-white/5 rounded-xl apple-shadow overflow-hidden border border-gray-100 dark:border-white/5 hover:-translate-y-1 transition-all duration-300 h-full">
                                 <div className="aspect-[16/10] overflow-hidden">
-                                    <img
+                                    <Image
                                         src={course.image}
                                         alt={course.title}
+                                        width={640}
+                                        height={400}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
                                 </div>

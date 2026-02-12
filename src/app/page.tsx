@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/ui/site-header";
 import { FAQSection } from "@/components/ui/faq-section";
 import { WhatsAppWidget } from "@/components/ui/whatsapp-widget";
+import Image from "next/image";
 import Link from "next/link";
 import { PlayCircle, ArrowRight, Phone, Mail, MapPin } from "lucide-react";
 
@@ -100,10 +101,12 @@ export default function Home() {
             ].map((course, i) => (
               <Link key={i} href="/courses" className="group apple-shadow bg-white dark:bg-gray-900 rounded-xl overflow-hidden block">
                 <div className="aspect-[4/3] relative overflow-hidden">
-                  <img
+                  <Image
                     src={course.img}
                     alt={course.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>

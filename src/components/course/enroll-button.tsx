@@ -6,7 +6,7 @@ import { isUserEnrolled, createEnrollment } from "@/lib/data/enrollments";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
 import { Check, Loader2, LogIn } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface EnrollButtonProps {
     courseId: string;
@@ -19,14 +19,7 @@ export function EnrollButton({ courseId, variant = "default", className }: Enrol
     const { user, isAuthenticated } = useUser();
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const [isEnrolled, setIsEnrolled] = useState(false);
-
-    // Check enrollment status when user changes
-    useEffect(() => {
-        if (user) {
-            setIsEnrolled(isUserEnrolled(user.id, courseId));
-        }
-    }, [user, courseId]);
+    const isEnrolled = !!user && isUserEnrolled(user.id, courseId);
 
     const handleEnroll = async () => {
         if (!isAuthenticated || !user) {
@@ -41,7 +34,6 @@ export function EnrollButton({ courseId, variant = "default", className }: Enrol
 
         // Create enrollment
         createEnrollment(user.id, courseId);
-        setIsEnrolled(true);
         setIsLoading(false);
 
         // Show success toast

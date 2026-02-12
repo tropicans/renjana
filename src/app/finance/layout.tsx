@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { RouteGuard } from "@/components/auth/route-guard";
 import { FinanceSidebar } from "@/components/finance/finance-sidebar";
 import { Header } from "@/components/dashboard/header";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ export default function FinanceLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
+        <RouteGuard allowedRoles={["finance"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (
@@ -48,5 +50,6 @@ export default function FinanceLayout({
                 <div className="p-6 lg:p-8">{children}</div>
             </main>
         </div>
+        </RouteGuard>
     );
 }

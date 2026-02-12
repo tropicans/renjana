@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, Bell, User, LogOut, Settings, Search } from "lucide-react";
@@ -16,7 +17,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboard" }: HeaderProps) {
     const router = useRouter();
-    const { user, logout, isAuthenticated } = useUser();
+    const { user, logout } = useUser();
     const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
     const handleLogout = () => {
@@ -87,9 +88,11 @@ export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboa
                         className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
                     >
                         {user?.avatar ? (
-                            <img
+                            <Image
                                 src={user.avatar}
                                 alt={user.name}
+                                width={36}
+                                height={36}
                                 className="h-9 w-9 rounded-full object-cover shadow-lg"
                             />
                         ) : (
