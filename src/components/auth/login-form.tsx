@@ -4,12 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
-import { useUser, getDashboardUrl } from "@/lib/context/user-context";
+import { signIn } from "next-auth/react";
 import { useLanguage } from "@/lib/i18n";
+
+const ROLE_DASHBOARD: Record<string, string> = {
+    ADMIN: "/admin",
+    INSTRUCTOR: "/instructor",
+    MANAGER: "/manager",
+    FINANCE: "/finance",
+    LEARNER: "/dashboard",
+};
 
 export function LoginForm() {
     const router = useRouter();
-    const { login } = useUser();
     const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -22,11 +29,20 @@ export function LoginForm() {
         setIsLoading(true);
         setError(null);
 
-        const result = await login(email, password);
+        const result = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+        });
 
-        if (result.success) {
-            const dashboardUrl = result.user ? getDashboardUrl(result.user.role) : '/dashboard';
+        if (result?.ok) {
+            // Fetch session to get role then redirect
+            const sessionRes = await fetch("/api/auth/session");
+            const session = await sessionRes.json();
+            const role = (session?.user?.role as string) ?? "LEARNER";
+            const dashboardUrl = ROLE_DASHBOARD[role] ?? "/dashboard";
             router.push(dashboardUrl);
+            router.refresh();
         } else {
             setError(t.auth.invalidCredentials);
             setIsLoading(false);
@@ -74,7 +90,7 @@ export function LoginForm() {
                         <br />eko@example.com
                     </div>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">Password: password123 (atau admin123)</p>
+                <p className="mt-2 text-xs text-gray-500">Password: password123 (atau admin123 untuk admin)</p>
             </div>
 
             {/* Form */}
@@ -154,12 +170,12 @@ export function LoginForm() {
                 </div>
             </div>
 
-            {/* Social Login */}
+            {/* Social Login (placeholder — no credentials yet) */}
             <div className="grid grid-cols-2 gap-4">
                 <button
                     type="button"
-                    disabled={isLoading}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 font-semibold text-sm hover:border-primary/50 transition-all disabled:opacity-50"
+                    disabled
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 font-semibold text-sm opacity-50 cursor-not-allowed"
                 >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
                         <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
@@ -168,8 +184,8 @@ export function LoginForm() {
                 </button>
                 <button
                     type="button"
-                    disabled={isLoading}
-                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 font-semibold text-sm hover:border-primary/50 transition-all disabled:opacity-50"
+                    disabled
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 font-semibold text-sm opacity-50 cursor-not-allowed"
                 >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
                         <path fill="currentColor" d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
