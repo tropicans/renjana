@@ -25,12 +25,13 @@ export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboa
     };
 
     const getRoleLabel = (role?: string) => {
-        switch (role) {
-            case 'admin': return 'Administrator';
-            case 'instructor': return 'Instructor';
-            case 'manager': return 'Manager';
-            case 'finance': return 'Finance';
-            default: return 'Learner';
+        switch (role?.toUpperCase()) {
+            case 'ADMIN': return 'Administrator';
+            case 'INSTRUCTOR': return 'Instructor';
+            case 'MANAGER': return 'Manager';
+            case 'FINANCE': return 'Finance';
+            case 'LEARNER': return 'Learner';
+            default: return role ?? 'Learner';
         }
     };
 
