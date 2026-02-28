@@ -2,9 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL,
-});
+const prisma = new PrismaClient();
 
 const mockUsers = [
     { email: "ahmad@example.com", password: "password123", fullName: "Ahmad Pratama", role: "LEARNER" as const, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad", phone: null },
