@@ -1,157 +1,82 @@
+"use client";
+
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchInstructorLearners } from "@/lib/api";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-    ArrowLeft,
-    Mail,
-    Calendar,
-    TrendingUp,
-    CheckCircle,
-    Clock,
-    FileText,
-    MessageSquare,
-} from "lucide-react";
-
-// Mock learner data
-const mockLearner = {
-    id: "learner-1",
-    name: "Andi Wijaya",
-    email: "andi.wijaya@email.com",
-    cohort: "Batch 2026-A",
-    program: "Mediator Certification Program",
-    enrolledDate: "Dec 1, 2025",
-    progress: 85,
-    status: "on-track",
-    activitiesCompleted: 12,
-    activitiesTotal: 15,
-    evidenceSubmitted: 8,
-    lastActivity: "2 hours ago",
-};
-
-const mockActivityTimeline = [
-    {
-        id: 1,
-        title: "Completed Module 3: Legal Framework",
-        type: "completion",
-        date: "Jan 5, 2026",
-        icon: CheckCircle,
-    },
-    {
-        id: 2,
-        title: "Submitted evidence for Case Study",
-        type: "evidence",
-        date: "Jan 4, 2026",
-        icon: FileText,
-    },
-    {
-        id: 3,
-        title: "Started Module 4: Negotiation Skills",
-        type: "start",
-        date: "Jan 3, 2026",
-        icon: Clock,
-    },
-    {
-        id: 4,
-        title: "Received feedback on Assignment 2",
-        type: "feedback",
-        date: "Jan 2, 2026",
-        icon: MessageSquare,
-    },
-];
+import { ArrowLeft, Loader2, User, BookOpen, CheckCircle, Clock, Award, TrendingUp } from "lucide-react";
 
 export default function LearnerDetailPage() {
-    return (
-        <div className="space-y-6">
-            {/* Back button */}
-            <Button variant="ghost" size="sm" asChild>
-                <Link href="/instructor/learners">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Learners
-                </Link>
-            </Button>
+    const { id } = useParams<{ id: string }>();
 
-            {/* Learner Header */}
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex items-start gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-                        {mockLearner.name.charAt(0)}
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold">{mockLearner.name}</h1>
-                        <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                            <Mail className="h-4 w-4" />
-                            <span>{mockLearner.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground mt-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>Enrolled: {mockLearner.enrolledDate}</span>
-                        </div>
-                    </div>
+    const { data, isLoading } = useQuery({
+        queryKey: ["instructor-learners"],
+        queryFn: fetchInstructorLearners,
+    });
+
+    if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+    const allEnrollments = data?.enrollments ?? [];
+    const learnerEnrollments = allEnrollments.filter(e => e.userId === id);
+    const learner = learnerEnrollments[0]?.user;
+
+    if (!learner) return <div className="text-center py-12 text-gray-500">Peserta tidak ditemukan</div>;
+
+    const avgProgress = learnerEnrollments.length ? Math.round(learnerEnrollments.reduce((s, e) => s + e.completionPercentage, 0) / learnerEnrollments.length) : 0;
+    const completed = learnerEnrollments.filter(e => e.status === "COMPLETED").length;
+
+    return (
+        <div className="space-y-8">
+            <Link href="/instructor/learners" className="text-sm text-gray-500 hover:text-primary flex items-center gap-1"><ArrowLeft className="h-4 w-4" /> Kembali</Link>
+
+            {/* Profile */}
+            <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-8 w-8 text-primary" />
                 </div>
-                <div className="flex gap-3">
-                    <Button variant="outline">Send Message</Button>
-                    <Button>Give Feedback</Button>
+                <div>
+                    <h1 className="text-3xl font-extrabold tracking-tight">{learner.fullName}</h1>
+                    <p className="text-gray-500">{learner.email}</p>
                 </div>
             </div>
 
             {/* Stats */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border bg-card p-4">
-                    <p className="text-sm text-muted-foreground">Progress</p>
-                    <div className="flex items-center gap-2 mt-1">
-                        <p className="text-2xl font-bold">{mockLearner.progress}%</p>
-                        <TrendingUp className="h-4 w-4 text-green-500" />
-                    </div>
-                    <div className="h-2 rounded-full bg-muted mt-2 overflow-hidden">
-                        <div
-                            className="h-full bg-primary"
-                            style={{ width: `${mockLearner.progress}%` }}
-                        />
-                    </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center"><BookOpen className="h-5 w-5 text-blue-500" /></div><div><p className="text-2xl font-bold">{learnerEnrollments.length}</p><p className="text-xs text-gray-500">Program Diikuti</p></div></div>
                 </div>
-                <div className="rounded-xl border bg-card p-4">
-                    <p className="text-sm text-muted-foreground">Activities</p>
-                    <p className="text-2xl font-bold mt-1">
-                        {mockLearner.activitiesCompleted}/{mockLearner.activitiesTotal}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Completed</p>
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center"><CheckCircle className="h-5 w-5 text-green-500" /></div><div><p className="text-2xl font-bold">{completed}</p><p className="text-xs text-gray-500">Selesai</p></div></div>
                 </div>
-                <div className="rounded-xl border bg-card p-4">
-                    <p className="text-sm text-muted-foreground">Evidence</p>
-                    <p className="text-2xl font-bold mt-1">{mockLearner.evidenceSubmitted}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Submitted</p>
-                </div>
-                <div className="rounded-xl border bg-card p-4">
-                    <p className="text-sm text-muted-foreground">Last Activity</p>
-                    <p className="text-lg font-semibold mt-1">{mockLearner.lastActivity}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{mockLearner.cohort}</p>
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center"><TrendingUp className="h-5 w-5 text-primary" /></div><div><p className="text-2xl font-bold">{avgProgress}%</p><p className="text-xs text-gray-500">Rata-rata</p></div></div>
                 </div>
             </div>
 
-            {/* Activity Timeline */}
+            {/* Enrollments */}
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Activity Timeline</h2>
-                <div className="space-y-4">
-                    {mockActivityTimeline.map((activity, index) => {
-                        const Icon = activity.icon;
-                        return (
-                            <div key={activity.id} className="flex gap-4">
-                                <div className="relative flex flex-col items-center">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full border bg-card">
-                                        <Icon className="h-5 w-5 text-primary" />
-                                    </div>
-                                    {index < mockActivityTimeline.length - 1 && (
-                                        <div className="absolute top-10 h-full w-px bg-border" />
-                                    )}
-                                </div>
-                                <div className="flex-1 pb-8">
-                                    <p className="font-medium">{activity.title}</p>
-                                    <p className="text-sm text-muted-foreground">{activity.date}</p>
-                                </div>
+                <h2 className="text-xl font-bold">Program yang Diikuti</h2>
+                {learnerEnrollments.map(e => (
+                    <div key={e.id} className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold">{e.course.title}</h3>
+                                <p className="text-xs text-gray-500 mt-1">Terdaftar: {new Date(e.enrolledAt).toLocaleDateString("id-ID")}</p>
                             </div>
-                        );
-                    })}
-                </div>
+                            <div className="flex items-center gap-3">
+                                {e.certificate && <span className="text-xs text-primary flex items-center gap-1"><Award className="h-4 w-4" /> Sertifikat</span>}
+                                {e.status === "COMPLETED" ? <span className="px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 text-xs font-semibold flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Selesai</span> : <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-xs font-semibold flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Aktif</span>}
+                            </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-3">
+                            <div className="flex-1 h-2.5 rounded-full bg-gray-100 dark:bg-gray-800">
+                                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${e.completionPercentage}%` }} />
+                            </div>
+                            <span className="text-sm font-semibold">{e.completionPercentage}%</span>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

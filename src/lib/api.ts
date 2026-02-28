@@ -230,3 +230,81 @@ export interface ApiCertificate {
 export function fetchCertificate(enrollmentId: string) {
     return apiFetch<{ certificate: ApiCertificate }>(`/api/certificates/${enrollmentId}`);
 }
+
+// ── Admin: Users ──────────────────────────────────────────────
+export function fetchUsers() {
+    return apiFetch<{ users: Array<{ id: string; fullName: string; email: string; role: string; isActive: boolean }> }>("/api/admin/users");
+}
+
+// ── Admin: Courses CRUD ───────────────────────────────────────
+export function fetchAdminCourses() {
+    return apiFetch<{
+        courses: Array<{
+            id: string; title: string; description: string | null; status: string;
+            createdAt: string; _count: { modules: number; enrollments: number };
+            modules: Array<{ id: string; title: string; order: number; _count: { lessons: number } }>;
+        }>
+    }>("/api/admin/courses");
+}
+
+export function fetchAdminCourse(id: string) {
+    return apiFetch<{ course: any }>(`/api/admin/courses/${id}`);
+}
+
+export function createCourse(data: { title: string; description?: string; status?: string }) {
+    return apiFetch<{ course: any }>("/api/admin/courses", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+export function updateCourse(id: string, data: { title?: string; description?: string; status?: string }) {
+    return apiFetch<{ course: any }>(`/api/admin/courses/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+    });
+}
+
+export function deleteCourse(id: string) {
+    return apiFetch<{ success: boolean }>(`/api/admin/courses/${id}`, { method: "DELETE" });
+}
+
+// ── Admin: Enrollments ────────────────────────────────────────
+export function fetchAdminEnrollments() {
+    return apiFetch<{
+        enrollments: Array<{
+            id: string; userId: string; courseId: string; status: string;
+            completionPercentage: number; enrolledAt: string; completedAt: string | null;
+            user: { id: string; fullName: string; email: string; role: string };
+            course: { id: string; title: string };
+        }>
+    }>("/api/admin/enrollments");
+}
+
+export function createAdminEnrollment(data: { userId: string; courseId: string }) {
+    return apiFetch<{ enrollment: any }>("/api/admin/enrollments", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+// ── Admin: Audit Logs ─────────────────────────────────────────
+export function fetchAuditLogs(limit?: number) {
+    const qs = limit ? `?limit=${limit}` : "";
+    return apiFetch<{
+        logs: Array<{
+            id: string; action: string; entity: string; entityId: string | null;
+            metadata: any; createdAt: string;
+            user: { id: string; fullName: string; email: string };
+        }>
+    }>(`/api/admin/audit${qs}`);
+}
+
+// ── Instructor ────────────────────────────────────────────────
+export function fetchInstructorStats() {
+    return apiFetch<{ stats: { totalCourses: number; totalEnrollments: number; completedEnrollments: number; totalAttendances: number; totalEvidences: number; avgProgress: number }; recentEnrollments: Array<{ id: string; enrolledAt: string; user: { fullName: string }; course: { title: string } }> }>("/api/instructor/stats");
+}
+
+export function fetchInstructorLearners() {
+    return apiFetch<{ enrollments: Array<{ id: string; userId: string; courseId: string; status: string; completionPercentage: number; enrolledAt: string; user: { id: string; fullName: string; email: string }; course: { id: string; title: string }; certificate: { id: string; issuedAt: string } | null }>; stats: { totalLearners: number; activeEnrollments: number; completedEnrollments: number; avgCompletion: number } }>("/api/instructor/learners");
+}

@@ -1,164 +1,119 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import {
-    Search,
-    UserPlus,
-    Clock,
-    CheckCircle,
-    XCircle,
-    Download,
-} from "lucide-react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchAdminEnrollments, fetchAdminCourses, fetchUsers, createAdminEnrollment } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
+import { Users, BookOpen, Loader2, Plus, CheckCircle, Clock, Search } from "lucide-react";
 
-// Mock data
-const mockEnrollments = [
-    { id: "enr-1", learnerName: "Andi Wijaya", email: "andi.wijaya@email.com", program: "Mediator Certification", cohort: "Batch 2026-A", enrolledAt: "Dec 1, 2025", status: "active" },
-    { id: "enr-2", learnerName: "Budi Santoso", email: "budi.santoso@email.com", program: "Mediator Certification", cohort: "Batch 2026-A", enrolledAt: "Dec 1, 2025", status: "active" },
-    { id: "enr-3", learnerName: "Citra Dewi", email: "citra.dewi@email.com", program: "Advanced Mediation", cohort: "Batch 2025-D", enrolledAt: "Nov 15, 2025", status: "completed" },
-    { id: "enr-4", learnerName: "Dian Pratama", email: "dian.pratama@email.com", program: "Legal Framework", cohort: "Corporate PT ABC", enrolledAt: "Jan 2, 2026", status: "pending" },
-    { id: "enr-5", learnerName: "Eka Putra", email: "eka.putra@email.com", program: "Mediator Certification", cohort: "Batch 2025-C", enrolledAt: "Oct 1, 2025", status: "dropped" },
-];
+export default function AdminEnrollmentsPage() {
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const [showForm, setShowForm] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState("");
+    const [selectedCourseId, setSelectedCourseId] = useState("");
+    const [search, setSearch] = useState("");
 
-const statusConfig = {
-    active: { label: "Active", icon: CheckCircle, class: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
-    pending: { label: "Pending", icon: Clock, class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-    completed: { label: "Completed", icon: CheckCircle, class: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-    dropped: { label: "Dropped", icon: XCircle, class: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-};
-
-export default function EnrollmentsPage() {
-    const [searchQuery, setSearchQuery] = React.useState("");
-    const [statusFilter, setStatusFilter] = React.useState<string | null>(null);
-
-    const filteredEnrollments = mockEnrollments.filter((e) => {
-        const matchesSearch = e.learnerName.toLowerCase().includes(searchQuery.toLowerCase()) || e.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = !statusFilter || e.status === statusFilter;
-        return matchesSearch && matchesStatus;
+    const { data, isLoading } = useQuery({
+        queryKey: ["admin-enrollments"],
+        queryFn: fetchAdminEnrollments,
     });
 
-    const handleExport = () => {
-        // Create CSV content
-        const headers = ["Learner Name", "Email", "Program", "Cohort", "Enrolled At", "Status"];
-        const csvContent = [
-            headers.join(","),
-            ...mockEnrollments.map(e => `"${e.learnerName}","${e.email}","${e.program}","${e.cohort}","${e.enrolledAt}","${e.status}"`)
-        ].join("\n");
+    const { data: coursesData } = useQuery({
+        queryKey: ["admin-courses"],
+        queryFn: fetchAdminCourses,
+        enabled: showForm,
+    });
 
-        // Download CSV
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "enrollments_export.csv";
-        link.click();
-    };
+    const { data: usersData } = useQuery({
+        queryKey: ["admin-users"],
+        queryFn: fetchUsers,
+        enabled: showForm,
+    });
+
+    const enrollments = data?.enrollments ?? [];
+    const filtered = search ? enrollments.filter(e => e.user.fullName.toLowerCase().includes(search.toLowerCase()) || e.course.title.toLowerCase().includes(search.toLowerCase())) : enrollments;
+
+    const enrollMutation = useMutation({
+        mutationFn: () => createAdminEnrollment({ userId: selectedUserId, courseId: selectedCourseId }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
+            toast.success("Peserta berhasil didaftarkan ✅");
+            setSelectedUserId(""); setSelectedCourseId(""); setShowForm(false);
+        },
+        onError: (err) => toast.error(err.message),
+    });
+
+    if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+    const active = enrollments.filter(e => e.status === "ACTIVE").length;
+    const completed = enrollments.filter(e => e.status === "COMPLETED").length;
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-extrabold tracking-tight">Enrollments</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Manage learner enrollments and cohorts</p>
+                    <p className="text-gray-500 mt-1">{enrollments.length} enrollment total</p>
                 </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={handleExport}
-                        className="bg-white dark:bg-[#1a242f] border border-gray-200 dark:border-gray-700 px-5 py-2.5 rounded-full font-semibold text-sm hover:border-red-500/50 transition-all flex items-center gap-2"
-                    >
-                        <Download className="h-4 w-4" />
-                        Export
-                    </button>
-                    <Link href="/admin/enrollments/new" className="bg-red-500 text-white px-6 py-3 rounded-full font-bold hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
-                        <UserPlus className="h-4 w-4" />
-                        Add Enrollment
-                    </Link>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a242f] focus:border-red-500 outline-none transition-all"
-                    />
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                    {Object.entries(statusConfig).map(([key, config]) => (
-                        <button
-                            key={key}
-                            onClick={() => setStatusFilter(statusFilter === key ? null : key)}
-                            className={`px-4 py-2 rounded-full font-semibold text-sm transition-all ${statusFilter === key
-                                ? "bg-red-500 text-white shadow-lg shadow-red-500/20"
-                                : "bg-white dark:bg-[#1a242f] border border-gray-200 dark:border-gray-700 hover:border-red-500/50"
-                                }`}
-                        >
-                            {config.label}
-                        </button>
-                    ))}
-                </div>
+                <button onClick={() => setShowForm(!showForm)} className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90">
+                    <Plus className="h-4 w-4" /> Daftarkan Peserta
+                </button>
             </div>
 
             {/* Stats */}
-            <div className="flex gap-6 text-sm">
-                <span className="font-semibold">{mockEnrollments.filter((e) => e.status === "active").length} <span className="font-normal text-gray-500">Active</span></span>
-                <span className="font-semibold">{mockEnrollments.filter((e) => e.status === "pending").length} <span className="font-normal text-gray-500">Pending</span></span>
-                <span className="font-semibold">{mockEnrollments.filter((e) => e.status === "completed").length} <span className="font-normal text-gray-500">Completed</span></span>
+            <div className="grid gap-4 sm:grid-cols-3">
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center"><Users className="h-5 w-5 text-blue-500" /></div><div><p className="text-2xl font-bold">{enrollments.length}</p><p className="text-xs text-gray-500">Total</p></div></div>
+                </div>
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center"><Clock className="h-5 w-5 text-amber-500" /></div><div><p className="text-2xl font-bold">{active}</p><p className="text-xs text-gray-500">Aktif</p></div></div>
+                </div>
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-xl bg-green-500/10 flex items-center justify-center"><CheckCircle className="h-5 w-5 text-green-500" /></div><div><p className="text-2xl font-bold">{completed}</p><p className="text-xs text-gray-500">Selesai</p></div></div>
+                </div>
             </div>
 
-            {/* Enrollments Table */}
-            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                            <th className="text-left p-5 font-bold text-sm">Learner</th>
-                            <th className="text-left p-5 font-bold text-sm">Program</th>
-                            <th className="text-left p-5 font-bold text-sm">Cohort</th>
-                            <th className="text-left p-5 font-bold text-sm">Enrolled</th>
-                            <th className="text-left p-5 font-bold text-sm">Status</th>
-                            <th className="p-5"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredEnrollments.map((enrollment, index) => {
-                            const status = statusConfig[enrollment.status as keyof typeof statusConfig];
-                            const StatusIcon = status.icon;
+            {showForm && (
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-6 space-y-4">
+                    <h2 className="font-bold">Daftarkan Peserta Baru</h2>
+                    <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-sm">
+                        <option value="">-- Pilih Peserta --</option>
+                        {usersData?.users?.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.email})</option>)}
+                    </select>
+                    <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-sm">
+                        <option value="">-- Pilih Program --</option>
+                        {coursesData?.courses?.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
+                    <button onClick={() => enrollMutation.mutate()} disabled={!selectedUserId || !selectedCourseId || enrollMutation.isPending} className="bg-primary text-white px-6 py-3 rounded-full font-bold text-sm disabled:opacity-50">
+                        {enrollMutation.isPending ? "Mendaftarkan..." : "Daftarkan"}
+                    </button>
+                </div>
+            )}
 
-                            return (
-                                <tr key={enrollment.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all ${index !== filteredEnrollments.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
-                                    <td className="p-5">
-                                        <p className="font-semibold">{enrollment.learnerName}</p>
-                                        <p className="text-sm text-gray-400">{enrollment.email}</p>
-                                    </td>
-                                    <td className="p-5 text-sm">{enrollment.program}</td>
-                                    <td className="p-5 text-sm text-gray-500">{enrollment.cohort}</td>
-                                    <td className="p-5 text-sm text-gray-500">{enrollment.enrolledAt}</td>
-                                    <td className="p-5">
-                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${status.class}`}>
-                                            <StatusIcon className="h-3.5 w-3.5" />
-                                            {status.label}
-                                        </span>
-                                    </td>
-                                    <td className="p-5">
-                                        <Link href={`/admin/enrollments/${enrollment.id}`} className="text-red-500 font-semibold text-sm hover:underline">Manage</Link>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input type="text" placeholder="Cari peserta atau program..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent text-sm" />
+            </div>
+
+            {/* Table */}
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-gray-500"><th className="p-4 font-semibold">Peserta</th><th className="p-4 font-semibold">Program</th><th className="p-4 font-semibold">Progress</th><th className="p-4 font-semibold">Status</th><th className="p-4 font-semibold">Tanggal</th></tr></thead>
+                    <tbody>
+                        {filtered.map(e => (
+                            <tr key={e.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                                <td className="p-4"><div><p className="font-medium">{e.user.fullName}</p><p className="text-xs text-gray-500">{e.user.email}</p></div></td>
+                                <td className="p-4 text-gray-500">{e.course.title}</td>
+                                <td className="p-4"><div className="flex items-center gap-2"><div className="w-20 h-2 rounded-full bg-gray-100 dark:bg-gray-800"><div className="h-full rounded-full bg-primary" style={{ width: `${e.completionPercentage}%` }} /></div><span className="text-xs">{e.completionPercentage}%</span></div></td>
+                                <td className="p-4">{e.status === "COMPLETED" ? <span className="text-xs text-green-600 font-semibold">Selesai</span> : <span className="text-xs text-amber-600 font-semibold">Aktif</span>}</td>
+                                <td className="p-4 text-xs text-gray-500">{new Date(e.enrolledAt).toLocaleDateString("id-ID")}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
-
-            {filteredEnrollments.length === 0 && (
-                <div className="text-center py-16">
-                    <p className="text-gray-500">No enrollments found</p>
-                </div>
-            )}
         </div>
     );
 }

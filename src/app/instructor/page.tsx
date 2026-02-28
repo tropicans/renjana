@@ -1,124 +1,73 @@
+"use client";
+
 import React from "react";
-import Link from "next/link";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { CohortCard } from "@/components/instructor/cohort-card";
-import {
-    Users,
-    TrendingUp,
-    AlertTriangle,
-    CheckCircle,
-    ArrowRight,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchInstructorStats } from "@/lib/api";
+import { BookOpen, Users, CheckCircle, MapPin, FileText, TrendingUp, Loader2, Clock } from "lucide-react";
 
-// Mock data
-const mockStats = {
-    totalLearners: 127,
-    avgCompletionRate: 68,
-    atRiskLearners: 12,
-    pendingFeedback: 8,
-};
-
-const mockCohorts = [
-    {
-        id: "cohort-1",
-        name: "Batch 2026-A",
-        program: "Mediator Certification Program",
-        totalLearners: 45,
-        completionRate: 72,
-        atRiskCount: 3,
-    },
-    {
-        id: "cohort-2",
-        name: "Batch 2025-D",
-        program: "Advanced Mediation Skills",
-        totalLearners: 32,
-        completionRate: 85,
-        atRiskCount: 1,
-    },
-    {
-        id: "cohort-3",
-        name: "Corporate Training - PT ABC",
-        program: "Legal Framework Fundamentals",
-        totalLearners: 50,
-        completionRate: 45,
-        atRiskCount: 8,
-    },
-];
+function StatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ElementType; color: string }) {
+    return (
+        <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+            <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${color}`}>
+                    <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                    <p className="text-2xl font-bold">{value}</p>
+                    <p className="text-xs text-gray-500">{title}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function InstructorDashboardPage() {
+    const { data, isLoading } = useQuery({
+        queryKey: ["instructor-stats"],
+        queryFn: fetchInstructorStats,
+    });
+
+    if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+    const stats = data?.stats;
+    const recent = data?.recentEnrollments ?? [];
+
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                        Instructor Dashboard
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Monitor cohort health and learner progress
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Link
-                        href="/instructor/feedback"
-                        className="bg-emerald-500 text-white px-6 py-3 rounded-full font-bold hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
-                    >
-                        Give Feedback
-                        <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                        href="/instructor/attendance"
-                        className="bg-white dark:bg-[#1a242f] border border-gray-200 dark:border-gray-700 px-6 py-3 rounded-full font-bold hover:border-emerald-500/50 transition-all"
-                    >
-                        Manage Attendance
-                    </Link>
-                </div>
+            <div>
+                <h1 className="text-3xl font-extrabold tracking-tight">Dashboard Instruktur</h1>
+                <p className="text-gray-500 mt-1">Overview aktivitas pelatihan</p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                    title="Total Learners"
-                    value={mockStats.totalLearners}
-                    icon={Users}
-                    description="Across all cohorts"
-                />
-                <StatCard
-                    title="Avg. Completion"
-                    value={`${mockStats.avgCompletionRate}%`}
-                    icon={TrendingUp}
-                    trend={{ value: 5, positive: true }}
-                />
-                <StatCard
-                    title="At-Risk Learners"
-                    value={mockStats.atRiskLearners}
-                    icon={AlertTriangle}
-                    description="Need attention"
-                />
-                <StatCard
-                    title="Pending Feedback"
-                    value={mockStats.pendingFeedback}
-                    icon={CheckCircle}
-                    description="Awaiting your review"
-                />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <StatCard title="Total Program" value={stats?.totalCourses ?? 0} icon={BookOpen} color="bg-primary/10 text-primary" />
+                <StatCard title="Peserta Aktif" value={stats?.totalEnrollments ?? 0} icon={Users} color="bg-blue-500/10 text-blue-500" />
+                <StatCard title="Selesai" value={stats?.completedEnrollments ?? 0} icon={CheckCircle} color="bg-green-500/10 text-green-500" />
+                <StatCard title="Kehadiran" value={stats?.totalAttendances ?? 0} icon={MapPin} color="bg-amber-500/10 text-amber-500" />
+                <StatCard title="Evidence" value={stats?.totalEvidences ?? 0} icon={FileText} color="bg-purple-500/10 text-purple-500" />
+                <StatCard title="Rata-rata Progress" value={`${stats?.avgProgress ?? 0}%`} icon={TrendingUp} color="bg-cyan-500/10 text-cyan-500" />
             </div>
 
-            {/* Cohorts */}
+            {/* Recent Enrollments */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Your Cohorts</h2>
-                    <Link
-                        href="/instructor/learners"
-                        className="text-emerald-500 font-semibold hover:underline flex items-center gap-1"
-                    >
-                        View All
-                        <ArrowRight className="h-4 w-4" />
-                    </Link>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {mockCohorts.map((cohort) => (
-                        <CohortCard key={cohort.id} {...cohort} />
-                    ))}
+                <h2 className="text-xl font-bold">Pendaftaran Terbaru</h2>
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
+                    {recent.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">Belum ada pendaftaran.</div>
+                    ) : (
+                        recent.map((e, i) => (
+                            <div key={e.id} className={`p-5 flex items-center justify-between ${i !== recent.length - 1 ? "border-b border-gray-100 dark:border-gray-800" : ""}`}>
+                                <div>
+                                    <p className="font-semibold">{e.user.fullName}</p>
+                                    <p className="text-sm text-gray-500">{e.course.title}</p>
+                                </div>
+                                <div className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {new Date(e.enrolledAt).toLocaleDateString("id-ID")}
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
