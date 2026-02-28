@@ -1,19 +1,32 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireAuth, requireRole } from "@/lib/auth-utils";
+import { requireAuth } from "@/lib/auth-utils";
 
 // POST /api/attendance — check-in with optional GPS
 export async function POST(req: Request) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const { lessonId, latitude, longitude, notes } = await req.json();
-    if (!lessonId) {
-        return NextResponse.json({ error: "lessonId is required" }, { status: 400 });
+    const { lessonId, courseId, latitude, longitude, notes } = await req.json();
+    if (!lessonId && !courseId) {
+        return NextResponse.json({ error: "lessonId or courseId is required" }, { status: 400 });
+    }
+
+    // Resolve lessonId: if courseId provided, find first lesson of the course
+    let resolvedLessonId = lessonId;
+    if (!resolvedLessonId && courseId) {
+        const firstLesson = await prisma.lesson.findFirst({
+            where: { module: { courseId } },
+            orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
+        });
+        if (!firstLesson) {
+            return NextResponse.json({ error: "No lessons found for this course" }, { status: 404 });
+        }
+        resolvedLessonId = firstLesson.id;
     }
 
     // Verify lesson exists
-    const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+    const lesson = await prisma.lesson.findUnique({ where: { id: resolvedLessonId } });
     if (!lesson) {
         return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
@@ -22,7 +35,7 @@ export async function POST(req: Request) {
     const attendance = await prisma.attendance.create({
         data: {
             userId: user!.id,
-            lessonId,
+            lessonId: resolvedLessonId,
             latitude: latitude ?? null,
             longitude: longitude ?? null,
             notes: notes ?? null,

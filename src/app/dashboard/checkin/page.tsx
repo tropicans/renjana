@@ -60,7 +60,7 @@ export default function CheckInPage() {
     const checkInMutation = useMutation({
         mutationFn: () =>
             checkIn({
-                lessonId: selectedLessonId!,
+                courseId: selectedLessonId!,
                 latitude: location?.lat,
                 longitude: location?.lng,
             }),
@@ -174,8 +174,8 @@ export default function CheckInPage() {
                             <div
                                 key={a.id}
                                 className={`flex items-center justify-between p-5 ${i !== attendances.length - 1
-                                        ? "border-b border-gray-100 dark:border-gray-800"
-                                        : ""
+                                    ? "border-b border-gray-100 dark:border-gray-800"
+                                    : ""
                                     }`}
                             >
                                 <div className="flex items-center gap-3">

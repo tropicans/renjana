@@ -183,7 +183,7 @@ export function fetchAttendances(lessonId?: string) {
     return apiFetch<{ attendances: ApiAttendance[] }>(`/api/attendance${qs}`);
 }
 
-export function checkIn(data: { lessonId: string; latitude?: number; longitude?: number; notes?: string }) {
+export function checkIn(data: { lessonId?: string; courseId?: string; latitude?: number; longitude?: number; notes?: string }) {
     return apiFetch<{ attendance: ApiAttendance }>("/api/attendance", {
         method: "POST",
         body: JSON.stringify(data),

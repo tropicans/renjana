@@ -45,9 +45,13 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy necessary files from builder
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Create writable upload directories for evidence and certificates
+RUN mkdir -p ./public/uploads/evidence ./public/uploads/certificates \
+    && chown -R nextjs:nodejs ./public/uploads
 
 USER nextjs
 
