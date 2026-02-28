@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { getUserEnrolledCourses } from "@/lib/data/enrollments";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMyEnrollments } from "@/lib/api";
 import { useUser } from "@/lib/context/user-context";
-import { PlayCircle, Clock } from "lucide-react";
+import { PlayCircle, Clock, BookOpen } from "lucide-react";
 
 export function EnrolledCourses() {
     const { user, isAuthenticated } = useUser();
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["my-enrollments"],
+        queryFn: fetchMyEnrollments,
+        enabled: !!user,
+    });
+
+    const enrollments = data?.enrollments ?? [];
 
     if (!isAuthenticated || !user) {
         return (
@@ -25,7 +33,13 @@ export function EnrolledCourses() {
         );
     }
 
-    const enrollments = getUserEnrolledCourses(user.id);
+    if (isLoading) {
+        return (
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-8 text-center">
+                <div className="animate-pulse text-gray-500">Loading...</div>
+            </div>
+        );
+    }
 
     if (enrollments.length === 0) {
         return (
@@ -62,39 +76,31 @@ export function EnrolledCourses() {
                         href={`/learn/${enrollment.courseId}`}
                         className="group flex gap-4 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all"
                     >
-                        {enrollment.course && (
-                            <>
-                                <Image
-                                    src={enrollment.course.image}
-                                    alt={enrollment.course.title}
-                                    width={80}
-                                    height={80}
-                                    className="w-20 h-20 rounded-xl object-cover shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold truncate group-hover:text-primary transition-colors">
-                                        {enrollment.course.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-                                        <Clock className="h-4 w-4" />
-                                        {enrollment.course.duration} jam
-                                    </p>
-                                    {/* Progress Bar */}
-                                    <div className="mt-3">
-                                        <div className="flex items-center justify-between text-xs mb-1">
-                                            <span className="text-gray-500">Progress</span>
-                                            <span className="font-semibold text-primary">{enrollment.progress}%</span>
-                                        </div>
-                                        <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-primary rounded-full transition-all"
-                                                style={{ width: `${enrollment.progress}%` }}
-                                            />
-                                        </div>
-                                    </div>
+                        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+                            <BookOpen className="h-8 w-8 text-primary/30" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold truncate group-hover:text-primary transition-colors">
+                                {enrollment.course.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                {enrollment.status === "COMPLETED" ? "Selesai" : "Sedang Belajar"}
+                            </p>
+                            {/* Progress Bar */}
+                            <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs mb-1">
+                                    <span className="text-gray-500">Progress</span>
+                                    <span className="font-semibold text-primary">{enrollment.completionPercentage}%</span>
                                 </div>
-                            </>
-                        )}
+                                <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-primary rounded-full transition-all"
+                                        style={{ width: `${enrollment.completionPercentage}%` }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </Link>
                 ))}
             </div>
