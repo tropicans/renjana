@@ -2,11 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCourseById, Activity } from "@/lib/data/courses";
-import { getUserEnrollment, updateActivityProgress } from "@/lib/data/enrollments";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
-import { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchCourseById, fetchMyEnrollments, fetchProgress, markLessonComplete } from "@/lib/api";
+import { useState, useMemo } from "react";
 import {
     ArrowLeft,
     PlayCircle,
@@ -19,7 +19,8 @@ import {
     ChevronRight,
     Video,
     Users,
-    Award
+    Award,
+    Loader2,
 } from "lucide-react";
 
 export default function LearnPage() {
@@ -27,63 +28,106 @@ export default function LearnPage() {
     const router = useRouter();
     const { user, isAuthenticated, isLoading: authLoading } = useUser();
     const toast = useToast();
+    const queryClient = useQueryClient();
     const courseId = params.courseId as string;
 
-    const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+    const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
     const [collapsedModules, setCollapsedModules] = useState<Set<string>>(new Set());
-    const [isCompleting, setIsCompleting] = useState(false);
-    const [progressVersion, setProgressVersion] = useState(0);
-    const course = useMemo(() => getCourseById(courseId), [courseId]);
-    const enrollment = useMemo(() => {
-        void progressVersion;
-        if (!user || !course) {
-            return undefined;
-        }
-        return getUserEnrollment(user.id, courseId);
-    }, [user, course, courseId, progressVersion]);
 
-    const defaultSelectedActivity = useMemo(() => {
-        if (!course || !enrollment) {
-            return null;
-        }
+    // Fetch course detail
+    const { data: courseData, isLoading: courseLoading } = useQuery({
+        queryKey: ["course", courseId],
+        queryFn: () => fetchCourseById(courseId),
+        enabled: !!courseId,
+    });
 
-        for (const courseModule of course.modules) {
-            for (const activity of courseModule.activities) {
-                const isCompleted = enrollment.activityProgress.some(
-                    p => p.activityId === activity.id && p.completed
-                );
-                if (!isCompleted) {
-                    return activity;
+    // Fetch user's enrollments to find the enrollment for this course
+    const { data: enrollmentData } = useQuery({
+        queryKey: ["my-enrollments"],
+        queryFn: fetchMyEnrollments,
+        enabled: !!user,
+    });
+
+    const course = courseData?.course;
+    const enrollment = enrollmentData?.enrollments?.find((e) => e.courseId === courseId);
+
+    // Fetch progress for this enrollment
+    const { data: progressData } = useQuery({
+        queryKey: ["progress", enrollment?.id],
+        queryFn: () => fetchProgress(enrollment!.id),
+        enabled: !!enrollment?.id,
+    });
+
+    const completedLessonIds = useMemo(() => {
+        const set = new Set<string>();
+        progressData?.progresses?.forEach((p) => {
+            if (p.isCompleted) set.add(p.lessonId);
+        });
+        return set;
+    }, [progressData]);
+
+    const completionPercentage = progressData?.completionPercentage ?? enrollment?.completionPercentage ?? 0;
+
+    // Flatten all lessons for navigation
+    const allLessons = useMemo(() => {
+        if (!course) return [];
+        return course.modules.flatMap((m) => m.lessons);
+    }, [course]);
+
+    // Auto-select first incomplete lesson
+    const defaultLesson = useMemo(() => {
+        for (const lesson of allLessons) {
+            if (!completedLessonIds.has(lesson.id)) return lesson;
+        }
+        return allLessons[allLessons.length - 1] ?? null;
+    }, [allLessons, completedLessonIds]);
+
+    const selectedLesson = useMemo(() => {
+        if (selectedLessonId) {
+            return allLessons.find((l) => l.id === selectedLessonId) ?? defaultLesson;
+        }
+        return defaultLesson;
+    }, [allLessons, defaultLesson, selectedLessonId]);
+
+    // Mutation: mark lesson complete
+    const completeMutation = useMutation({
+        mutationFn: (lessonId: string) => markLessonComplete(enrollment!.id, lessonId),
+        onSuccess: (data) => {
+            // Invalidate queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ["progress", enrollment!.id] });
+            queryClient.invalidateQueries({ queryKey: ["my-enrollments"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+
+            if (data.enrollment.completionPercentage === 100) {
+                toast.success("🎉 Selamat! Anda telah menyelesaikan course ini!");
+            } else {
+                toast.success("Aktivitas selesai! Lanjutkan ke aktivitas berikutnya.");
+            }
+
+            // Auto-advance to next lesson
+            if (selectedLesson) {
+                const currentIdx = allLessons.findIndex((l) => l.id === selectedLesson.id);
+                if (currentIdx < allLessons.length - 1) {
+                    setSelectedLessonId(allLessons[currentIdx + 1].id);
                 }
             }
-        }
+        },
+        onError: () => {
+            toast.error("Gagal menyimpan progress. Coba lagi.");
+        },
+    });
 
-        const lastModule = course.modules[course.modules.length - 1];
-        return lastModule.activities[lastModule.activities.length - 1] ?? null;
-    }, [course, enrollment]);
+    // Redirect if not authenticated
+    if (!authLoading && !isAuthenticated) {
+        router.push(`/login?redirect=/learn/${courseId}`);
+        return null;
+    }
 
-    const selectedActivity = useMemo(() => {
-        if (!course) {
-            return null;
-        }
-
-        const selected = selectedActivityId
-            ? course.modules.flatMap(courseModule => courseModule.activities).find(activity => activity.id === selectedActivityId)
-            : null;
-
-        return selected ?? defaultSelectedActivity;
-    }, [course, defaultSelectedActivity, selectedActivityId]);
-
-    useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
-            router.push(`/login?redirect=/learn/${courseId}`);
-            return;
-        }
-
-        if (user && course && !enrollment) {
-            router.push(`/course/${courseId}`);
-        }
-    }, [authLoading, isAuthenticated, user, courseId, router, course, enrollment]);
+    // Redirect if not enrolled
+    if (!courseLoading && !authLoading && user && course && !enrollment) {
+        router.push(`/course/${courseId}`);
+        return null;
+    }
 
     const toggleModule = (moduleId: string) => {
         const newCollapsed = new Set(collapsedModules);
@@ -95,65 +139,28 @@ export default function LearnPage() {
         setCollapsedModules(newCollapsed);
     };
 
-    const isActivityCompleted = (activityId: string) => {
-        return enrollment?.activityProgress.some(p => p.activityId === activityId && p.completed) || false;
-    };
-
-    const completeActivity = async () => {
-        if (!selectedActivity || !enrollment) return;
-
-        setIsCompleting(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        updateActivityProgress(enrollment.id, selectedActivity.id);
-        setProgressVersion(prev => prev + 1);
-
-        const refreshedEnrollment = getUserEnrollment(enrollment.userId, courseId);
-
-        // Check if course is now complete
-        if (refreshedEnrollment?.progress === 100) {
-            toast.success("🎉 Selamat! Anda telah menyelesaikan course ini!");
-        } else {
-            toast.success("Aktivitas selesai! Lanjutkan ke aktivitas berikutnya.");
-        }
-
-        setIsCompleting(false);
-
-        // Auto-advance to next activity
-        if (course) {
-            let foundCurrent = false;
-            for (const courseModule of course.modules) {
-                for (const activity of courseModule.activities) {
-                    if (foundCurrent) {
-                        setSelectedActivityId(activity.id);
-                        return;
-                    }
-                    if (activity.id === selectedActivity.id) {
-                        foundCurrent = true;
-                    }
-                }
-            }
-        }
-    };
-
-    const getActivityIcon = (type: Activity['type']) => {
-        switch (type) {
-            case 'video': return <Video className="h-4 w-4" />;
-            case 'quiz': return <HelpCircle className="h-4 w-4" />;
-            case 'assignment': return <FileText className="h-4 w-4" />;
-            case 'reading': return <FileText className="h-4 w-4" />;
-            case 'live-session': return <Users className="h-4 w-4" />;
+    const getActivityIcon = (type: string) => {
+        switch (type.toUpperCase()) {
+            case "VIDEO": return <Video className="h-4 w-4" />;
+            case "QUIZ": return <HelpCircle className="h-4 w-4" />;
+            case "ASSIGNMENT": return <FileText className="h-4 w-4" />;
+            case "READING": return <FileText className="h-4 w-4" />;
+            case "LIVE_SESSION": return <Users className="h-4 w-4" />;
             default: return <PlayCircle className="h-4 w-4" />;
         }
     };
 
-    if (authLoading || !course || !enrollment) {
+    const isLoading = authLoading || courseLoading || !course || !enrollment;
+
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] flex items-center justify-center">
-                <div className="animate-pulse text-gray-500">Loading...</div>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
     }
+
+    const totalDuration = allLessons.reduce((sum, l) => sum + (l.durationMin ?? 0), 0);
 
     return (
         <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] flex">
@@ -171,15 +178,15 @@ export default function LearnPage() {
                     <h2 className="font-bold text-lg line-clamp-2">{course.title}</h2>
                     <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                         <Clock className="h-4 w-4" />
-                        <span>{course.duration} jam</span>
+                        <span>{totalDuration} min</span>
                         <span className="mx-2">•</span>
-                        <span className="text-primary font-semibold">{enrollment.progress}% selesai</span>
+                        <span className="text-primary font-semibold">{completionPercentage}% selesai</span>
                     </div>
                     {/* Progress Bar */}
                     <div className="mt-3 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-primary rounded-full transition-all"
-                            style={{ width: `${enrollment.progress}%` }}
+                            style={{ width: `${completionPercentage}%` }}
                         />
                     </div>
                 </div>
@@ -206,16 +213,16 @@ export default function LearnPage() {
                             </button>
                             {!collapsedModules.has(module.id) && (
                                 <div className="pb-2">
-                                    {module.activities.map((activity) => {
-                                        const isCompleted = isActivityCompleted(activity.id);
-                                        const isSelected = selectedActivity?.id === activity.id;
+                                    {module.lessons.map((lesson) => {
+                                        const isCompleted = completedLessonIds.has(lesson.id);
+                                        const isSelected = selectedLesson?.id === lesson.id;
                                         return (
                                             <button
-                                                key={activity.id}
-                                                onClick={() => setSelectedActivityId(activity.id)}
+                                                key={lesson.id}
+                                                onClick={() => setSelectedLessonId(lesson.id)}
                                                 className={`w-full pl-16 pr-4 py-3 flex items-center gap-3 text-left text-sm transition-colors ${isSelected
-                                                    ? 'bg-primary/10 text-primary'
-                                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                                                        ? "bg-primary/10 text-primary"
+                                                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
                                                     }`}
                                             >
                                                 {isCompleted ? (
@@ -223,10 +230,12 @@ export default function LearnPage() {
                                                 ) : (
                                                     <Circle className="h-5 w-5 text-gray-300 shrink-0" />
                                                 )}
-                                                <span className={`flex-1 ${isCompleted ? 'text-gray-500 line-through' : ''}`}>
-                                                    {activity.title}
+                                                <span className={`flex-1 ${isCompleted ? "text-gray-500 line-through" : ""}`}>
+                                                    {lesson.title}
                                                 </span>
-                                                <span className="text-xs text-gray-400">{activity.duration}m</span>
+                                                {lesson.durationMin && (
+                                                    <span className="text-xs text-gray-400">{lesson.durationMin}m</span>
+                                                )}
                                             </button>
                                         );
                                     })}
@@ -237,7 +246,7 @@ export default function LearnPage() {
                 </div>
 
                 {/* Completion Status */}
-                {enrollment.progress === 100 && (
+                {completionPercentage === 100 && (
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 border-t border-green-200 dark:border-green-800">
                         <div className="flex items-center gap-3">
                             <Award className="h-8 w-8 text-green-500" />
@@ -252,26 +261,32 @@ export default function LearnPage() {
 
             {/* Main Content - Activity Viewer */}
             <main className="flex-1 flex flex-col">
-                {selectedActivity ? (
+                {selectedLesson ? (
                     <>
                         {/* Video/Content Area */}
                         <div className="aspect-video bg-black relative">
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="text-center text-white">
                                     <div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
-                                        {getActivityIcon(selectedActivity.type)}
+                                        {getActivityIcon(selectedLesson.type)}
                                     </div>
-                                    <p className="text-lg font-bold">{selectedActivity.title}</p>
+                                    <p className="text-lg font-bold">{selectedLesson.title}</p>
                                     <p className="text-sm text-white/60 mt-2">
-                                        {selectedActivity.type === 'video' ? 'Video Content' :
-                                            selectedActivity.type === 'quiz' ? 'Quiz Activity' :
-                                                selectedActivity.type === 'assignment' ? 'Assignment' :
-                                                    selectedActivity.type === 'live-session' ? 'Live Session' :
-                                                        'Reading Material'}
+                                        {selectedLesson.type === "VIDEO"
+                                            ? "Video Content"
+                                            : selectedLesson.type === "QUIZ"
+                                                ? "Quiz Activity"
+                                                : selectedLesson.type === "ASSIGNMENT"
+                                                    ? "Assignment"
+                                                    : selectedLesson.type === "LIVE_SESSION"
+                                                        ? "Live Session"
+                                                        : "Reading Material"}
                                     </p>
-                                    <p className="text-xs text-white/40 mt-4">
-                                        [Mock Content Player - {selectedActivity.duration} menit]
-                                    </p>
+                                    {selectedLesson.durationMin && (
+                                        <p className="text-xs text-white/40 mt-4">
+                                            [Content Player - {selectedLesson.durationMin} menit]
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -282,31 +297,33 @@ export default function LearnPage() {
                                 <div className="flex items-start justify-between gap-4 mb-6">
                                     <div>
                                         <span className="text-xs font-bold text-primary uppercase tracking-widest">
-                                            {selectedActivity.type}
+                                            {selectedLesson.type}
                                         </span>
-                                        <h1 className="text-2xl font-bold mt-2">{selectedActivity.title}</h1>
+                                        <h1 className="text-2xl font-bold mt-2">{selectedLesson.title}</h1>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                                        <Clock className="h-4 w-4" />
-                                        {selectedActivity.duration} menit
-                                    </div>
+                                    {selectedLesson.durationMin && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                                            <Clock className="h-4 w-4" />
+                                            {selectedLesson.durationMin} menit
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="prose dark:prose-invert max-w-none mb-8">
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        Ini adalah konten placeholder untuk aktivitas &quot;{selectedActivity.title}&quot;.
+                                        Ini adalah konten placeholder untuk aktivitas &quot;{selectedLesson.title}&quot;.
                                         Dalam implementasi nyata, konten video, quiz, atau materi bacaan akan ditampilkan di sini.
                                     </p>
                                 </div>
 
                                 {/* Complete Button */}
-                                {!isActivityCompleted(selectedActivity.id) ? (
+                                {!completedLessonIds.has(selectedLesson.id) ? (
                                     <button
-                                        onClick={completeActivity}
-                                        disabled={isCompleting}
+                                        onClick={() => completeMutation.mutate(selectedLesson.id)}
+                                        disabled={completeMutation.isPending}
                                         className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
                                     >
-                                        {isCompleting ? (
+                                        {completeMutation.isPending ? (
                                             <>
                                                 <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                                 Menyimpan...

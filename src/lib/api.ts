@@ -130,3 +130,32 @@ export function updateAdminUser(id: string, data: Partial<{ fullName: string; ro
 export function deleteAdminUser(id: string) {
     return apiFetch<{ success: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" });
 }
+
+// ── Progress ──────────────────────────────────────────────────
+export interface ApiProgress {
+    lessonId: string;
+    isCompleted: boolean;
+    completedAt: string | null;
+    score: number | null;
+}
+
+export interface ApiProgressResponse {
+    enrollmentId: string;
+    completionPercentage: number;
+    status: string;
+    progresses: ApiProgress[];
+}
+
+export function fetchProgress(enrollmentId: string) {
+    return apiFetch<ApiProgressResponse>(`/api/progress/${enrollmentId}`);
+}
+
+export function markLessonComplete(enrollmentId: string, lessonId: string) {
+    return apiFetch<{
+        progress: ApiProgress;
+        enrollment: { id: string; completionPercentage: number; status: string };
+    }>("/api/progress", {
+        method: "PUT",
+        body: JSON.stringify({ enrollmentId, lessonId }),
+    });
+}
