@@ -3,7 +3,7 @@
 
 # Stage 1: Dependencies
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Copy package files
@@ -14,6 +14,7 @@ RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
+RUN apk add --no-cache openssl
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -29,6 +30,7 @@ RUN npm run build
 
 # Stage 3: Production runner
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -37,6 +39,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy Prisma engine binaries (needed at runtime by NextAuth)
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy necessary files from builder
 COPY --from=builder /app/public ./public
