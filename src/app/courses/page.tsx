@@ -1,21 +1,21 @@
 "use client";
 
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/ui/site-header";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, ArrowRight } from "lucide-react";
-import { courses } from "@/lib/data/courses";
-
-// Map category to display format
-const categoryDisplay: Record<string, string> = {
-    foundation: "Foundation",
-    certification: "Certification",
-    masterclass: "Masterclass",
-};
-
+import { ChevronRight, ArrowRight, Loader2, BookOpen, Clock, Users } from "lucide-react";
+import { fetchCourses } from "@/lib/api";
 
 export default function CoursesPage() {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ["courses"],
+        queryFn: () => fetchCourses(),
+    });
+
+    const courses = data?.courses ?? [];
+
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark text-[#111418] dark:text-white transition-colors duration-300">
             <SiteHeader />
@@ -31,55 +31,73 @@ export default function CoursesPage() {
                     </div>
                 </ScrollReveal>
 
-                {/* Filter Pill Group */}
-                <ScrollReveal delay={100}>
-                    <div className="flex justify-center gap-3 mb-12 flex-wrap">
-                        <button className="px-6 py-2.5 rounded-full bg-primary text-white font-semibold text-sm shadow-md transition-all hover:scale-105">
-                            All Courses
-                        </button>
-                        <button className="px-6 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-primary/50 text-sm font-semibold transition-all hover:scale-105">
-                            Certification
-                        </button>
-                        <button className="px-6 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-primary/50 text-sm font-semibold transition-all hover:scale-105">
-                            Foundation
-                        </button>
-                        <button className="px-6 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-primary/50 text-sm font-semibold transition-all hover:scale-105">
-                            Masterclass
-                        </button>
+                {/* Loading */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-24">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
-                </ScrollReveal>
+                )}
+
+                {/* Error */}
+                {error && (
+                    <div className="text-center py-24 text-red-500">
+                        Failed to load courses. Please try again.
+                    </div>
+                )}
 
                 {/* Course Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {courses.map((course, index) => (
-                        <ScrollReveal key={course.id} delay={index * 100}>
-                            <div className="group flex flex-col bg-white dark:bg-white/5 rounded-xl apple-shadow overflow-hidden border border-gray-100 dark:border-white/5 hover:-translate-y-1 transition-all duration-300 h-full">
-                                <div className="aspect-[16/10] overflow-hidden">
-                                    <Image
-                                        src={course.image}
-                                        alt={course.title}
-                                        width={640}
-                                        height={400}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
+                {!isLoading && !error && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {courses.map((course, index) => (
+                            <ScrollReveal key={course.id} delay={index * 100}>
+                                <div className="group flex flex-col bg-white dark:bg-white/5 rounded-xl apple-shadow overflow-hidden border border-gray-100 dark:border-white/5 hover:-translate-y-1 transition-all duration-300 h-full">
+                                    {/* Course Thumbnail or Placeholder */}
+                                    <div className="aspect-[16/10] overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                        <BookOpen className="h-16 w-16 text-primary/30" />
+                                    </div>
+                                    <div className="p-8 flex flex-col flex-1">
+                                        <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-3">
+                                            {course.status}
+                                        </span>
+                                        <h3 className="text-xl font-bold leading-tight mb-3 group-hover:text-primary transition-colors">
+                                            {course.title}
+                                        </h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4 flex-1">
+                                            {course.description}
+                                        </p>
+                                        <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
+                                            <span className="flex items-center gap-1">
+                                                <BookOpen className="h-3.5 w-3.5" />
+                                                {course._count.modules} modules
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="h-3.5 w-3.5" />
+                                                {course.totalDurationMin} min
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Users className="h-3.5 w-3.5" />
+                                                {course._count.enrollments} enrolled
+                                            </span>
+                                        </div>
+                                        <Link
+                                            href={`/course/${course.id}`}
+                                            className="flex items-center gap-1 text-primary font-bold text-sm hover:gap-2 transition-all"
+                                        >
+                                            See Details <ChevronRight className="size-4" />
+                                        </Link>
+                                    </div>
                                 </div>
-                                <div className="p-8 flex flex-col flex-1">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-3">{categoryDisplay[course.category]}</span>
-                                    <h3 className="text-xl font-bold leading-tight mb-3 group-hover:text-primary transition-colors">{course.title}</h3>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6 flex-1">
-                                        {course.shortDescription}
-                                    </p>
-                                    <Link
-                                        href={`/course/${course.id}`}
-                                        className="flex items-center gap-1 text-primary font-bold text-sm hover:gap-2 transition-all"
-                                    >
-                                        See Details <ChevronRight className="size-4" />
-                                    </Link>
-                                </div>
-                            </div>
-                        </ScrollReveal>
-                    ))}
-                </div>
+                            </ScrollReveal>
+                        ))}
+                    </div>
+                )}
+
+                {/* Empty State */}
+                {!isLoading && !error && courses.length === 0 && (
+                    <div className="text-center py-24 text-gray-500">
+                        No courses available yet. Check back soon!
+                    </div>
+                )}
 
                 {/* CTA Section */}
                 <ScrollReveal delay={200}>

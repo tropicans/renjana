@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { cn } from "@/lib/utils";
+import { fetchDashboardStats, fetchAdminUsers, fetchCourses } from "@/lib/api";
 import {
     BookOpen,
     Layers,
@@ -9,24 +12,35 @@ import {
     Activity,
     Plus,
     ArrowRight,
+    Loader2,
 } from "lucide-react";
 
-// Mock data
-const mockStats = {
-    totalPrograms: 8,
-    totalActivities: 124,
-    activeEnrollments: 412,
-    monthlyEvents: 1847,
-};
-
-const mockRecentActivity = [
-    { id: 1, action: "Program created", item: "Advanced Mediation Skills", user: "Admin", time: "2 hours ago" },
-    { id: 2, action: "Enrollment approved", item: "Batch 2026-A (15 learners)", user: "System", time: "3 hours ago" },
-    { id: 3, action: "Activity updated", item: "Module 5: Conflict Resolution", user: "Dr. Sarah", time: "5 hours ago" },
-    { id: 4, action: "Program published", item: "Legal Framework Fundamentals", user: "Admin", time: "1 day ago" },
-];
-
 export default function AdminDashboardPage() {
+    const { data: stats, isLoading: statsLoading } = useQuery({
+        queryKey: ["dashboard-stats"],
+        queryFn: fetchDashboardStats,
+    });
+
+    const { data: usersData } = useQuery({
+        queryKey: ["admin-users"],
+        queryFn: fetchAdminUsers,
+    });
+
+    const { data: coursesData } = useQuery({
+        queryKey: ["courses"],
+        queryFn: () => fetchCourses(),
+    });
+
+    if (statsLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    const recentUsers = (usersData?.users ?? []).slice(0, 4);
+
     return (
         <div className="space-y-8">
             {/* Header */}
@@ -49,28 +63,27 @@ export default function AdminDashboardPage() {
             {/* Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Total Programs"
-                    value={mockStats.totalPrograms}
+                    title="Total Courses"
+                    value={stats?.totalCourses ?? 0}
                     icon={BookOpen}
-                    description="Active programs"
+                    description="Published programs"
                 />
                 <StatCard
-                    title="Total Activities"
-                    value={mockStats.totalActivities}
-                    icon={Layers}
-                    trend={{ value: 12, positive: true }}
+                    title="Total Users"
+                    value={stats?.totalUsers ?? 0}
+                    icon={Users}
                 />
                 <StatCard
                     title="Active Enrollments"
-                    value={mockStats.activeEnrollments}
-                    icon={Users}
+                    value={stats?.activeEnrollments ?? 0}
+                    icon={Layers}
                     trend={{ value: 8, positive: true }}
                 />
                 <StatCard
-                    title="Events This Month"
-                    value={mockStats.monthlyEvents}
+                    title="Completed"
+                    value={stats?.completedEnrollments ?? 0}
                     icon={Activity}
-                    description="Learning events"
+                    description="Enrollments completed"
                 />
             </div>
 
@@ -87,21 +100,21 @@ export default function AdminDashboardPage() {
                     <p className="text-sm text-gray-500 mt-1">Create and manage learning programs</p>
                 </Link>
                 <Link
-                    href="/admin/activities"
+                    href="/admin/users"
                     className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-6 transition-all hover:border-red-500/50 hover:shadow-lg hover:-translate-y-0.5"
                 >
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
-                        <Layers className="h-6 w-6 text-red-500" />
+                        <Users className="h-6 w-6 text-red-500" />
                     </div>
-                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Activities</h3>
-                    <p className="text-sm text-gray-500 mt-1">Define activity templates</p>
+                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Users</h3>
+                    <p className="text-sm text-gray-500 mt-1">Manage all users</p>
                 </Link>
                 <Link
                     href="/admin/enrollments"
                     className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-6 transition-all hover:border-red-500/50 hover:shadow-lg hover:-translate-y-0.5"
                 >
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
-                        <Users className="h-6 w-6 text-red-500" />
+                        <Layers className="h-6 w-6 text-red-500" />
                     </div>
                     <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Enrollments</h3>
                     <p className="text-sm text-gray-500 mt-1">Manage enrollment logic</p>
@@ -118,39 +131,68 @@ export default function AdminDashboardPage() {
                 </Link>
             </div>
 
-            {/* Recent Activity */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Recent Activity</h2>
-                    <Link
-                        href="/admin/audit"
-                        className="text-red-500 font-semibold hover:underline flex items-center gap-1"
-                    >
-                        View All
-                        <ArrowRight className="h-4 w-4" />
-                    </Link>
-                </div>
-                <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
-                    {mockRecentActivity.map((activity, index) => (
-                        <div
-                            key={activity.id}
-                            className={cn(
-                                "flex items-center justify-between p-5",
-                                index !== mockRecentActivity.length - 1 && "border-b border-gray-100 dark:border-gray-800"
-                            )}
+            {/* Recent Users */}
+            {recentUsers.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold">Recent Users</h2>
+                        <Link
+                            href="/admin/users"
+                            className="text-red-500 font-semibold hover:underline flex items-center gap-1"
                         >
-                            <div className="space-y-1">
-                                <p className="font-semibold">{activity.action}</p>
-                                <p className="text-sm text-gray-500">{activity.item}</p>
+                            View All
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
+                        {recentUsers.map((u, index) => (
+                            <div
+                                key={u.id}
+                                className={`flex items-center justify-between p-5 ${index !== recentUsers.length - 1
+                                        ? "border-b border-gray-100 dark:border-gray-800"
+                                        : ""
+                                    }`}
+                            >
+                                <div className="space-y-1">
+                                    <p className="font-semibold">{u.fullName}</p>
+                                    <p className="text-sm text-gray-500">{u.email}</p>
+                                </div>
+                                <div className="text-right">
+                                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                                        {u.role}
+                                    </span>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {u._count.enrollments} enrollments
+                                    </p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium">{activity.user}</p>
-                                <p className="text-xs text-gray-400">{activity.time}</p>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Courses Overview */}
+            {(coursesData?.courses ?? []).length > 0 && (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold">All Courses</h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {(coursesData?.courses ?? []).map((c) => (
+                            <div
+                                key={c.id}
+                                className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]"
+                            >
+                                <h3 className="font-bold">{c.title}</h3>
+                                <p className="text-sm text-gray-500 mt-1">{c.description}</p>
+                                <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                                    <span>{c._count.modules} modules</span>
+                                    <span>{c.totalLessons} lessons</span>
+                                    <span>{c._count.enrollments} enrolled</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
