@@ -217,3 +217,16 @@ export async function uploadEvidence(title: string, file: File) {
     }
     return res.json() as Promise<{ evidence: ApiEvidence }>;
 }
+
+// ── Certificates ──────────────────────────────────────────────
+export interface ApiCertificate {
+    id: string;
+    enrollmentId: string;
+    userId: string;
+    pdfUrl: string | null;
+    issuedAt: string;
+}
+
+export function fetchCertificate(enrollmentId: string) {
+    return apiFetch<{ certificate: ApiCertificate }>(`/api/certificates/${enrollmentId}`);
+}

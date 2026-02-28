@@ -64,6 +64,23 @@ export async function PUT(req: Request) {
         },
     });
 
+    // Auto-create certificate record when course completes
+    let certificateCreated = false;
+    if (completionPercentage === 100) {
+        const existing = await prisma.certificate.findUnique({
+            where: { enrollmentId },
+        });
+        if (!existing) {
+            await prisma.certificate.create({
+                data: {
+                    enrollmentId,
+                    userId: user!.id,
+                },
+            });
+            certificateCreated = true;
+        }
+    }
+
     return NextResponse.json({
         progress,
         enrollment: {
@@ -71,5 +88,7 @@ export async function PUT(req: Request) {
             completionPercentage: updatedEnrollment.completionPercentage,
             status: updatedEnrollment.status,
         },
+        certificateCreated,
     });
 }
+
