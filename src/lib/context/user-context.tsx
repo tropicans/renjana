@@ -1,104 +1,59 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { User, validateLogin, getUserByEmail, UserRole } from '@/lib/data/users';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+
+// Minimal user type based on NextAuth session
+export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'MANAGER' | 'FINANCE' | 'LEARNER';
+
+export interface User {
+    id: string;
+    email: string;
+    name: string;
+    role: UserRole;
+}
 
 interface UserContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     updateUser: (updates: Partial<User>) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'renjana_user';
-const SESSION_COOKIE = 'renjana_session';
-
-interface StoredUserSession {
-    email: string;
-}
-
-function setSessionCookie(payload: StoredUserSession & { role: UserRole }) {
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-    document.cookie = `${SESSION_COOKIE}=${encoded}; path=/; max-age=2592000; samesite=lax`;
-}
-
-function clearSessionCookie() {
-    document.cookie = `${SESSION_COOKIE}=; path=/; max-age=0; samesite=lax`;
-}
-
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(() => {
-        if (typeof window === 'undefined') {
-            return null;
+    const { data: session, status } = useSession();
+
+    const user: User | null = session?.user
+        ? {
+            id: (session.user as { id?: string }).id ?? '',
+            email: session.user.email ?? '',
+            name: session.user.name ?? '',
+            role: ((session.user as { role?: string }).role as UserRole) ?? 'LEARNER',
         }
+        : null;
 
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (!stored) {
-            return null;
-        }
-
-        try {
-            const parsedSession = JSON.parse(stored) as StoredUserSession;
-            const currentUser = getUserByEmail(parsedSession.email);
-            if (!currentUser) {
-                localStorage.removeItem(STORAGE_KEY);
-                clearSessionCookie();
-                return null;
-            }
-            setSessionCookie({ email: currentUser.email, role: currentUser.role });
-            return currentUser;
-        } catch {
-            localStorage.removeItem(STORAGE_KEY);
-            clearSessionCookie();
-            return null;
-        }
-    });
-    const [isLoading, setIsLoading] = useState(false);
-
-    const login = async (email: string, password: string) => {
-        setIsLoading(true);
-
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const validatedUser = validateLogin(email, password);
-
-        if (validatedUser) {
-            setUser(validatedUser);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: validatedUser.email }));
-            setSessionCookie({ email: validatedUser.email, role: validatedUser.role });
-            setIsLoading(false);
-            return { success: true, user: validatedUser };
-        }
-
-        setIsLoading(false);
-        return { success: false, error: 'Email atau password salah' };
+    const login = async () => {
+        // Login is now handled by NextAuth signIn() in the login form
+        return { success: false, error: 'Use NextAuth signIn() instead' };
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem(STORAGE_KEY);
-        clearSessionCookie();
+    const logout = async () => {
+        await signOut({ callbackUrl: '/login' });
     };
 
-    const updateUser = (updates: Partial<User>) => {
-        if (user) {
-            const updatedUser = { ...user, ...updates };
-            setUser(updatedUser);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: updatedUser.email }));
-            setSessionCookie({ email: updatedUser.email, role: updatedUser.role });
-        }
+    const updateUser = () => {
+        // No-op — user data comes from session
     };
 
     return (
         <UserContext.Provider
             value={{
                 user,
-                isLoading,
+                isLoading: status === 'loading',
                 isAuthenticated: !!user,
                 login,
                 logout,
@@ -121,30 +76,18 @@ export function useUser() {
 // Helper hook for role-based access
 export function useRequireAuth(allowedRoles?: UserRole[]) {
     const { user, isLoading, isAuthenticated } = useUser();
-
     const hasAccess = isAuthenticated && (!allowedRoles || (user && allowedRoles.includes(user.role)));
-
-    return {
-        user,
-        isLoading,
-        isAuthenticated,
-        hasAccess,
-    };
+    return { user, isLoading, isAuthenticated, hasAccess };
 }
 
 // Helper to get dashboard URL based on role
 export function getDashboardUrl(role: UserRole): string {
     switch (role) {
-        case 'admin':
-            return '/admin';
-        case 'instructor':
-            return '/instructor';
-        case 'manager':
-            return '/manager';
-        case 'finance':
-            return '/finance';
-        case 'learner':
-        default:
-            return '/dashboard';
+        case 'ADMIN': return '/admin';
+        case 'INSTRUCTOR': return '/instructor';
+        case 'MANAGER': return '/manager';
+        case 'FINANCE': return '/finance';
+        case 'LEARNER':
+        default: return '/dashboard';
     }
 }

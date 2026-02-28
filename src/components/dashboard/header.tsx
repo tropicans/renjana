@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, Bell, User, LogOut, Settings, Search } from "lucide-react";
@@ -87,19 +86,7 @@ export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboa
                         onClick={() => setDropdownOpen(!dropdownOpen)}
                         className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
                     >
-                        {user?.avatar ? (
-                            <Image
-                                src={user.avatar}
-                                alt={user.name}
-                                width={36}
-                                height={36}
-                                className="h-9 w-9 rounded-full object-cover shadow-lg"
-                            />
-                        ) : (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/20">
-                                <User className="h-4 w-4" />
-                            </div>
-                        )}
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/20"><User className="h-4 w-4" /></div>
                         <div className="hidden md:block text-left">
                             <p className="text-sm font-semibold">{user?.name || 'Guest'}</p>
                             <p className="text-xs text-gray-400">{getRoleLabel(user?.role)}</p>

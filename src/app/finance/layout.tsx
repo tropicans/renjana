@@ -15,7 +15,7 @@ export default function FinanceLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
-        <RouteGuard allowedRoles={["finance"]}>
+        <RouteGuard allowedRoles={["FINANCE"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (

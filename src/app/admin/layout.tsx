@@ -15,7 +15,7 @@ export default function AdminLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
-        <RouteGuard allowedRoles={["admin"]}>
+        <RouteGuard allowedRoles={["ADMIN"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (

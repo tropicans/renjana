@@ -15,7 +15,7 @@ export default function InstructorLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
-        <RouteGuard allowedRoles={["instructor"]}>
+        <RouteGuard allowedRoles={["INSTRUCTOR"]}>
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
             {/* Mobile overlay */}
             {mobileMenuOpen && (

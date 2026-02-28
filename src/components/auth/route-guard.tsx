@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getDashboardUrl, useRequireAuth } from "@/lib/context/user-context";
-import type { UserRole } from "@/lib/data/users";
+import { getDashboardUrl, useRequireAuth, type UserRole } from "@/lib/context/user-context";
 
 interface RouteGuardProps {
     children: ReactNode;
