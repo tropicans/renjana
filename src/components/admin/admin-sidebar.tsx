@@ -95,25 +95,26 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
 
             {/* Footer - Quick Links */}
             <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-3 space-y-2">
-                <Link
+                <a
                     href="/instructor"
                     className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-primary transition-all",
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 transition-all",
                         collapsed && "justify-center px-2"
                     )}
                 >
                     <Settings className="h-4 w-4 shrink-0" />
                     {!collapsed && <span>Instructor View</span>}
-                </Link>
-                <Link
+                </a>
+                <a
                     href="/dashboard"
                     className={cn(
-                        "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-all",
-                        collapsed && "px-2"
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-blue-600 transition-all",
+                        collapsed && "justify-center px-2"
                     )}
                 >
-                    {collapsed ? "L" : "Learner View"}
-                </Link>
+                    <UserPlus className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>Learner View</span>}
+                </a>
             </div>
 
             {/* Footer */}
