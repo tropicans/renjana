@@ -159,3 +159,61 @@ export function markLessonComplete(enrollmentId: string, lessonId: string) {
         body: JSON.stringify({ enrollmentId, lessonId }),
     });
 }
+
+// ── Attendance ────────────────────────────────────────────────
+export interface ApiAttendance {
+    id: string;
+    userId: string;
+    lessonId: string;
+    checkedAt: string;
+    latitude: number | null;
+    longitude: number | null;
+    notes: string | null;
+    user?: { id: string; fullName: string; email: string };
+    lesson?: {
+        id: string;
+        title: string;
+        type: string;
+        module?: { title: string; course: { title: string } };
+    };
+}
+
+export function fetchAttendances(lessonId?: string) {
+    const qs = lessonId ? `?lessonId=${lessonId}` : "";
+    return apiFetch<{ attendances: ApiAttendance[] }>(`/api/attendance${qs}`);
+}
+
+export function checkIn(data: { lessonId: string; latitude?: number; longitude?: number; notes?: string }) {
+    return apiFetch<{ attendance: ApiAttendance }>("/api/attendance", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+// ── Evidence ──────────────────────────────────────────────────
+export interface ApiEvidence {
+    id: string;
+    userId: string;
+    title: string;
+    fileUrl: string;
+    fileType: string;
+    uploadedAt: string;
+    user?: { id: string; fullName: string; email: string };
+}
+
+export function fetchEvidences() {
+    return apiFetch<{ evidences: ApiEvidence[] }>("/api/evidence");
+}
+
+export async function uploadEvidence(title: string, file: File) {
+    const form = new FormData();
+    form.append("title", title);
+    form.append("file", file);
+
+    const res = await fetch("/api/evidence", { method: "POST", body: form });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Upload failed ${res.status}`);
+    }
+    return res.json() as Promise<{ evidence: ApiEvidence }>;
+}

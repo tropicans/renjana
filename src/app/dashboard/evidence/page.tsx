@@ -1,207 +1,171 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchEvidences, uploadEvidence, type ApiEvidence } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 import {
     Upload,
     FileCheck,
     Clock,
     CheckCircle,
-    XCircle,
-    Camera,
     File,
     Plus,
+    Loader2,
+    Image as ImageIcon,
 } from "lucide-react";
 
-// Mock evidence data
-const mockEvidence = [
-    {
-        id: "ev-1",
-        activityTitle: "Complete Module 2: Introduction to Mediation",
-        type: "Photo",
-        submittedAt: "Jan 3, 2026",
-        status: "approved",
-        fileName: "certificate-module2.jpg",
-    },
-    {
-        id: "ev-2",
-        activityTitle: "Attend Live Session: Case Study Workshop",
-        type: "Attendance",
-        submittedAt: "Jan 2, 2026",
-        status: "approved",
-        fileName: "attendance-qr-scan.png",
-    },
-    {
-        id: "ev-3",
-        activityTitle: "Submit Assignment: Conflict Analysis",
-        type: "Document",
-        submittedAt: "Jan 5, 2026",
-        status: "pending",
-        fileName: "conflict-analysis-john.pdf",
-    },
-];
-
-const statusStyles = {
-    approved: {
-        bg: "bg-green-100 dark:bg-green-900/30",
-        text: "text-green-700 dark:text-green-400",
-        icon: CheckCircle,
-    },
-    pending: {
-        bg: "bg-amber-100 dark:bg-amber-900/30",
-        text: "text-amber-700 dark:text-amber-400",
-        icon: Clock,
-    },
-    rejected: {
-        bg: "bg-red-100 dark:bg-red-900/30",
-        text: "text-red-700 dark:text-red-400",
-        icon: XCircle,
-    },
-};
-
 export default function EvidencePage() {
-    const [showUploadModal, setShowUploadModal] = React.useState(false);
+    const toast = useToast();
+    const queryClient = useQueryClient();
+    const fileRef = useRef<HTMLInputElement>(null);
+    const [title, setTitle] = useState("");
+    const [file, setFile] = useState<File | null>(null);
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["my-evidences"],
+        queryFn: fetchEvidences,
+    });
+
+    const evidences = data?.evidences ?? [];
+
+    const uploadMutation = useMutation({
+        mutationFn: () => uploadEvidence(title, file!),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-evidences"] });
+            toast.success("Evidence berhasil diupload! ✅");
+            setTitle("");
+            setFile(null);
+            if (fileRef.current) fileRef.current.value = "";
+        },
+        onError: (err) => {
+            toast.error(err.message || "Upload gagal.");
+        },
+    });
+
+    const getFileIcon = (fileType: string) => {
+        return fileType === "image" ? (
+            <ImageIcon className="h-5 w-5 text-blue-500" />
+        ) : (
+            <File className="h-5 w-5 text-red-500" />
+        );
+    };
 
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 className="text-3xl font-extrabold tracking-tight">Upload Evidence</h1>
+                <p className="text-gray-500 mt-1">Upload bukti kerja dan portofolio pembelajaran Anda</p>
+            </div>
+
+            {/* Upload Form */}
+            <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-8 space-y-6">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Plus className="h-5 w-5 text-primary" />
+                    Upload Baru
+                </h2>
+
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">Evidence</h1>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Track and manage your submitted evidence
-                    </p>
+                    <label className="block text-sm font-semibold mb-2">Judul Evidence</label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Contoh: Tugas Modul 3 - Studi Kasus"
+                        className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                    />
                 </div>
+
+                <div>
+                    <label className="block text-sm font-semibold mb-2">File (JPEG, PNG, WebP, PDF — maks 10MB)</label>
+                    <div
+                        onClick={() => fileRef.current?.click()}
+                        className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    >
+                        {file ? (
+                            <div className="flex items-center justify-center gap-3">
+                                <FileCheck className="h-8 w-8 text-green-500" />
+                                <div className="text-left">
+                                    <p className="font-semibold text-sm">{file.name}</p>
+                                    <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Upload className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                                <p className="text-sm text-gray-500">Klik atau drag file ke sini</p>
+                            </>
+                        )}
+                    </div>
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                        className="hidden"
+                    />
+                </div>
+
                 <button
-                    onClick={() => setShowUploadModal(true)}
-                    className="bg-primary text-white px-6 py-3 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2"
+                    onClick={() => uploadMutation.mutate()}
+                    disabled={!title || !file || uploadMutation.isPending}
+                    className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
-                    <Plus className="h-4 w-4" />
-                    Upload Evidence
+                    {uploadMutation.isPending ? (
+                        <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Mengupload...
+                        </>
+                    ) : (
+                        <>
+                            <Upload className="h-5 w-5" />
+                            Upload Evidence
+                        </>
+                    )}
                 </button>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-500 font-medium">
-                        {mockEvidence.filter((e) => e.status === "approved").length} Approved
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-500" />
-                    <span className="text-gray-500 font-medium">
-                        {mockEvidence.filter((e) => e.status === "pending").length} Pending Review
-                    </span>
-                </div>
-            </div>
-
             {/* Evidence List */}
-            <div className="grid gap-4">
-                {mockEvidence.map((evidence) => {
-                    const statusConfig = statusStyles[evidence.status as keyof typeof statusStyles];
-                    const StatusIcon = statusConfig.icon;
-
-                    return (
-                        <div
-                            key={evidence.id}
-                            className="flex items-center gap-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-5 hover:border-primary/50 transition-all"
-                        >
-                            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-                                {evidence.type === "Photo" ? (
-                                    <Camera className="h-6 w-6 text-primary" />
-                                ) : (
-                                    <File className="h-6 w-6 text-primary" />
-                                )}
-                            </div>
-                            <div className="flex-1 space-y-1">
-                                <h3 className="font-bold">{evidence.activityTitle}</h3>
-                                <div className="flex items-center gap-3 text-sm text-gray-400">
-                                    <span>{evidence.fileName}</span>
-                                    <span>•</span>
-                                    <span>{evidence.submittedAt}</span>
-                                </div>
-                            </div>
+            <div className="space-y-4">
+                <h2 className="text-xl font-bold">Evidence Saya</h2>
+                {isLoading ? (
+                    <div className="flex justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                ) : evidences.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                        Belum ada evidence yang diupload.
+                    </div>
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {evidences.map((ev) => (
                             <div
-                                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold ${statusConfig.bg} ${statusConfig.text}`}
+                                key={ev.id}
+                                className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] flex items-start gap-4"
                             >
-                                <StatusIcon className="h-3.5 w-3.5" />
-                                <span className="capitalize">{evidence.status}</span>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Upload Modal */}
-            {showUploadModal && (
-                <>
-                    <div
-                        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowUploadModal(false)}
-                    />
-                    <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-8 shadow-xl">
-                        <h2 className="text-xl font-bold mb-6">Upload Evidence</h2>
-
-                        <div className="space-y-5">
-                            {/* Activity Select */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold">Activity</label>
-                                <select className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm focus:border-primary outline-none">
-                                    <option>Complete Module 3: Legal Framework Basics</option>
-                                    <option>Submit Case Study Analysis</option>
-                                    <option>Read: Ethics in Mediation Practice</option>
-                                </select>
-                            </div>
-
-                            {/* Evidence Type */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold">Evidence Type</label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-all">
-                                        <Camera className="h-6 w-6 text-primary" />
-                                        <span className="text-xs font-semibold">Photo</span>
-                                    </button>
-                                    <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-all">
-                                        <File className="h-6 w-6 text-primary" />
-                                        <span className="text-xs font-semibold">Document</span>
-                                    </button>
-                                    <button className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-all">
-                                        <FileCheck className="h-6 w-6 text-primary" />
-                                        <span className="text-xs font-semibold">QR Scan</span>
-                                    </button>
+                                <div className="h-12 w-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                    {getFileIcon(ev.fileType)}
                                 </div>
-                            </div>
-
-                            {/* File Upload */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold">Upload File</label>
-                                <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 p-10 hover:border-primary/50 transition-all cursor-pointer">
-                                    <div className="text-center">
-                                        <Upload className="mx-auto h-10 w-10 text-gray-400 mb-3" />
-                                        <p className="text-sm text-gray-500">
-                                            Drag & drop or click to upload
-                                        </p>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-sm truncate">{ev.title}</h3>
+                                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {new Date(ev.uploadedAt).toLocaleDateString("id-ID", {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                        })}
+                                    </p>
+                                    <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+                                        <CheckCircle className="h-3 w-3" />
+                                        Uploaded
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Actions */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    className="flex-1 px-6 py-3 rounded-full border border-gray-200 dark:border-gray-700 font-bold text-sm hover:border-primary/50 transition-all"
-                                    onClick={() => setShowUploadModal(false)}
-                                >
-                                    Cancel
-                                </button>
-                                <button className="flex-1 bg-primary text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-primary/90 transition-all">
-                                    Submit Evidence
-                                </button>
-                            </div>
-                        </div>
+                        ))}
                     </div>
-                </>
-            )}
+                )}
+            </div>
         </div>
     );
 }
