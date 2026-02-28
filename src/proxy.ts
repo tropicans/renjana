@@ -13,7 +13,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
     "/dashboard": ["LEARNER", "ADMIN"],
 };
 
-export default auth((req) => {
+export const proxy = auth((req) => {
     const { pathname } = req.nextUrl;
 
     // Allow public routes
