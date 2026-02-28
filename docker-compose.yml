@@ -3,16 +3,61 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lmsapp
+    container_name: renjana-lmsapp
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3214:3214"
     environment:
       - NODE_ENV=production
-    # Healthcheck to ensure container is running properly
+      - DATABASE_URL=postgresql://renjana:renjana_dev@postgres:5432/renjana_db
+      - NEXTAUTH_URL=http://localhost:3214
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - renjana_network
     healthcheck:
-      test: [ "CMD", "node", "-e", "fetch('http://localhost:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))" ]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3214/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: renjana-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: renjana
+      POSTGRES_PASSWORD: renjana_dev
+      POSTGRES_DB: renjana_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - renjana_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renjana -d renjana_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: renjana-adminer
+    restart: unless-stopped
+    ports:
+      - "8888:8080"
+    depends_on:
+      - postgres
+    networks:
+      - renjana_network
+
+networks:
+  renjana_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
