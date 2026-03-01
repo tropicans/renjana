@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/courses — list published courses
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
