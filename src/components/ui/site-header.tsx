@@ -8,9 +8,11 @@ import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher, useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { useUser, getDashboardUrl } from '@/lib/context/user-context'
 
 export function SiteHeader({ className }: { className?: string }) {
     const { t } = useLanguage()
+    const { user, isAuthenticated, logout } = useUser()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
 
@@ -56,16 +58,28 @@ export function SiteHeader({ className }: { className?: string }) {
                 <div className="flex items-center gap-1 sm:gap-2">
                     <LanguageSwitcher />
                     <ThemeToggle />
-                    {/* Login - visible on medium screens and up, mobile uses hamburger menu */}
-                    <Link href="/login" className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
-                        {t.nav.login}
-                    </Link>
-                    {/* Register button with min-width for long text */}
-                    <Button asChild className="bg-primary text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-full hover:bg-opacity-90 transition-all h-8 sm:h-9 whitespace-nowrap">
-                        <Link href="/register">
-                            {t.nav.register}
-                        </Link>
-                    </Button>
+                    {/* Login / Dashboard */}
+                    {isAuthenticated ? (
+                        <>
+                            <Link href={getDashboardUrl(user!.role)} className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
+                                Dashboard
+                            </Link>
+                            <Button onClick={() => logout()} variant="outline" className="text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 transition-all h-8 sm:h-9 whitespace-nowrap hidden md:inline-flex">
+                                Logout
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/login" className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
+                                {t.nav.login}
+                            </Link>
+                            <Button asChild className="bg-primary text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-full hover:bg-opacity-90 transition-all h-8 sm:h-9 whitespace-nowrap">
+                                <Link href="/register">
+                                    {t.nav.register}
+                                </Link>
+                            </Button>
+                        </>
+                    )}
 
                     {/* Mobile Menu Button */}
                     <button
@@ -91,13 +105,31 @@ export function SiteHeader({ className }: { className?: string }) {
                                 {item.name}
                             </Link>
                         ))}
-                        <Link
-                            href="/login"
-                            onClick={() => setMenuState(false)}
-                            className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
-                        >
-                            {t.nav.login}
-                        </Link>
+                        {isAuthenticated ? (
+                            <>
+                                <Link
+                                    href={getDashboardUrl(user!.role)}
+                                    onClick={() => setMenuState(false)}
+                                    className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
+                                >
+                                    Dashboard
+                                </Link>
+                                <button
+                                    onClick={() => { setMenuState(false); logout(); }}
+                                    className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        ) : (
+                            <Link
+                                href="/login"
+                                onClick={() => setMenuState(false)}
+                                className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
+                            >
+                                {t.nav.login}
+                            </Link>
+                        )}
                     </nav>
                 </div>
             )}
