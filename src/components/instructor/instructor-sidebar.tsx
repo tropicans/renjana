@@ -11,10 +11,12 @@ import {
     ClipboardCheck,
     ChevronLeft,
     ChevronRight,
+    BookOpen,
 } from "lucide-react";
 
 const navItems = [
     { name: "Dashboard", href: "/instructor", icon: LayoutDashboard },
+    { name: "Kelola Modul", href: "/instructor/courses", icon: BookOpen },
     { name: "Learners", href: "/instructor/learners", icon: Users },
     { name: "Feedback", href: "/instructor/feedback", icon: MessageSquare },
     { name: "Attendance", href: "/instructor/attendance", icon: ClipboardCheck },
