@@ -12,12 +12,13 @@ export async function GET() {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const [totalCourses, totalEnrollments, completedEnrollments, totalAttendances, totalEvidences] = await Promise.all([
+    const [totalCourses, totalEnrollments, completedEnrollments, totalAttendances, totalEvidences, courses] = await Promise.all([
         prisma.course.count(),
         prisma.enrollment.count(),
         prisma.enrollment.count({ where: { status: "COMPLETED" } }),
         prisma.attendance.count(),
         prisma.evidence.count(),
+        prisma.course.findMany({ select: { id: true, title: true, _count: { select: { enrollments: true } } } }),
     ]);
 
     const enrollments = await prisma.enrollment.findMany({ select: { completionPercentage: true } });
@@ -34,7 +35,7 @@ export async function GET() {
     });
 
     return NextResponse.json({
-        stats: { totalCourses, totalEnrollments, completedEnrollments, totalAttendances, totalEvidences, avgProgress },
+        stats: { totalCourses, totalEnrollments, completedEnrollments, totalAttendances, totalEvidences, avgProgress, courses },
         recentEnrollments,
     });
 }

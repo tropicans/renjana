@@ -3,6 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorStats } from "@/lib/api";
+import { InstructorTrendChart } from "@/components/instructor/instructor-charts";
 import { BookOpen, Users, CheckCircle, MapPin, FileText, TrendingUp, Loader2, Clock } from "lucide-react";
 
 function StatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ElementType; color: string }) {
@@ -47,6 +48,13 @@ export default function InstructorDashboardPage() {
                 <StatCard title="Evidence" value={stats?.totalEvidences ?? 0} icon={FileText} color="bg-purple-500/10 text-purple-500" />
                 <StatCard title="Rata-rata Progress" value={`${stats?.avgProgress ?? 0}%`} icon={TrendingUp} color="bg-cyan-500/10 text-cyan-500" />
             </div>
+
+            {/* Trends Chart */}
+            {((stats as any)?.courses ?? []).length > 0 && (
+                <div className="mt-8">
+                    <InstructorTrendChart courses={(stats as any).courses} />
+                </div>
+            )}
 
             {/* Recent Enrollments */}
             <div className="space-y-4">

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { AdminTrendChart } from "@/components/admin/admin-charts";
 import { fetchDashboardStats, fetchAdminUsers, fetchCourses } from "@/lib/api";
 import {
     BookOpen,
@@ -131,6 +132,13 @@ export default function AdminDashboardPage() {
                 </Link>
             </div>
 
+            {/* Trends Chart */}
+            {(coursesData?.courses ?? []).length > 0 && (
+                <div className="mt-8">
+                    <AdminTrendChart coursesData={coursesData!.courses} />
+                </div>
+            )}
+
             {/* Recent Users */}
             {recentUsers.length > 0 && (
                 <div className="space-y-4">
@@ -149,8 +157,8 @@ export default function AdminDashboardPage() {
                             <div
                                 key={u.id}
                                 className={`flex items-center justify-between p-5 ${index !== recentUsers.length - 1
-                                        ? "border-b border-gray-100 dark:border-gray-800"
-                                        : ""
+                                    ? "border-b border-gray-100 dark:border-gray-800"
+                                    : ""
                                     }`}
                             >
                                 <div className="space-y-1">
