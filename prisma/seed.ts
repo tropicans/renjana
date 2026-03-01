@@ -112,6 +112,17 @@ async function main() {
                 completionPercentage: 0,
             },
         });
+
+        await prisma.enrollment.upsert({
+            where: { userId_courseId: { userId: learner.id, courseId: createdCourses[2].id } },
+            update: {},
+            create: {
+                userId: learner.id,
+                courseId: createdCourses[2].id,
+                status: "ACTIVE",
+                completionPercentage: 0,
+            },
+        });
         console.log(`   ✅ ${learner.fullName} → ${createdCourses[0].title}`);
     }
 
