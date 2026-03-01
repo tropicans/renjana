@@ -97,11 +97,11 @@ export function LoginForm() {
             <form onSubmit={onSubmit} className="space-y-5">
                 {/* Email */}
                 <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-semibold">{t.auth.email}</label>
+                    <label htmlFor="login-email" className="text-sm font-semibold">{t.auth.email}</label>
                     <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
-                            id="email"
+                            id="login-email"
                             type="email"
                             placeholder="name@example.com"
                             required
@@ -124,7 +124,7 @@ export function LoginForm() {
                     <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
-                            id="password"
+                            id="login-password"
                             type={showPassword ? "text" : "password"}
                             placeholder="••••••••"
                             required
@@ -145,6 +145,7 @@ export function LoginForm() {
 
                 {/* Submit Button */}
                 <button
+                    id="login-submit"
                     type="submit"
                     disabled={isLoading}
                     className="w-full bg-primary text-white py-4 rounded-full font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"

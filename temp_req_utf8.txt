@@ -1,0 +1,44 @@
+TIME LINE GO LIVE RENJANA.KELAZZ.MY.ID
+
+Remarks:
+Business Adalah mengacu kepada tim RENJANA dan/atau IKAFH UNDIP yang ditunjuk
+IT Adalah mengacu kepada tim IT yang Menyusun aplikasi RENJANA
+Catatan Website/LMS
+Halaman Website diberikan penghantar 
+pengenalan Program Pembelajaran Digital, Mandiri, dan Flexble
+Pengenalan LMS dan LXP
+Pengertian Metode Pembelajaran 
+Mandiri
+hybrid
+Online/Daring
+Offline/Luring
+Dasboard User 
+Identitas user ditambahkan
+Laporan Status/Report Pencapaian Pembelajaran
+Progress hanya angka/statik
+Tidak ada visual timeline atau milestone
+Tidak ada reminder otomatis “lanjutkan modul”
+Grafik tren
+Insight otomatis (misalnya: “40% user berhenti di Modul 3”)
+Tambahkan Continue Learning Card
+Progress bar + status modul
+Dasboard Admin
+Grafik tren per program
+Database & Download peserta
+Dasboard Instructor
+Grafik tren per program
+Item bisa update modul belum ada.
+Terkait dengan pendaftaran peserta kegiatan training, yang sifanya offline seperti Webinar Umum tidak berbayar dan PKPA, Mediator berbayar ini belum ada contoh ya mas?
+Materi dan flayer kegiatan Webinar sebagai sarana di website coba dibuat contohnya mas yudi, daftar peserta dan absensi langsung ada sertifikatnya.
+
+
+
+
+
+
+
+
+
+
+
+

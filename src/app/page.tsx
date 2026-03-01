@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/ui/site-header";
 import { FAQSection } from "@/components/ui/faq-section";
 import { WhatsAppWidget } from "@/components/ui/whatsapp-widget";
+import { LearningMethodsSection } from "@/components/ui/learning-methods-section";
 import Image from "next/image";
 import Link from "next/link";
 import { PlayCircle, ArrowRight, Phone, Mail, MapPin } from "lucide-react";
@@ -170,6 +171,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Learning Methods Narratives */}
+      <LearningMethodsSection />
 
       {/* FAQ Section */}
       <FAQSection />

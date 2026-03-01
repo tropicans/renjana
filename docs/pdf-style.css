@@ -1,0 +1,144 @@
+/* Custom CSS for UAT Scenarios PDF */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: #334155;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px 40px;
+    background-color: #ffffff;
+}
+
+h1 {
+    color: #0f172a;
+    font-size: 28px;
+    font-weight: 800;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+h2 {
+    color: #1e40af;
+    /* Primary blue */
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+p {
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* Table styling for UAT Scenarios */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Remove page-break-inside: avoid to prevent large empty spaces */
+}
+
+tr {
+    /* Allow rows to break across pages if they are very long, but try to avoid it */
+    page-break-inside: auto;
+    page-break-after: auto;
+}
+
+th,
+td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    /* Align text to top for better readability on long steps */
+}
+
+th {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-weight: 600;
+    border-top: 2px solid #cbd5e1;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Specific Column Widths */
+th:nth-child(1),
+td:nth-child(1) {
+    width: 12%;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* ID */
+th:nth-child(2),
+td:nth-child(2) {
+    width: 22%;
+    font-weight: 500;
+    color: #0f172a;
+}
+
+/* Scenario */
+th:nth-child(3),
+td:nth-child(3) {
+    width: 30%;
+}
+
+/* Steps */
+th:nth-child(4),
+td:nth-child(4) {
+    width: 20%;
+}
+
+/* Expected */
+th:nth-child(5),
+td:nth-child(5) {
+    width: 8%;
+    text-align: center;
+}
+
+/* Status */
+th:nth-child(6),
+td:nth-child(6) {
+    width: 8%;
+    text-align: center;
+}
+
+/* Notes */
+
+/* Inline code / badges */
+code {
+    background-color: #f1f5f9;
+    color: #db2777;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed #cbd5e1;
+    margin: 40px 0;
+}
+
+/* Hide empty brackets in Status/Notes if any by giving them explicit space */
+td:nth-child(5),
+td:nth-child(6) {
+    min-height: 40px;
+}
