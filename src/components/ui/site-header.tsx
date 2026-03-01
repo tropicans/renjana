@@ -9,10 +9,11 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher, useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useUser, getDashboardUrl } from '@/lib/context/user-context'
+import { Loader2 } from 'lucide-react'
 
 export function SiteHeader({ className }: { className?: string }) {
     const { t } = useLanguage()
-    const { user, isAuthenticated, logout } = useUser()
+    const { user, isAuthenticated, logout, isLoading } = useUser()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
 
@@ -59,7 +60,11 @@ export function SiteHeader({ className }: { className?: string }) {
                     <LanguageSwitcher />
                     <ThemeToggle />
                     {/* Login / Dashboard */}
-                    {isAuthenticated ? (
+                    {isLoading ? (
+                        <div className="flex items-center gap-2 px-4 h-9">
+                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                        </div>
+                    ) : isAuthenticated ? (
                         <>
                             <Link href={getDashboardUrl(user!.role)} className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
                                 Dashboard
@@ -105,7 +110,11 @@ export function SiteHeader({ className }: { className?: string }) {
                                 {item.name}
                             </Link>
                         ))}
-                        {isAuthenticated ? (
+                        {isLoading ? (
+                            <div className="py-2">
+                                <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                            </div>
+                        ) : isAuthenticated ? (
                             <>
                                 <Link
                                     href={getDashboardUrl(user!.role)}
