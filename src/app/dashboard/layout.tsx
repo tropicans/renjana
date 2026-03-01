@@ -15,48 +15,48 @@ export default function DashboardLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
-        <RouteGuard allowedRoles={["LEARNER"]}>
-        <div className="min-h-screen bg-background-light dark:bg-background-dark">
-            {/* Mobile overlay */}
-            {mobileMenuOpen && (
+        <RouteGuard allowedRoles={["LEARNER", "INSTRUCTOR", "MANAGER", "FINANCE", "ADMIN"]}>
+            <div className="min-h-screen bg-background-light dark:bg-background-dark">
+                {/* Mobile overlay */}
+                {mobileMenuOpen && (
+                    <div
+                        className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                )}
+
+                {/* Sidebar - hidden on mobile unless open */}
                 <div
-                    className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
-                    onClick={() => setMobileMenuOpen(false)}
-                />
-            )}
-
-            {/* Sidebar - hidden on mobile unless open */}
-            <div
-                className={cn(
-                    "lg:block",
-                    mobileMenuOpen ? "block" : "hidden"
-                )}
-            >
-                <Sidebar
-                    collapsed={sidebarCollapsed}
-                    onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-                />
-            </div>
-
-            {/* Header */}
-            <Header
-                sidebarCollapsed={sidebarCollapsed}
-                onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                title="Learner Dashboard"
-            />
-
-            {/* Main content */}
-            <main
-                className={cn(
-                    "min-h-screen pt-16 transition-all duration-300",
-                    sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
-                )}
-            >
-                <div className="p-6 lg:p-8">
-                    {children}
+                    className={cn(
+                        "lg:block",
+                        mobileMenuOpen ? "block" : "hidden"
+                    )}
+                >
+                    <Sidebar
+                        collapsed={sidebarCollapsed}
+                        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    />
                 </div>
-            </main>
-        </div>
+
+                {/* Header */}
+                <Header
+                    sidebarCollapsed={sidebarCollapsed}
+                    onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    title="Learner Dashboard"
+                />
+
+                {/* Main content */}
+                <main
+                    className={cn(
+                        "min-h-screen pt-16 transition-all duration-300",
+                        sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
+                    )}
+                >
+                    <div className="p-6 lg:p-8">
+                        {children}
+                    </div>
+                </main>
+            </div>
         </RouteGuard>
     );
 }
