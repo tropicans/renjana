@@ -191,72 +191,96 @@ export default function LearnPage() {
                     </div>
                 </div>
 
-                {/* Modules List */}
-                <div className="flex-1 overflow-y-auto">
-                    {course.modules.map((module, index) => (
-                        <div key={module.id} className="border-b border-gray-100 dark:border-gray-800">
-                            <button
-                                onClick={() => toggleModule(module.id)}
-                                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                            >
-                                <div className="flex items-center gap-3 text-left">
-                                    <span className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
-                                        {index + 1}
-                                    </span>
-                                    <span className="font-semibold text-sm">{module.title}</span>
+                {/* Modules List - Visual Timeline */}
+                <div className="flex-1 overflow-y-auto p-4 relative">
+                    {/* Vertical connecting line for the whole timeline */}
+                    <div className="absolute left-8 top-8 bottom-8 w-px bg-gray-200 dark:bg-gray-800 hidden md:block"></div>
+
+                    <div className="relative space-y-4">
+                        {course.modules.map((module, index) => {
+                            const isModuleCollapsed = collapsedModules.has(module.id);
+                            // Check if all lessons in this module are completed
+                            const allModuleLessonsCompleted = module.lessons.length > 0 && module.lessons.every(l => completedLessonIds.has(l.id));
+
+                            return (
+                                <div key={module.id} className="relative z-10">
+                                    <button
+                                        onClick={() => toggleModule(module.id)}
+                                        className="w-full flex items-center justify-between bg-white dark:bg-[#1a242f] p-3 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:border-primary/50 transition-all group"
+                                    >
+                                        <div className="flex items-center gap-3 text-left">
+                                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${allModuleLessonsCompleted ? 'bg-green-500 border-green-500 text-white' : 'bg-white dark:bg-gray-900 border-primary text-primary'}`}>
+                                                {allModuleLessonsCompleted ? <CheckCircle2 className="h-5 w-5" /> : <span className="text-sm font-bold">{index + 1}</span>}
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block">Modul {index + 1}</span>
+                                                <span className="font-bold text-sm group-hover:text-primary transition-colors">{module.title}</span>
+                                            </div>
+                                        </div>
+                                        {!isModuleCollapsed ? (
+                                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                                        ) : (
+                                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                                        )}
+                                    </button>
+
+                                    {!isModuleCollapsed && (
+                                        <div className="pt-2 pb-4 pl-4 ml-4 border-l-2 border-dashed border-gray-200 dark:border-gray-800 space-y-1">
+                                            {module.lessons.map((lesson) => {
+                                                const isCompleted = completedLessonIds.has(lesson.id);
+                                                const isSelected = selectedLesson?.id === lesson.id;
+                                                return (
+                                                    <button
+                                                        key={lesson.id}
+                                                        onClick={() => setSelectedLessonId(lesson.id)}
+                                                        className={`w-full relative flex items-center gap-3 p-3 rounded-lg text-left text-sm transition-all ${isSelected
+                                                            ? "bg-primary/10 text-primary border border-primary/20 font-medium translate-x-1"
+                                                            : "hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-400"
+                                                            }`}
+                                                    >
+                                                        {/* Activity Connector Line to Icon */}
+                                                        <div className="absolute -left-4 top-1/2 w-4 border-t-2 border-dashed border-gray-200 dark:border-gray-800"></div>
+
+                                                        {isCompleted ? (
+                                                            <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                                                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
+                                                                {getActivityIcon(lesson.type)}
+                                                            </div>
+                                                        )}
+                                                        <span className={`flex-1 line-clamp-2 ${isCompleted ? "text-gray-400 line-through" : ""}`}>
+                                                            {lesson.title}
+                                                        </span>
+                                                        {lesson.durationMin && (
+                                                            <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full shrink-0">{lesson.durationMin}m</span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
-                                {!collapsedModules.has(module.id) ? (
-                                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                                ) : (
-                                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                                )}
-                            </button>
-                            {!collapsedModules.has(module.id) && (
-                                <div className="pb-2">
-                                    {module.lessons.map((lesson) => {
-                                        const isCompleted = completedLessonIds.has(lesson.id);
-                                        const isSelected = selectedLesson?.id === lesson.id;
-                                        return (
-                                            <button
-                                                key={lesson.id}
-                                                onClick={() => setSelectedLessonId(lesson.id)}
-                                                className={`w-full pl-16 pr-4 py-3 flex items-center gap-3 text-left text-sm transition-colors ${isSelected
-                                                        ? "bg-primary/10 text-primary"
-                                                        : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                                                    }`}
-                                            >
-                                                {isCompleted ? (
-                                                    <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                                                ) : (
-                                                    <Circle className="h-5 w-5 text-gray-300 shrink-0" />
-                                                )}
-                                                <span className={`flex-1 ${isCompleted ? "text-gray-500 line-through" : ""}`}>
-                                                    {lesson.title}
-                                                </span>
-                                                {lesson.durationMin && (
-                                                    <span className="text-xs text-gray-400">{lesson.durationMin}m</span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Completion Status */}
-                {completionPercentage === 100 && (
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border-t border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-3">
-                            <Award className="h-8 w-8 text-green-500" />
-                            <div>
-                                <p className="font-bold text-green-700 dark:text-green-400">Selamat!</p>
-                                <p className="text-sm text-green-600 dark:text-green-500">Course selesai</p>
+                {
+                    completionPercentage === 100 && (
+                        <div className="p-4 bg-green-50 dark:bg-green-900/20 border-t border-green-200 dark:border-green-800">
+                            <div className="flex items-center gap-3">
+                                <Award className="h-8 w-8 text-green-500" />
+                                <div>
+                                    <p className="font-bold text-green-700 dark:text-green-400">Selamat!</p>
+                                    <p className="text-sm text-green-600 dark:text-green-500">Course selesai</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
             </aside>
 
             {/* Main Content - Activity Viewer */}

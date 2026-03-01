@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { InsightsCard, ProgressChart } from "@/components/learner/dashboard-visuals";
 import { useUser } from "@/lib/context/user-context";
 import { fetchDashboardStats, fetchMyEnrollments } from "@/lib/api";
 import {
@@ -87,6 +88,14 @@ export default function DashboardPage() {
                 />
             </div>
 
+            {/* AI Insights Card */}
+            <InsightsCard
+                userName={user?.name?.split(" ")[0] || "Learner"}
+                completedCourses={stats?.completedCourses ?? 0}
+                activeCourses={stats?.activeCourses ?? 0}
+                totalHours={stats?.totalHoursLearned ?? 0}
+            />
+
             {/* Next Action - Prominent CTA */}
             {activeEnrollment ? (
                 <div className="rounded-3xl border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-8">
@@ -96,27 +105,20 @@ export default function DashboardPage() {
                                 <span className="rounded-full bg-primary text-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
                                     Continue Learning
                                 </span>
-                                <span className="text-sm text-primary font-semibold">
-                                    {activeEnrollment.completionPercentage}% complete
-                                </span>
                             </div>
                             <h2 className="text-2xl font-bold">{activeEnrollment.course.title}</h2>
-                            {/* Progress Bar */}
-                            <div className="w-64 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary rounded-full transition-all"
-                                    style={{ width: `${activeEnrollment.completionPercentage}%` }}
-                                />
-                            </div>
                         </div>
-                        <Link
-                            href={`/learn/${activeEnrollment.courseId}`}
-                            className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
-                        >
-                            <PlayCircle className="h-5 w-5" />
-                            Resume Course
-                            <ArrowRight className="h-4 w-4" />
-                        </Link>
+                        <div className="flex items-center gap-6">
+                            <ProgressChart completionPercentage={activeEnrollment.completionPercentage} />
+                            <Link
+                                href={`/learn/${activeEnrollment.courseId}`}
+                                className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
+                            >
+                                <PlayCircle className="h-5 w-5" />
+                                Resume Course
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             ) : enrollments.length === 0 ? (
@@ -151,44 +153,47 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* My Enrolled Courses */}
-            {enrollments.length > 0 && (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold">My Courses</h2>
-                        <Link href="/courses" className="text-sm text-primary hover:underline">
-                            View All
-                        </Link>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {enrollments.map((e) => (
-                            <Link
-                                key={e.id}
-                                href={`/learn/${e.courseId}`}
-                                className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
-                            >
-                                <h3 className="font-bold group-hover:text-primary transition-colors">
-                                    {e.course.title}
-                                </h3>
-                                <div className="mt-4">
-                                    <div className="flex justify-between text-sm text-gray-500 mb-1">
-                                        <span>{e.status === "COMPLETED" ? "Completed" : "In Progress"}</span>
-                                        <span>{e.completionPercentage}%</span>
-                                    </div>
-                                    <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary rounded-full transition-all"
-                                            style={{ width: `${e.completionPercentage}%` }}
-                                        />
-                                    </div>
-                                </div>
+            {
+                enrollments.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold">My Courses</h2>
+                            <Link href="/courses" className="text-sm text-primary hover:underline">
+                                View All
                             </Link>
-                        ))}
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {enrollments.map((e) => (
+                                <Link
+                                    key={e.id}
+                                    href={`/learn/${e.courseId}`}
+                                    className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
+                                >
+                                    <h3 className="font-bold group-hover:text-primary transition-colors">
+                                        {e.course.title}
+                                    </h3>
+                                    <div className="mt-4">
+                                        <div className="flex justify-between text-sm text-gray-500 mb-1">
+                                            <span>{e.status === "COMPLETED" ? "Completed" : "In Progress"}</span>
+                                            <span>{e.completionPercentage}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary rounded-full transition-all"
+                                                style={{ width: `${e.completionPercentage}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Quick Actions */}
             <div className="space-y-4">
@@ -220,6 +225,6 @@ export default function DashboardPage() {
                     </Link>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
