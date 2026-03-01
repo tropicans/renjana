@@ -6,15 +6,16 @@ import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchMyEnrollments, enrollInCourse } from "@/lib/api";
-import { Check, Loader2, LogIn } from "lucide-react";
+import { Check, Loader2, LogIn, Calendar, BookOpen } from "lucide-react";
 
 interface EnrollButtonProps {
     courseId: string;
     variant?: "default" | "large";
     className?: string;
+    isOfflineEvent?: boolean;
 }
 
-export function EnrollButton({ courseId, variant = "default", className }: EnrollButtonProps) {
+export function EnrollButton({ courseId, variant = "default", className, isOfflineEvent = false }: EnrollButtonProps) {
     const router = useRouter();
     const { user, isAuthenticated } = useUser();
     const toast = useToast();
@@ -59,8 +60,8 @@ export function EnrollButton({ courseId, variant = "default", className }: Enrol
                 className={`flex items-center justify-center gap-2 bg-green-500 text-white font-bold rounded-full hover:bg-green-600 transition-all ${variant === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
                     } ${className}`}
             >
-                <Check className="h-5 w-5" />
-                Lanjutkan Belajar
+                {isOfflineEvent ? <Calendar className="h-5 w-5" /> : <Check className="h-5 w-5" />}
+                {isOfflineEvent ? "Lihat Jadwal Event" : "Lanjutkan Belajar"}
             </button>
         );
     }
@@ -73,7 +74,7 @@ export function EnrollButton({ courseId, variant = "default", className }: Enrol
                     } ${className}`}
             >
                 <LogIn className="h-5 w-5" />
-                Login untuk Enroll
+                {isOfflineEvent ? "Login untuk Daftar" : "Login untuk Enroll"}
             </Link>
         );
     }
@@ -91,7 +92,10 @@ export function EnrollButton({ courseId, variant = "default", className }: Enrol
                     Processing...
                 </>
             ) : (
-                "Enroll Now"
+                <>
+                    {isOfflineEvent ? <Calendar className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+                    {isOfflineEvent ? "Daftar Webinar Sekarang" : "Enroll Now"}
+                </>
             )}
         </button>
     );

@@ -21,6 +21,7 @@ export interface ApiCourse {
     description: string | null;
     thumbnail: string | null;
     status: string;
+    type: string;
     createdAt: string;
     _count: { modules: number; enrollments: number };
     totalLessons: number;

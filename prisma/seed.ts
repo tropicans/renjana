@@ -32,6 +32,16 @@ const mockCourses = [
             { title: "Proses Persidangan", order: 2, lessons: [{ title: "Tahap-tahap Sidang Perdata", type: "VIDEO", order: 1, durationMin: 30 }, { title: "Simulasi Persidangan", type: "ASSIGNMENT", order: 2 }] },
         ],
     },
+    {
+        title: "Webinar PKPA & Sertifikasi Mediator",
+        description: "Event offline khusus: Pendidikan Khusus Profesi Advokat dan Sertifikasi Mediator dengan lokasi terpusat di Jakarta.",
+        status: "PUBLISHED" as const,
+        type: "OFFLINE_EVENT" as const,
+        modules: [
+            { title: "Materi Pra-Event", order: 1, lessons: [{ title: "Rundown dan Tata Tertib", type: "READING", order: 1 }] },
+            { title: "Pelaksanaan Event", order: 2, lessons: [{ title: "Check-in Kehadiran (Lokasi)", type: "LIVE_SESSION", order: 1 }] },
+        ],
+    },
 ];
 
 async function main() {
@@ -67,6 +77,7 @@ async function main() {
                 title: courseData.title,
                 description: courseData.description,
                 status: courseData.status,
+                type: (courseData as any).type || "ONLINE",
                 modules: {
                     create: courseData.modules.map((mod) => ({
                         title: mod.title,
@@ -76,7 +87,7 @@ async function main() {
                                 title: lesson.title,
                                 type: lesson.type,
                                 order: lesson.order,
-                                durationMin: lesson.durationMin ?? null,
+                                durationMin: (lesson as any).durationMin ?? null,
                             })),
                         },
                     })),

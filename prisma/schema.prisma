@@ -62,6 +62,7 @@ model Course {
   title       String
   description String?
   thumbnail   String?
+  type        String       @default("ONLINE") // "ONLINE" | "OFFLINE_EVENT" | "HYBRID"
   status      CourseStatus @default(DRAFT)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")

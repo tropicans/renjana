@@ -5,7 +5,7 @@ import { EnrollButton } from "@/components/course/enroll-button";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCourseById } from "@/lib/api";
 import Link from "next/link";
-import { CheckCircle, Clock, BookOpen, ArrowLeft, Users, Loader2 } from "lucide-react";
+import { CheckCircle, Clock, BookOpen, ArrowLeft, Users, Loader2, MapPin, Calendar } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function CourseDetailPage() {
@@ -50,6 +50,8 @@ export default function CourseDetailPage() {
         (sum, m) => sum + m.lessons.reduce((s, l) => s + (l.durationMin ?? 0), 0),
         0
     );
+
+    const isOfflineEvent = course.type === "OFFLINE_EVENT";
 
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased">
@@ -127,32 +129,53 @@ export default function CourseDetailPage() {
                                 <div className="bg-white dark:bg-[#1a242f] rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xl p-8 sticky top-24">
                                     {/* Gradient placeholder */}
                                     <div className="w-full aspect-video rounded-xl mb-6 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                        <BookOpen className="h-16 w-16 text-primary/30" />
+                                        {isOfflineEvent ? (
+                                            <Calendar className="h-16 w-16 text-primary/30" />
+                                        ) : (
+                                            <BookOpen className="h-16 w-16 text-primary/30" />
+                                        )}
                                     </div>
 
                                     <div className="space-y-4 mb-8">
+                                        {isOfflineEvent ? (
+                                            <>
+                                                <div className="flex items-start gap-3">
+                                                    <Calendar className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                    <span className="text-sm font-medium">Jadwal Fix Tersedia</span>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                    <span className="text-sm font-medium">Lokasi tatap muka</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-start gap-3">
+                                                    <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                    <span className="text-sm font-medium">{course.modules.length} modul terstruktur</span>
+                                                </div>
+                                                <div className="flex items-start gap-3">
+                                                    <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                    <span className="text-sm font-medium">{totalLessons} lesson interaktif</span>
+                                                </div>
+                                            </>
+                                        )}
                                         <div className="flex items-start gap-3">
                                             <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                            <span className="text-sm font-medium">{course.modules.length} modul terstruktur</span>
+                                            <span className="text-sm font-medium">Sertifikat Resmi</span>
                                         </div>
-                                        <div className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                            <span className="text-sm font-medium">{totalLessons} lesson interaktif</span>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                            <span className="text-sm font-medium">Sertifikat penyelesaian</span>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                            <span className="text-sm font-medium">Akses materi selamanya</span>
-                                        </div>
+                                        {!isOfflineEvent && (
+                                            <div className="flex items-start gap-3">
+                                                <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                                                <span className="text-sm font-medium">Akses materi selamanya</span>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <EnrollButton courseId={course.id} variant="large" className="w-full" />
+                                    <EnrollButton courseId={course.id} variant="large" className="w-full" isOfflineEvent={isOfflineEvent} />
 
                                     <p className="text-center text-gray-400 text-xs mt-4">
-                                        Free enrollment for all members
+                                        {isOfflineEvent ? "Free registration for invitees" : "Free enrollment for all members"}
                                     </p>
                                 </div>
                             </div>
@@ -165,7 +188,9 @@ export default function CourseDetailPage() {
                     <div className="max-w-[1200px] mx-auto">
                         <div className="lg:col-span-2 space-y-12">
                             <div>
-                                <h2 className="text-3xl font-bold mb-6">Syllabus / Curriculum</h2>
+                                <h2 className="text-3xl font-bold mb-6">
+                                    {isOfflineEvent ? "Event Rundown" : "Syllabus / Curriculum"}
+                                </h2>
                                 <div className="space-y-4">
                                     {course.modules.map((module, i) => (
                                         <div

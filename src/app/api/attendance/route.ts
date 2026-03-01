@@ -26,7 +26,10 @@ export async function POST(req: Request) {
     }
 
     // Verify lesson exists
-    const lesson = await prisma.lesson.findUnique({ where: { id: resolvedLessonId } });
+    const lesson = await prisma.lesson.findUnique({
+        where: { id: resolvedLessonId },
+        include: { module: { include: { course: true } } }
+    });
     if (!lesson) {
         return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
     }
@@ -44,6 +47,21 @@ export async function POST(req: Request) {
             lesson: { select: { title: true, type: true } },
         },
     });
+
+    // Auto-complete offline events if the user checks in
+    if (lesson.module?.course?.type === "OFFLINE_EVENT") {
+        await prisma.enrollment.updateMany({
+            where: {
+                userId: user!.id,
+                courseId: lesson.module.course.id,
+            },
+            data: {
+                status: "COMPLETED",
+                completionPercentage: 100,
+                completedAt: new Date(),
+            },
+        });
+    }
 
     return NextResponse.json({ attendance }, { status: 201 });
 }
