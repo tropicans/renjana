@@ -53,6 +53,8 @@ model User {
   evidences    Evidence[]
   certificates Certificate[]
   auditLogs    AuditLog[]
+  quizAttempts QuizAttempt[]
+  evaluations  Evaluation[]
 
   @@map("users")
 }
@@ -70,6 +72,8 @@ model Course {
   // Relations
   modules     Module[]
   enrollments Enrollment[]
+  quizzes     Quiz[]
+  evaluations Evaluation[]
 
   @@map("courses")
 }
@@ -183,6 +187,71 @@ model Certificate {
   user         User       @relation(fields: [userId], references: [id])
 
   @@map("certificates")
+}
+
+model Quiz {
+  id           String         @id @default(uuid())
+  courseId     String         @map("course_id")
+  type         String         // "PRE_TEST" | "POST_TEST"
+  title        String
+  timeLimit    Int?           @map("time_limit") // in minutes, null = no limit
+  passingScore Int            @default(70) @map("passing_score")
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions    QuizQuestion[]
+  attempts     QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id         String @id @default(uuid())
+  quizId     String @map("quiz_id")
+  question   String
+  options    Json   // ["option A", "option B", "option C", "option D"]
+  correctIdx Int    @map("correct_idx") // index of correct option (0-based)
+  order      Int
+
+  // Relations
+  quiz       Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String    @id @default(uuid())
+  quizId      String    @map("quiz_id")
+  userId      String    @map("user_id")
+  answers     Json      // [{ questionId, selectedIdx }]
+  score       Float     // percentage 0-100
+  passed      Boolean
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  // Relations
+  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("quiz_attempts")
+}
+
+model Evaluation {
+  id        String   @id @default(uuid())
+  courseId  String   @map("course_id")
+  userId    String   @map("user_id")
+  rating    Int      // 1-5
+  comment   String?
+  answers   Json?    // structured survey answers if needed
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([courseId, userId])
+  @@map("evaluations")
 }
 
 model AuditLog {

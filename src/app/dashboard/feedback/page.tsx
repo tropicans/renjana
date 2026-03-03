@@ -1,134 +1,114 @@
+"use client";
+
 import React from "react";
-import { Star, MessageSquare, Calendar, User } from "lucide-react";
-
-// Mock feedback data
-const mockFeedback = [
-    {
-        id: "fb-1",
-        activityTitle: "Submit Assignment: Conflict Analysis",
-        program: "Mediator Certification Program",
-        instructor: "Dr. Sarah Wijaya",
-        date: "Jan 4, 2026",
-        rating: 4,
-        comment:
-            "Excellent analysis of the conflict dynamics. Your identification of underlying interests was particularly insightful. Consider expanding on the power imbalance section in future assignments.",
-    },
-    {
-        id: "fb-2",
-        activityTitle: "Complete Module 2: Introduction to Mediation",
-        program: "Mediator Certification Program",
-        instructor: "Prof. Ahmad Rahman",
-        date: "Jan 2, 2026",
-        rating: 5,
-        comment:
-            "Outstanding performance on the module quiz. You demonstrated a strong understanding of mediation fundamentals. Keep up the excellent work!",
-    },
-    {
-        id: "fb-3",
-        activityTitle: "Attend Live Session: Case Study Workshop",
-        program: "Advanced Mediation Skills",
-        instructor: "Dr. Sarah Wijaya",
-        date: "Dec 28, 2025",
-        rating: 4,
-        comment:
-            "Good participation during the workshop. Your role-play as the mediator showed promising skills. Practice active listening techniques to further improve.",
-    },
-];
-
-function StarRating({ rating }: { rating: number }) {
-    return (
-        <div className="flex gap-0.5">
-            {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                    key={star}
-                    className={`h-4 w-4 ${star <= rating
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-gray-300 dark:text-gray-600"
-                        }`}
-                />
-            ))}
-        </div>
-    );
-}
+import { useQuery } from "@tanstack/react-query";
+import { fetchEvaluations } from "@/lib/api";
+import {
+    MessageSquare,
+    Star,
+    Loader2,
+    ClipboardCheck,
+} from "lucide-react";
 
 export default function FeedbackPage() {
+    // Fetch all user's evaluations (uses the learner path — returns own evaluations)
+    const { data, isLoading } = useQuery({
+        queryKey: ["my-evaluations"],
+        queryFn: () => fetchEvaluations(),
+    });
+
+    const evaluations = data?.evaluations ?? [];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8">
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-extrabold tracking-tight">Feedback</h1>
-                <p className="text-gray-500 dark:text-gray-400">
-                    Review feedback from your instructors
+                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    Riwayat feedback dan evaluasi yang telah Anda berikan
                 </p>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                    <span className="text-gray-500 font-medium">
-                        {mockFeedback.length} Total Feedback
-                    </span>
+            {/* Summary */}
+            {evaluations.length > 0 && (
+                <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <MessageSquare className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{evaluations.length}</p>
+                            <p className="text-xs text-gray-500">Total Evaluasi Diberikan</p>
+                        </div>
+                        <div className="ml-auto flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                            <span className="font-bold">
+                                {(evaluations.reduce((sum, e) => sum + e.rating, 0) / evaluations.length).toFixed(1)}
+                            </span>
+                            <span className="text-xs text-gray-500">rata-rata</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                    <span className="text-gray-500 font-medium">
-                        {(
-                            mockFeedback.reduce((acc, f) => acc + f.rating, 0) /
-                            mockFeedback.length
-                        ).toFixed(1)}{" "}
-                        Average Rating
-                    </span>
-                </div>
-            </div>
+            )}
 
             {/* Feedback List */}
-            <div className="grid gap-4">
-                {mockFeedback.map((feedback) => (
-                    <div
-                        key={feedback.id}
-                        className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-6 space-y-4 hover:border-primary/50 transition-all"
-                    >
-                        {/* Header */}
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1">
-                                <h3 className="font-bold text-lg">{feedback.activityTitle}</h3>
-                                <p className="text-sm text-gray-500">
-                                    {feedback.program}
+            {evaluations.length > 0 ? (
+                <div className="grid gap-4">
+                    {evaluations.map((evaluation) => (
+                        <div
+                            key={evaluation.id}
+                            className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] space-y-3"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <h3 className="font-bold text-lg">{evaluation.course?.title ?? "Course"}</h3>
+                                <div className="flex gap-0.5 shrink-0">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                            key={star}
+                                            className={`h-4 w-4 ${star <= evaluation.rating
+                                                ? "fill-amber-400 text-amber-400"
+                                                : "text-gray-300 dark:text-gray-600"
+                                                }`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            {evaluation.comment ? (
+                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                                    &ldquo;{evaluation.comment}&rdquo;
                                 </p>
-                            </div>
-                            <StarRating rating={feedback.rating} />
+                            ) : (
+                                <p className="text-gray-400 dark:text-gray-600 text-sm italic">
+                                    Tidak ada komentar
+                                </p>
+                            )}
+                            <p className="text-xs text-gray-400">
+                                {new Date(evaluation.createdAt).toLocaleDateString("id-ID", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                })}
+                            </p>
                         </div>
-
-                        {/* Comment */}
-                        <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                            {feedback.comment}
-                        </p>
-
-                        {/* Meta */}
-                        <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-sm text-gray-400">
-                            <div className="flex items-center gap-1.5">
-                                <User className="h-4 w-4" />
-                                <span>{feedback.instructor}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <Calendar className="h-4 w-4" />
-                                <span>{feedback.date}</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Empty state */}
-            {mockFeedback.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="rounded-2xl bg-primary/10 p-6 mb-4">
-                        <MessageSquare className="h-10 w-10 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-bold">No feedback yet</h3>
-                    <p className="text-gray-500">
-                        Complete activities to receive feedback from instructors.
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <ClipboardCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p>Belum ada evaluasi yang diberikan.</p>
+                    <p className="text-sm mt-1">
+                        Selesaikan course dan berikan evaluasi melalui halaman{" "}
+                        <a href="/dashboard/evaluations" className="text-primary hover:underline">
+                            Evaluasi
+                        </a>.
                     </p>
                 </div>
             )}
