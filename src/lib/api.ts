@@ -309,3 +309,105 @@ export function fetchInstructorStats() {
 export function fetchInstructorLearners() {
     return apiFetch<{ enrollments: Array<{ id: string; userId: string; courseId: string; status: string; completionPercentage: number; enrolledAt: string; user: { id: string; fullName: string; email: string }; course: { id: string; title: string }; certificate: { id: string; issuedAt: string } | null }>; stats: { totalLearners: number; activeEnrollments: number; completedEnrollments: number; avgCompletion: number } }>("/api/instructor/learners");
 }
+
+// ── Quizzes ────────────────────────────────────────────────────
+export interface ApiQuizSummary {
+    id: string;
+    courseId: string;
+    type: string;
+    title: string;
+    timeLimit: number | null;
+    passingScore: number;
+    questionCount: number;
+    lastAttempt: {
+        id: string;
+        score: number;
+        passed: boolean;
+        completedAt: string | null;
+    } | null;
+}
+
+export interface ApiQuizQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    order: number;
+}
+
+export interface ApiQuizDetail {
+    id: string;
+    courseId: string;
+    type: string;
+    title: string;
+    timeLimit: number | null;
+    passingScore: number;
+    questions: ApiQuizQuestion[];
+}
+
+export interface ApiQuizAttemptResult {
+    id: string;
+    score: number;
+    passed: boolean;
+    totalQuestions: number;
+    correctCount: number;
+    answers: Array<{
+        questionId: string;
+        selectedIdx: number;
+        correctIdx: number;
+        isCorrect: boolean;
+    }>;
+    completedAt: string | null;
+}
+
+export interface ApiQuizAttempt {
+    id: string;
+    score: number;
+    passed: boolean;
+    answers: unknown;
+    startedAt: string;
+    completedAt: string | null;
+}
+
+export function fetchQuizzes(courseId: string) {
+    return apiFetch<{ quizzes: ApiQuizSummary[] }>(`/api/quizzes/${courseId}`);
+}
+
+export function fetchQuizDetail(courseId: string, quizId: string) {
+    return apiFetch<{ quiz: ApiQuizDetail }>(`/api/quizzes/${courseId}/${quizId}`);
+}
+
+export function submitQuiz(courseId: string, quizId: string, answers: Array<{ questionId: string; selectedIdx: number }>) {
+    return apiFetch<{ attempt: ApiQuizAttemptResult }>(`/api/quizzes/${courseId}/${quizId}/submit`, {
+        method: "POST",
+        body: JSON.stringify({ answers }),
+    });
+}
+
+export function fetchQuizAttempts(courseId: string, quizId: string) {
+    return apiFetch<{ attempts: ApiQuizAttempt[] }>(`/api/quizzes/${courseId}/${quizId}/attempts`);
+}
+
+// ── Evaluations ───────────────────────────────────────────────
+export interface ApiEvaluation {
+    id: string;
+    courseId: string;
+    userId: string;
+    rating: number;
+    comment: string | null;
+    answers: unknown;
+    createdAt: string;
+    course?: { id: string; title: string };
+    user?: { id: string; fullName: string; email: string };
+}
+
+export function fetchEvaluations(courseId?: string) {
+    const qs = courseId ? `?courseId=${courseId}` : "";
+    return apiFetch<{ evaluations: ApiEvaluation[]; avgRating?: number; total?: number }>(`/api/evaluations${qs}`);
+}
+
+export function submitEvaluation(data: { courseId: string; rating: number; comment?: string }) {
+    return apiFetch<{ evaluation: ApiEvaluation }>("/api/evaluations", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}

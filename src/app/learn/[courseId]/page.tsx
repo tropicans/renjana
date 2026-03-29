@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCourseById, fetchMyEnrollments, fetchProgress, markLessonComplete } from "@/lib/api";
+import { fetchCourseById, fetchMyEnrollments, fetchProgress, markLessonComplete, fetchQuizzes } from "@/lib/api";
 import { useState, useMemo } from "react";
 import {
     ArrowLeft,
@@ -21,6 +21,8 @@ import {
     Users,
     Award,
     Loader2,
+    ClipboardCheck,
+    AlertTriangle,
 } from "lucide-react";
 
 export default function LearnPage() {
@@ -57,6 +59,16 @@ export default function LearnPage() {
         queryFn: () => fetchProgress(enrollment!.id),
         enabled: !!enrollment?.id,
     });
+
+    // Fetch quizzes (pre/post test)
+    const { data: quizData } = useQuery({
+        queryKey: ["quizzes", courseId],
+        queryFn: () => fetchQuizzes(courseId),
+        enabled: !!courseId && !!enrollment,
+    });
+
+    const preTest = quizData?.quizzes?.find((q) => q.type === "PRE_TEST");
+    const postTest = quizData?.quizzes?.find((q) => q.type === "POST_TEST");
 
     const completedLessonIds = useMemo(() => {
         const set = new Set<string>();
@@ -285,6 +297,73 @@ export default function LearnPage() {
 
             {/* Main Content - Activity Viewer */}
             <main className="flex-1 flex flex-col">
+                {/* Pre-test Banner */}
+                {preTest && !preTest.lastAttempt && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 px-8 py-4">
+                        <div className="flex items-center justify-between max-w-3xl">
+                            <div className="flex items-center gap-3">
+                                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                                <div>
+                                    <p className="font-bold text-amber-700 dark:text-amber-400">Pre-Test Tersedia</p>
+                                    <p className="text-sm text-amber-600 dark:text-amber-500">Kerjakan pre-test sebelum memulai course</p>
+                                </div>
+                            </div>
+                            <Link
+                                href={`/dashboard/quiz/${courseId}/${preTest.id}`}
+                                className="px-5 py-2 bg-amber-500 text-white rounded-full font-bold text-sm hover:opacity-90 transition-all"
+                            >
+                                Kerjakan Pre-Test
+                            </Link>
+                        </div>
+                    </div>
+                )}
+                {preTest?.lastAttempt && (
+                    <div className="bg-green-50 dark:bg-green-900/10 border-b border-green-200 dark:border-green-800 px-8 py-3">
+                        <div className="flex items-center gap-3 max-w-3xl">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <p className="text-sm text-green-700 dark:text-green-400">
+                                Pre-Test selesai — Skor: <span className="font-bold">{preTest.lastAttempt.score}%</span>
+                                {preTest.lastAttempt.passed ? " ✅" : " (belum lulus)"}
+                            </p>
+                        </div>
+                    </div>
+                )}
+                {/* Post-test Banner */}
+                {postTest && completionPercentage === 100 && !postTest.lastAttempt && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 px-8 py-4">
+                        <div className="flex items-center justify-between max-w-3xl">
+                            <div className="flex items-center gap-3">
+                                <ClipboardCheck className="h-5 w-5 text-blue-500" />
+                                <div>
+                                    <p className="font-bold text-blue-700 dark:text-blue-400">Post-Test Tersedia</p>
+                                    <p className="text-sm text-blue-600 dark:text-blue-500">Course selesai! Kerjakan post-test untuk mengukur pemahaman</p>
+                                </div>
+                            </div>
+                            <Link
+                                href={`/dashboard/quiz/${courseId}/${postTest.id}`}
+                                className="px-5 py-2 bg-blue-500 text-white rounded-full font-bold text-sm hover:opacity-90 transition-all"
+                            >
+                                Kerjakan Post-Test
+                            </Link>
+                        </div>
+                    </div>
+                )}
+                {postTest?.lastAttempt && completionPercentage === 100 && (
+                    <div className="bg-green-50 dark:bg-green-900/10 border-b border-green-200 dark:border-green-800 px-8 py-3">
+                        <div className="flex items-center gap-3 max-w-3xl">
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <p className="text-sm text-green-700 dark:text-green-400">
+                                Post-Test selesai — Skor: <span className="font-bold">{postTest.lastAttempt.score}%</span>
+                                {postTest.lastAttempt.passed ? " ✅" : " (belum lulus)"}
+                                {preTest?.lastAttempt && (
+                                    <span className="ml-2 text-gray-500">
+                                        (Pre: {preTest.lastAttempt.score}% → Post: {postTest.lastAttempt.score}%)
+                                    </span>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                )}
                 {selectedLesson ? (
                     <>
                         {/* Video/Content Area */}

@@ -13,12 +13,14 @@ import {
     ChevronLeft,
     ChevronRight,
     Settings,
+    ClipboardCheck,
 } from "lucide-react";
 
 const navItems = [
     { name: "Home", href: "/dashboard", icon: Home },
     { name: "Action Queue", href: "/dashboard/actions", icon: ListTodo },
     { name: "Evidence", href: "/dashboard/evidence", icon: FileCheck },
+    { name: "Evaluasi", href: "/dashboard/evaluations", icon: ClipboardCheck },
     { name: "Feedback", href: "/dashboard/feedback", icon: MessageSquare },
 ];
 
