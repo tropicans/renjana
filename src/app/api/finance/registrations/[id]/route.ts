@@ -24,7 +24,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { error } = await requireRole("FINANCE", "ADMIN");
+    const { user, error } = await requireRole("FINANCE", "ADMIN");
     if (error) return error;
 
     const { id } = await params;
@@ -66,6 +66,20 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         });
     }
 
+    if (documentUpdates.length > 0) {
+        await prisma.auditLog.create({
+            data: {
+                userId: user!.id,
+                action: "REVIEW_PAYMENT_PROOF",
+                entity: "REGISTRATION",
+                entityId: id,
+                metadata: {
+                    documentUpdates,
+                },
+            },
+        });
+    }
+
     const updated = await prisma.registration.update({
         where: { id },
         data: {
@@ -78,6 +92,31 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             documents: { orderBy: { createdAt: "asc" } },
         },
     });
+
+    if (paymentStatus || adminNote !== undefined) {
+        await prisma.auditLog.create({
+            data: {
+                userId: user!.id,
+                action: paymentStatus === "VERIFIED"
+                    ? "VERIFY_REGISTRATION_PAYMENT"
+                    : paymentStatus === "REJECTED"
+                        ? "REJECT_REGISTRATION_PAYMENT"
+                        : "UPDATE_REGISTRATION_PAYMENT_NOTE",
+                entity: "PAYMENT",
+                entityId: id,
+                metadata: {
+                    previous: {
+                        paymentStatus: registration.paymentStatus,
+                        adminNote: registration.adminNote,
+                    },
+                    next: {
+                        paymentStatus: updated.paymentStatus,
+                        adminNote: updated.adminNote,
+                    },
+                },
+            },
+        });
+    }
 
     return NextResponse.json({ registration: updated });
 }

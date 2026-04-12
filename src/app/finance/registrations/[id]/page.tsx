@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { formatRupiah } from "@/lib/events";
+import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
 
 type FinanceRegistrationDetail = {
     id: string;
@@ -117,8 +118,8 @@ export default function FinanceRegistrationDetailPage() {
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
                         <h2 className="text-xl font-bold">Status Operasional</h2>
                         <div className="mt-5 grid gap-4 text-sm">
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span>Registration</span><strong>{registration.status}</strong></div>
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{registration.paymentStatus}</strong></div>
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span>Registration</span><strong>{getRegistrationStatusLabel(registration.status)}</strong></div>
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{getPaymentStatusLabel(registration.paymentStatus)}</strong></div>
                             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span>Total fee</span><strong>{formatRupiah(registration.totalFee)}</strong></div>
                         </div>
                     </section>

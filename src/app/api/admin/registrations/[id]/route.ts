@@ -33,7 +33,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { error } = await requireRole("ADMIN");
+    const { user, error } = await requireRole("ADMIN");
     if (error) return error;
 
     const { id } = await params;
@@ -63,6 +63,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                 },
             })
         ));
+
+        await prisma.auditLog.create({
+            data: {
+                userId: user!.id,
+                action: "UPDATE_REGISTRATION_DOCUMENT_REVIEW",
+                entity: "REGISTRATION",
+                entityId: id,
+                metadata: {
+                    documentUpdates,
+                },
+            },
+        });
     }
 
     const updated = await prisma.registration.update({
@@ -83,6 +95,35 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             documents: { orderBy: { createdAt: "asc" } },
         },
     });
+
+    if (status || paymentStatus || adminNote !== undefined) {
+        await prisma.auditLog.create({
+            data: {
+                userId: user!.id,
+                action: status === "APPROVED"
+                    ? "APPROVE_REGISTRATION"
+                    : status === "REJECTED"
+                        ? "REJECT_REGISTRATION"
+                        : status === "REVISION_REQUIRED"
+                            ? "REQUEST_REGISTRATION_REVISION"
+                            : "UPDATE_REGISTRATION",
+                entity: "REGISTRATION",
+                entityId: id,
+                metadata: {
+                    previous: {
+                        status: registration.status,
+                        paymentStatus: registration.paymentStatus,
+                        adminNote: registration.adminNote,
+                    },
+                    next: {
+                        status: updated.status,
+                        paymentStatus: updated.paymentStatus,
+                        adminNote: updated.adminNote,
+                    },
+                },
+            },
+        });
+    }
 
     return NextResponse.json({ registration: updated });
 }

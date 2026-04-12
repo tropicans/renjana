@@ -9,6 +9,7 @@ import { fetchAdminRegistrations } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/lib/context/user-context";
 import { formatRupiah } from "@/lib/events";
+import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
 
 function readinessClasses(status: string) {
     if (status === "issued" || status === "ready") {
@@ -334,8 +335,8 @@ export default function AdminRegistrationsPage() {
                                     <td className="p-4"><Link href={`/admin/registrations/${registration.id}`} className="block hover:text-primary"><p className="font-medium">{registration.user.fullName}</p><p className="text-xs text-gray-500">{registration.user.email}</p></Link></td>
                                     <td className="p-4"><div><p className="font-medium">{registration.event.title}</p><p className="text-xs text-gray-500">{registration.event.category}</p></div></td>
                                     <td className="p-4 text-gray-500">{registration.participantMode}</td>
-                                    <td className="p-4"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{registration.status}</span></td>
-                                    <td className="p-4 text-gray-500">{registration.paymentStatus}</td>
+                                    <td className="p-4"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">{getRegistrationStatusLabel(registration.status)}</span></td>
+                                    <td className="p-4 text-gray-500">{getPaymentStatusLabel(registration.paymentStatus)}</td>
                                     <td className="p-4">
                                         <div className="space-y-2">
                                             <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${readinessClasses(registration.certificateReadiness.status)}`}>

@@ -114,6 +114,21 @@ export interface ApiRegistrationDocument {
     adminNote: string | null;
 }
 
+export interface ApiRegistrationPayment {
+    id: string;
+    provider: string;
+    externalId: string;
+    invoiceId: string | null;
+    invoiceUrl: string | null;
+    amount: number;
+    currency: string;
+    status: string;
+    expiresAt: string | null;
+    paidAt: string | null;
+    payerEmail: string | null;
+    description: string | null;
+}
+
 export interface ApiRegistration {
     id: string;
     userId: string;
@@ -143,6 +158,7 @@ export interface ApiRegistration {
     updatedAt: string;
     event: Pick<ApiEvent, "id" | "slug" | "title" | "category" | "modality" | "status" | "eventStart" | "registrationEnd" | "courseId">;
     documents: ApiRegistrationDocument[];
+    payments?: ApiRegistrationPayment[];
 }
 
 export interface ApiAdminCourseDetail {
@@ -220,6 +236,21 @@ export async function uploadRegistrationDocument(registrationId: string, type: s
     }
 
     return res.json() as Promise<{ document: ApiRegistrationDocument }>;
+}
+
+export async function createRegistrationPaymentCheckout(registrationId: string) {
+    const res = await fetch("/api/payments/doku/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationId }),
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Payment creation failed ${res.status}`);
+    }
+
+    return res.json() as Promise<{ payment: ApiRegistrationPayment; reused?: boolean }>;
 }
 
 // ── Enrollments ────────────────────────────────────────────────

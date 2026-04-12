@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle2, ChevronDown, FileText, Loader2, UploadCloud } 
 import { RouteGuard } from "@/components/auth/route-guard";
 import { SiteHeader } from "@/components/ui/site-header";
 import { useToast } from "@/components/ui/toast";
-import { fetchEventBySlug, fetchMyRegistrations, saveRegistration, uploadRegistrationDocument } from "@/lib/api";
+import { createRegistrationPaymentCheckout, fetchEventBySlug, fetchMyRegistrations, saveRegistration, uploadRegistrationDocument } from "@/lib/api";
 import { useUser } from "@/lib/context/user-context";
 import { formatRupiah } from "@/lib/events";
 
@@ -144,6 +144,10 @@ export default function EventRegistrationPage() {
 
     const event = eventData?.event;
     const existingRegistration = registrationsData?.registrations.find((registration) => registration.event.slug === slug);
+    const paymentGatewayEnabled = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "DOKU";
+    const activeDocumentDefinitions = paymentGatewayEnabled
+        ? documentDefinitions.filter((definition) => definition.type !== "PAYMENT_PROOF")
+        : documentDefinitions;
 
     const validateBeforeSubmit = React.useCallback(() => {
         const missingFields = Object.entries({
@@ -159,13 +163,13 @@ export default function EventRegistrationPage() {
             .map(([key]) => fieldLabels[key]);
 
         const uploadedTypes = new Set(existingRegistration?.documents.map((document) => document.type) ?? []);
-        for (const definition of documentDefinitions) {
+        for (const definition of activeDocumentDefinitions) {
             if (files[definition.type]) {
                 uploadedTypes.add(definition.type);
             }
         }
 
-        const missingDocuments = documentDefinitions
+        const missingDocuments = activeDocumentDefinitions
             .filter((definition) => !uploadedTypes.has(definition.type))
             .map((definition) => definition.label);
 
@@ -182,7 +186,7 @@ export default function EventRegistrationPage() {
         }
 
         return true;
-    }, [existingRegistration?.documents, files, form, toast]);
+    }, [activeDocumentDefinitions, existingRegistration?.documents, files, form, toast]);
 
     React.useEffect(() => {
         if (!existingRegistration) return;
@@ -218,7 +222,7 @@ export default function EventRegistrationPage() {
                 submit: false,
             });
 
-            for (const definition of documentDefinitions) {
+            for (const definition of activeDocumentDefinitions) {
                 const file = files[definition.type];
                 if (file) {
                     await uploadRegistrationDocument(draft.registration.id, definition.type, file);
@@ -235,13 +239,24 @@ export default function EventRegistrationPage() {
                 submit: true,
             });
         },
-        onSuccess: async (_, submit) => {
+        onSuccess: async (result, submit) => {
             await queryClient.invalidateQueries({ queryKey: ["my-registrations"] });
             if (event) {
                 await queryClient.invalidateQueries({ queryKey: ["event", event.slug] });
             }
-            toast.success(submit ? "Pendaftaran berhasil dikirim untuk verifikasi." : "Draft pendaftaran tersimpan.");
+            toast.success(submit ? (paymentGatewayEnabled ? "Pendaftaran berhasil dikirim. Checkout pembayaran sedang disiapkan." : "Pendaftaran berhasil dikirim untuk verifikasi.") : "Draft pendaftaran tersimpan.");
             if (submit) {
+                if (paymentGatewayEnabled) {
+                    try {
+                        const paymentResult = await createRegistrationPaymentCheckout(result.registration.id);
+                        if (paymentResult.payment.invoiceUrl) {
+                            window.open(paymentResult.payment.invoiceUrl, "_blank", "noopener,noreferrer");
+                        }
+                    } catch (paymentError) {
+                        const message = paymentError instanceof Error ? paymentError.message : "Gagal membuat invoice pembayaran";
+                        toast.warning(message);
+                    }
+                }
                 router.push(`/my-registrations?submitted=1&event=${event?.slug ?? slug}`);
             }
         },
@@ -298,7 +313,7 @@ export default function EventRegistrationPage() {
     const registrationPeriod = formatEventDateRange(event.registrationStart, event.registrationEnd);
     const eventPeriod = formatEventDateRange(event.eventStart, event.eventEnd);
     const uploadedTypes = new Set(existingRegistration?.documents.map((document) => document.type) ?? []);
-    for (const definition of documentDefinitions) {
+    for (const definition of activeDocumentDefinitions) {
         if (files[definition.type]) {
             uploadedTypes.add(definition.type);
         }
@@ -313,7 +328,7 @@ export default function EventRegistrationPage() {
         form.whatsapp,
         form.institution,
     ].every((value) => value.trim());
-    const documentsComplete = documentDefinitions.every((definition) => uploadedTypes.has(definition.type));
+    const documentsComplete = activeDocumentDefinitions.every((definition) => uploadedTypes.has(definition.type));
     const flowSections = [
         { label: "1. Persetujuan & mode", complete: agreementsComplete },
         { label: "2. Data diri", complete: identityComplete },
@@ -618,10 +633,11 @@ export default function EventRegistrationPage() {
                                     <div>
                                         <h2 className="text-2xl font-bold">Dokumen dan sumber informasi</h2>
                                         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Upload dokumen wajib dan bantu kami mengetahui kanal promosi yang efektif.</p>
+                                        {paymentGatewayEnabled ? <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">Pembayaran menggunakan checkout DOKU. Bukti pembayaran manual tidak wajib diunggah.</p> : null}
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
-                                        {documentDefinitions.map((definition) => {
+                                        {activeDocumentDefinitions.map((definition) => {
                                             const uploaded = existingRegistration?.documents.find((document) => document.type === definition.type);
                                             return (
                                                 <label key={definition.type} className="rounded-2xl border border-dashed border-slate-300 p-5 text-sm dark:border-slate-700">

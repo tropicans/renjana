@@ -387,9 +387,34 @@ model Registration {
   user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   event                 Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
   documents             RegistrationDocument[]
+  payments              RegistrationPayment[]
 
   @@unique([userId, eventId])
   @@map("registrations")
+}
+
+model RegistrationPayment {
+  id             String   @id @default(uuid())
+  registrationId String   @map("registration_id")
+  provider       String
+  externalId     String   @unique @map("external_id")
+  invoiceId      String?  @unique @map("invoice_id")
+  invoiceUrl     String?  @map("invoice_url")
+  amount         Int
+  currency       String   @default("IDR")
+  status         String   @default("PENDING")
+  expiresAt      DateTime? @map("expires_at")
+  paidAt         DateTime? @map("paid_at")
+  payerEmail     String?  @map("payer_email")
+  description    String?
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
+  @@map("registration_payments")
 }
 
 model RegistrationDocument {

@@ -5,6 +5,12 @@ export const REGISTRATION_DOCUMENT_TYPES = [
     "DIPLOMA_OR_SKL",
 ] as const;
 
+export const REGISTRATION_SUPPORTING_DOCUMENT_TYPES = [
+    "PHOTO_4X6",
+    "KTP",
+    "DIPLOMA_OR_SKL",
+] as const;
+
 export type RegistrationDocumentType = (typeof REGISTRATION_DOCUMENT_TYPES)[number];
 
 export const SOURCE_CHANNELS = ["INSTAGRAM", "TIKTOK", "OTHER"] as const;
@@ -24,6 +30,10 @@ export function slugifyEventTitle(value: string) {
 
 export function isRegistrationDocumentType(value: string): value is RegistrationDocumentType {
     return REGISTRATION_DOCUMENT_TYPES.includes(value as RegistrationDocumentType);
+}
+
+export function getRequiredRegistrationDocumentTypes(useGatewayPayment: boolean) {
+    return useGatewayPayment ? REGISTRATION_SUPPORTING_DOCUMENT_TYPES : REGISTRATION_DOCUMENT_TYPES;
 }
 
 export function isSourceChannel(value: string): value is SourceChannel {

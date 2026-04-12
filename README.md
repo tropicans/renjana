@@ -82,6 +82,12 @@ npm run dev
 | `NEXTAUTH_URL` | ✅ | Application URL |
 | `NEXTAUTH_SECRET` | ✅ | JWT signing secret |
 | `AUTH_TRUST_HOST` | ✅ | Set `true` for Docker/proxy |
+| `NEXT_PUBLIC_PAYMENT_PROVIDER` | — | Set `DOKU` to enable DOKU checkout flow |
+| `DOKU_API_BASE_URL` | — | DOKU API base URL (sandbox or production) |
+| `DOKU_CLIENT_ID` | — | DOKU client identifier |
+| `DOKU_SECRET_KEY` | — | DOKU secret key used for request signing |
+| `DOKU_WEBHOOK_URL` | — | Public callback URL registered in DOKU |
+| `DOKU_WEBHOOK_TOKEN` | — | Token used to validate DOKU webhook callbacks |
 | `NODE_ENV` | — | `development` or `production` |
 
 ---

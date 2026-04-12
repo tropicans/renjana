@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
-import { calculateEventTotalFee, isParticipantMode, isSourceChannel, REGISTRATION_DOCUMENT_TYPES } from "@/lib/events";
+import { calculateEventTotalFee, getRequiredRegistrationDocumentTypes, isParticipantMode, isSourceChannel } from "@/lib/events";
+import { getDokuPublicConfig } from "@/lib/doku";
 
 export async function GET() {
     const { user, error } = await requireAuth();
@@ -30,6 +31,10 @@ export async function GET() {
                     reviewStatus: true,
                     fileUrl: true,
                 },
+            },
+            payments: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
             },
         },
         orderBy: { createdAt: "desc" },
@@ -125,7 +130,7 @@ export async function POST(req: Request) {
         ].filter(([, value]) => !value).map(([key]) => key);
 
         const uploadedTypes = new Set(registration.documents.map((document: { type: string }) => document.type));
-        const missingDocuments = REGISTRATION_DOCUMENT_TYPES.filter((type) => !uploadedTypes.has(type));
+        const missingDocuments = getRequiredRegistrationDocumentTypes(getDokuPublicConfig().enabled).filter((type) => !uploadedTypes.has(type));
 
         if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
             await prisma.registration.update({
@@ -159,6 +164,10 @@ export async function POST(req: Request) {
         include: {
             event: true,
             documents: true,
+            payments: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
+            },
         },
     });
 
