@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 // Routes that are always public (no auth needed)
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/events", "/courses", "/course", "/about-us", "/contact", "/career", "/news"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/events", "/courses", "/course", "/about-us", "/contact", "/career", "/news", "/news-and-publications", "/privacy", "/terms"];
 
 // Route prefix → required role(s)
 const ROLE_ROUTES: Record<string, string[]> = {

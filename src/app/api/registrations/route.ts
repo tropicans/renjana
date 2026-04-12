@@ -115,25 +115,33 @@ export async function POST(req: Request) {
 
     if (submit) {
         const missingFields = [
-            registration.fullName,
-            registration.birthPlace,
-            registration.birthDate,
-            registration.gender,
-            registration.domicileAddress,
-            registration.whatsapp,
-            registration.institution,
-        ].some((value) => !value);
+            ["fullName", registration.fullName],
+            ["birthPlace", registration.birthPlace],
+            ["birthDate", registration.birthDate],
+            ["gender", registration.gender],
+            ["domicileAddress", registration.domicileAddress],
+            ["whatsapp", registration.whatsapp],
+            ["institution", registration.institution],
+        ].filter(([, value]) => !value).map(([key]) => key);
 
         const uploadedTypes = new Set(registration.documents.map((document: { type: string }) => document.type));
         const missingDocuments = REGISTRATION_DOCUMENT_TYPES.filter((type) => !uploadedTypes.has(type));
 
-        if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields || missingDocuments.length > 0) {
+        if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
             await prisma.registration.update({
                 where: { id: registration.id },
                 data: { status: "DRAFT", submittedAt: null },
             });
             return NextResponse.json(
-                { error: "Complete the required form fields and uploads before submitting" },
+                {
+                    error: "Complete the required form fields and uploads before submitting",
+                    details: {
+                        missingFields,
+                        missingDocuments,
+                        agreedTerms: registration.agreedTerms,
+                        agreedRefundPolicy: registration.agreedRefundPolicy,
+                    },
+                },
                 { status: 400 },
             );
         }

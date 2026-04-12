@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, FileText, Loader2, UploadCloud } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, FileText, Loader2, UploadCloud } from "lucide-react";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { SiteHeader } from "@/components/ui/site-header";
 import { useToast } from "@/components/ui/toast";
@@ -37,6 +37,47 @@ const documentDefinitions = [
     { type: "DIPLOMA_OR_SKL", label: "Scan ijazah / SKL" },
 ] as const;
 
+function toChecklistItems(value: string | null | undefined, fallback: string[]) {
+    const raw = value?.trim();
+    if (!raw) return fallback;
+
+    return raw
+        .split(/\r?\n+/)
+        .map((item) => item.replace(/^[-*\d.)\s]+/, "").trim())
+        .filter(Boolean);
+}
+
+function isPkpaEvent(event: { title: string; category: string }) {
+    const haystack = `${event.title} ${event.category}`.toLowerCase();
+    return haystack.includes("pkpa") || haystack.includes("advokat");
+}
+
+function formatEventDateRange(start: string | null | undefined, end: string | null | undefined) {
+    if (!start) return null;
+
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : null;
+
+    const formatter = new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+
+    if (!endDate) return formatter.format(startDate);
+    return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
+}
+
+const fieldLabels: Record<string, string> = {
+    fullName: "Nama lengkap",
+    birthPlace: "Tempat lahir",
+    birthDate: "Tanggal lahir",
+    gender: "Jenis kelamin",
+    domicileAddress: "Alamat domisili",
+    whatsapp: "Nomor WhatsApp",
+    institution: "Instansi / Universitas",
+};
+
 const initialState: FormState = {
     participantMode: "ONLINE",
     agreedTerms: false,
@@ -64,6 +105,10 @@ export default function EventRegistrationPage() {
     const [step, setStep] = React.useState(1);
     const [form, setForm] = React.useState<FormState>(initialState);
     const [files, setFiles] = React.useState<Partial<Record<(typeof documentDefinitions)[number]["type"], File>>>({});
+    const [expandedPolicies, setExpandedPolicies] = React.useState<{ terms: boolean; refund: boolean }>({
+        terms: false,
+        refund: false,
+    });
 
     const { data: eventData, isLoading: eventLoading } = useQuery({
         queryKey: ["event", slug],
@@ -79,6 +124,45 @@ export default function EventRegistrationPage() {
 
     const event = eventData?.event;
     const existingRegistration = registrationsData?.registrations.find((registration) => registration.event.slug === slug);
+
+    const validateBeforeSubmit = React.useCallback(() => {
+        const missingFields = Object.entries({
+            fullName: form.fullName,
+            birthPlace: form.birthPlace,
+            birthDate: form.birthDate,
+            gender: form.gender,
+            domicileAddress: form.domicileAddress,
+            whatsapp: form.whatsapp,
+            institution: form.institution,
+        })
+            .filter(([, value]) => !value.trim())
+            .map(([key]) => fieldLabels[key]);
+
+        const uploadedTypes = new Set(existingRegistration?.documents.map((document) => document.type) ?? []);
+        for (const definition of documentDefinitions) {
+            if (files[definition.type]) {
+                uploadedTypes.add(definition.type);
+            }
+        }
+
+        const missingDocuments = documentDefinitions
+            .filter((definition) => !uploadedTypes.has(definition.type))
+            .map((definition) => definition.label);
+
+        if (!form.agreedTerms || !form.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
+            const parts = [
+                !form.agreedTerms ? "setujui tata tertib" : null,
+                !form.agreedRefundPolicy ? "setujui kebijakan refund" : null,
+                missingFields.length > 0 ? `lengkapi: ${missingFields.join(", ")}` : null,
+                missingDocuments.length > 0 ? `upload: ${missingDocuments.join(", ")}` : null,
+            ].filter(Boolean);
+
+            toast.error(`Pendaftaran belum bisa dikirim, ${parts.join("; ")}.`);
+            return false;
+        }
+
+        return true;
+    }, [existingRegistration?.documents, files, form, toast]);
 
     React.useEffect(() => {
         if (!existingRegistration) return;
@@ -104,6 +188,9 @@ export default function EventRegistrationPage() {
     const saveMutation = useMutation({
         mutationFn: async (submit: boolean) => {
             if (!event) throw new Error("Event not found");
+            if (submit && !validateBeforeSubmit()) {
+                throw new Error("Lengkapi form dan dokumen sebelum submit.");
+            }
 
             const draft = await saveRegistration({
                 eventId: event.id,
@@ -138,7 +225,11 @@ export default function EventRegistrationPage() {
                 window.location.href = "/my-registrations";
             }
         },
-        onError: (error: Error) => toast.error(error.message),
+        onError: (error: Error) => {
+            if (error.message !== "Lengkapi form dan dokumen sebelum submit.") {
+                toast.error(error.message);
+            }
+        },
     });
 
     if (authLoading || eventLoading || (isAuthenticated && registrationsLoading)) {
@@ -151,6 +242,41 @@ export default function EventRegistrationPage() {
 
     const onlineTotal = (event.onlineTuitionFee ?? 0) + (event.registrationFee ?? 0);
     const offlineTotal = (event.offlineTuitionFee ?? 0) + (event.registrationFee ?? 0);
+    const pkpaLike = isPkpaEvent(event);
+    const termsItems = toChecklistItems(event.termsSummary, pkpaLike ? [
+        "Peserta diwajibkan mengikuti seluruh sesi pelatihan PKPA secara tertib sesuai jadwal yang berlaku.",
+        "Materi yang dibagikan penyelenggara dipakai untuk belajar pribadi dan tidak untuk diperjualbelikan atau disebarluaskan tanpa izin.",
+        "Selama sesi berlangsung, peserta wajib menjaga nama akun, identitas, dan ketertiban kelas sesuai arahan panitia maupun pengajar.",
+        "Kehadiran, keterlibatan, tugas, dan evaluasi menjadi bagian dari penilaian kelulusan program dan penerbitan sertifikat.",
+        "Peserta online wajib menggunakan identitas yang jelas saat masuk sesi dan menjaga partisipasi aktif selama pembelajaran.",
+        "Pelanggaran tata tertib dapat menjadi dasar evaluasi admin atau penghentian hak peserta pada program berjalan.",
+    ] : [
+        "Peserta wajib mengikuti alur registrasi dan verifikasi sesuai jadwal yang ditentukan.",
+        "Data peserta harus valid karena dipakai untuk administrasi, evaluasi, dan sertifikat.",
+        "Akses pembelajaran, quiz, dan sertifikat mengikuti aturan event dan course yang terhubung.",
+    ]);
+    const refundItems = toChecklistItems(event.refundPolicySummary, pkpaLike ? [
+        "Dengan mengirim formulir ini, peserta menyatakan memahami bahwa pendaftaran yang sudah diajukan tidak dapat dibatalkan sepihak setelah diverifikasi panitia.",
+        "Biaya pendaftaran yang sudah dibayarkan tidak dapat dikembalikan kecuali ada kebijakan resmi dari penyelenggara atau kegiatan dibatalkan oleh pihak penyelenggara.",
+        "Pembayaran yang sudah tercatat tidak dapat dialihkan atas nama peserta lain tanpa persetujuan admin.",
+        "Manfaat biaya hanya berlaku untuk periode program berjalan dan tidak otomatis dipindahkan ke tahun berikutnya.",
+    ] : [
+        "Biaya yang sudah dibayarkan diverifikasi lebih dulu sebelum status registrasi diproses admin.",
+        "Pembatalan atau perubahan keikutsertaan mengikuti evaluasi admin dan kebijakan penyelenggara event.",
+        "Jika ada revisi dokumen atau pembayaran, peserta harus melengkapi ulang sebelum pendaftaran dinyatakan final.",
+    ]);
+    const feeLines = [
+        { label: "Biaya pendidikan online", value: event.onlineTuitionFee ?? 0 },
+        { label: "Biaya pendaftaran online", value: event.registrationFee ?? 0 },
+        { label: "Total online", value: onlineTotal, emphasis: true },
+        { label: "Biaya pendidikan offline", value: event.offlineTuitionFee ?? 0 },
+        { label: "Biaya pendaftaran offline", value: event.registrationFee ?? 0 },
+        { label: "Total offline", value: offlineTotal, emphasis: true },
+    ];
+    const termsPreview = termsItems.slice(0, 2);
+    const refundPreview = refundItems.slice(0, 2);
+    const registrationPeriod = formatEventDateRange(event.registrationStart, event.registrationEnd);
+    const eventPeriod = formatEventDateRange(event.eventStart, event.eventEnd);
 
     return (
         <RouteGuard allowedRoles={["LEARNER"]}>
@@ -203,10 +329,164 @@ export default function EventRegistrationPage() {
                                         ))}
                                     </div>
 
+                                    <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/60">
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpandedPolicies((prev) => ({ ...prev, terms: !prev.terms }))}
+                                            className="flex w-full items-start justify-between gap-4 text-left"
+                                        >
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Applicant Agreement</p>
+                                                <p className="mt-2 text-lg font-bold text-slate-900 dark:text-white">
+                                                    {pkpaLike ? "Tata tertib PKPA dan alur pelaksanaan" : "Tata tertib dan alur pelaksanaan"}
+                                                </p>
+                                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                                                    Ringkasan aturan utama tetap terlihat. Buka detail lengkap bila ingin membaca seluruh poin sebelum menyetujui.
+                                                </p>
+                                            </div>
+                                            <span className={`mt-1 rounded-full border border-slate-200 p-2 transition dark:border-slate-700 ${expandedPolicies.terms ? "rotate-180" : ""}`}>
+                                                <ChevronDown className="h-4 w-4" />
+                                            </span>
+                                        </button>
+
+                                        {pkpaLike ? (
+                                            <div className="mt-4 rounded-[24px] border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950/70">
+                                                <p className="text-center text-sm font-bold uppercase tracking-[0.08em] text-slate-900 dark:text-white">
+                                                    Pendidikan Khusus Profesi Advokat
+                                                </p>
+                                                <p className="mt-1 text-center text-xs font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                                                    Tata Tertib dan Ketentuan Peserta
+                                                </p>
+                                                <div className="mt-4 grid gap-2 text-xs text-slate-500 dark:text-slate-400 md:grid-cols-2">
+                                                    <p><span className="font-semibold text-slate-700 dark:text-slate-200">Periode pendaftaran:</span> {registrationPeriod || "Mengikuti jadwal admin"}</p>
+                                                    <p><span className="font-semibold text-slate-700 dark:text-slate-200">Jadwal pendidikan:</span> {eventPeriod || event.scheduleSummary || "Mengikuti jadwal yang diumumkan"}</p>
+                                                    <p className="md:col-span-2"><span className="font-semibold text-slate-700 dark:text-slate-200">Narahubung:</span> {event.contactName || "Admin Renjana"}{event.contactPhone ? ` (${event.contactPhone})` : ""}</p>
+                                                </div>
+                                            </div>
+                                        ) : null}
+
+                                        {pkpaLike ? (
+                                            <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm leading-6 text-slate-700 dark:border-primary/20 dark:bg-primary/10 dark:text-slate-200">
+                                                Dengan mengisi formulir ini, saya menyepakati dan siap menjalankan PKPA sesuai dengan tata tertib PKPA FH UNDIP 2026 yang berlaku.
+                                            </div>
+                                        ) : null}
+
+                                        <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                            {termsPreview.map((item, index) => (
+                                                <li key={item} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
+                                                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{index + 1}</span>
+                                                    <span>{item}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        {expandedPolicies.terms ? (
+                                            <ul className="mt-3 space-y-3 border-t border-dashed border-slate-200 pt-4 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                                                {termsItems.slice(termsPreview.length).map((item, index) => (
+                                                    <li key={item} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
+                                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{termsPreview.length + index + 1}</span>
+                                                        <span>{item}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : null}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpandedPolicies((prev) => ({ ...prev, terms: !prev.terms }))}
+                                            className="mt-4 text-sm font-semibold text-primary hover:underline"
+                                        >
+                                            {expandedPolicies.terms ? "Sembunyikan detail tata tertib" : "Baca tata tertib lengkap"}
+                                        </button>
+                                    </div>
+
                                     <label className="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-800">
                                         <input type="checkbox" checked={form.agreedTerms} onChange={(e) => setForm((prev) => ({ ...prev, agreedTerms: e.target.checked }))} className="mt-1" />
                                         <span>Saya telah membaca dan menyetujui tata tertib serta alur pelaksanaan kegiatan.</span>
                                     </label>
+
+                                    <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/60">
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpandedPolicies((prev) => ({ ...prev, refund: !prev.refund }))}
+                                            className="flex w-full items-start justify-between gap-4 text-left"
+                                        >
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Fees & Refunds</p>
+                                                <p className="mt-2 text-lg font-bold text-slate-900 dark:text-white">Kebijakan pembatalan dan biaya</p>
+                                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                                                    Ringkasan biaya tetap tampil. Detail kebijakan pembatalan bisa dibuka saat diperlukan, tetap nyaman di mobile.
+                                                </p>
+                                            </div>
+                                            <span className={`mt-1 rounded-full border border-slate-200 p-2 transition dark:border-slate-700 ${expandedPolicies.refund ? "rotate-180" : ""}`}>
+                                                <ChevronDown className="h-4 w-4" />
+                                            </span>
+                                        </button>
+
+                                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                            <div className="rounded-2xl bg-white p-4 dark:bg-slate-950/70">
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">Rincian biaya pendidikan</p>
+                                                <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                                                    {feeLines.map((line) => (
+                                                        <div key={line.label} className={`flex items-center justify-between gap-4 ${line.emphasis ? "border-t border-dashed border-slate-200 pt-2 font-bold text-slate-900 dark:border-slate-800 dark:text-white" : ""}`}>
+                                                            <span>{line.label}</span>
+                                                            <span>{formatRupiah(line.value)}</span>
+                                                        </div>
+                                                    ))}
+                                                    {(event.alumniRegistrationFee ?? 0) > 0 ? (
+                                                        <div className="rounded-xl bg-primary/5 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                                                            Alumni / skema khusus: biaya pendaftaran dapat menyesuaikan menjadi {formatRupiah(event.alumniRegistrationFee)} sesuai kebijakan event.
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-2xl bg-white p-4 dark:bg-slate-950/70">
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">Pernyataan yang perlu dipahami</p>
+                                                <ul className="mt-3 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                                                    {refundPreview.map((item, index) => (
+                                                        <li key={item} className="flex gap-3">
+                                                            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{index + 1}</span>
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                {expandedPolicies.refund ? (
+                                                    <ul className="mt-3 space-y-3 border-t border-dashed border-slate-200 pt-3 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                                                        {refundItems.slice(refundPreview.length).map((item, index) => (
+                                                            <li key={item} className="flex gap-3">
+                                                                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{refundPreview.length + index + 1}</span>
+                                                                <span>{item}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : null}
+                                                {(event.contactName || event.contactPhone) ? (
+                                                    <div className="mt-4 rounded-xl border border-slate-200 px-3 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                                                        Narahubung: {event.contactName || "Admin Renjana"}{event.contactPhone ? ` (${event.contactPhone})` : ""}
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        </div>
+
+                                        {pkpaLike ? (
+                                            <div className="mt-4 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm leading-6 text-slate-700 dark:border-primary/20 dark:bg-primary/10 dark:text-slate-200">
+                                                Dengan mengisi formulir ini, saya telah memahami bahwa pendaftaran yang saya lakukan tidak dapat dibatalkan dan biaya yang telah dibayarkan mengikuti kebijakan resmi penyelenggara.
+                                            </div>
+                                        ) : null}
+
+                                        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-300">
+                                            Mohon baca seluruh poin di atas sebelum melanjutkan pendaftaran. Centang persetujuan berarti Anda menyetujui tata tertib, skema biaya, dan kebijakan pembatalan yang berlaku.
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setExpandedPolicies((prev) => ({ ...prev, refund: !prev.refund }))}
+                                            className="mt-4 text-sm font-semibold text-primary hover:underline"
+                                        >
+                                            {expandedPolicies.refund ? "Sembunyikan detail kebijakan" : "Baca kebijakan lengkap"}
+                                        </button>
+                                    </div>
 
                                     <label className="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-800">
                                         <input type="checkbox" checked={form.agreedRefundPolicy} onChange={(e) => setForm((prev) => ({ ...prev, agreedRefundPolicy: e.target.checked }))} className="mt-1" />

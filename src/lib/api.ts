@@ -73,6 +73,8 @@ export interface ApiEvent {
     scheduleSummary: string | null;
     contactName: string | null;
     contactPhone: string | null;
+    termsSummary: string | null;
+    refundPolicySummary: string | null;
     registrationFee: number | null;
     onlineTuitionFee: number | null;
     offlineTuitionFee: number | null;

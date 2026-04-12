@@ -10,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://renjana:renjana_dev@postgres:5432/renjana_db
-      - NEXTAUTH_URL=https://renjana.kelazz.my.id
+      - NEXTAUTH_URL=http://localhost:3214
       - NEXTAUTH_SECRET=renjana-lms-secret-key-change-in-production-2026
       - AUTH_TRUST_HOST=true
     depends_on:

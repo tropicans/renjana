@@ -64,6 +64,27 @@ const mockEvents = [
         location: "Fakultas Hukum UNDIP / Zoom",
         contactName: "Renjana",
         contactPhone: "081717777247",
+        termsSummary: `Peserta diwajibkan menaati tata tertib selama pelatihan berlangsung.
+Materi dari pengajar diberikan kepada peserta di dalam Google Drive sebelum sesi berlangsung dan hanya untuk dipelajari secara pribadi, tidak untuk disebarluaskan.
+Rekaman sesi belajar hanya untuk arsip internal panitia dan tidak untuk dibagikan.
+Peserta harus berpakaian rapi dan sopan selama sesi PKPA.
+Nama dan memori perangkat peserta wajib dijaga dengan baik selama mengikuti sesi PKPA.
+Selama pembelajaran menyala, peserta wajib menyalakan kamera dan mengikuti instruksi panitia.
+Peserta dilarang meninggalkan handphone selama pelatihan berlangsung.
+Minimal kehadiran untuk dapat menyelesaikan PKPA dan mendapatkan sertifikat adalah 80%.
+Untuk peserta online, link Zoom Meeting dibagikan khusus untuk peserta dan panitia serta tidak diperkenankan dibagikan ke pihak lain.
+Peserta wajib menggunakan nama lengkap pada Zoom masing-masing, bukan nama panggilan atau nama samaran.
+Peserta yang hendak bertanya diharapkan mengangkat fitur raise hand terlebih dahulu atau menulis pertanyaan di kolom chat dengan format nama, asal instansi.
+Daftar hadir peserta online dan offline diabsen setiap akhir sesi, dan peserta wajib mengisi form kehadiran.
+Kehadiran dan proses check-in kehadiran melalui Google Form peserta dan pendataan kehadiran manual oleh panitia.
+Peserta offline diharapkan sudah hadir di tempat PKPA paling lambat 15 menit sebelum dimulai dan mengisi daftar hadir yang disediakan.
+Peserta yang akan meninggalkan ruang kelas pada saat pelatihan berlangsung harus seizin panitia.
+Menjaga barang pribadi menjadi tanggung jawab masing-masing peserta.
+Pelanggaran terhadap tata tertib dapat menjadi bahan pertimbangan panitia dalam pemberian sertifikat pelatihan kepada peserta yang melakukan pelanggaran tersebut.`,
+        refundPolicySummary: `Dengan mengisi formulir ini, saya telah memahami bahwa pendaftaran yang saya lakukan ini tidak dapat dibatalkan.
+Biaya pendaftaran yang akan dan/atau telah saya bayarkan tidak dapat dikembalikan dengan alasan apa pun kecuali tidak terlaksananya kegiatan oleh pihak penyelenggara.
+Biaya tersebut tidak dapat pula dialihkan untuk dan atas nama orang lain.
+Biaya tersebut tidak dapat digunakan untuk kegiatan apa pun setelah lewat tahun berjalan.`,
         status: "REGISTRATION_OPEN" as const,
         learningEnabled: true,
         preTestEnabled: true,
@@ -177,6 +198,8 @@ async function main() {
                 platform: eventDataPlatform(eventData),
                 contactName: eventData.contactName,
                 contactPhone: eventData.contactPhone,
+                termsSummary: eventData.termsSummary,
+                refundPolicySummary: eventData.refundPolicySummary,
                 status: eventData.status,
                 learningEnabled: eventData.learningEnabled,
                 preTestEnabled: eventData.preTestEnabled,
@@ -205,6 +228,8 @@ async function main() {
                 platform: eventDataPlatform(eventData),
                 contactName: eventData.contactName,
                 contactPhone: eventData.contactPhone,
+                termsSummary: eventData.termsSummary,
+                refundPolicySummary: eventData.refundPolicySummary,
                 status: eventData.status,
                 learningEnabled: eventData.learningEnabled,
                 preTestEnabled: eventData.preTestEnabled,
