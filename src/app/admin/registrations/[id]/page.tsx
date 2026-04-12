@@ -98,6 +98,8 @@ export default function AdminRegistrationDetailPage() {
         });
     };
 
+    const paymentVerified = registration.paymentStatus === "VERIFIED";
+
     return (
         <div className="space-y-8">
             <Link href="/admin/registrations" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary">
@@ -112,10 +114,16 @@ export default function AdminRegistrationDetailPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <button onClick={() => mutation.mutate({ status: "REVISION_REQUIRED", adminNote })} className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-700">Minta revisi</button>
-                    <button onClick={() => mutation.mutate({ status: "APPROVED", paymentStatus: "VERIFIED", adminNote })} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white">Approve</button>
-                    <button onClick={() => mutation.mutate({ status: "REJECTED", paymentStatus: "REJECTED", adminNote })} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Reject</button>
+                    <button onClick={() => mutation.mutate({ status: "APPROVED", adminNote })} disabled={!paymentVerified} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Approve</button>
+                    <button onClick={() => mutation.mutate({ status: "REJECTED", adminNote })} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Reject</button>
                 </div>
             </div>
+
+            {!paymentVerified ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/20 dark:text-amber-300">
+                    Approval final dikunci sampai tim Finance memverifikasi pembayaran peserta. Minta Finance review payment proof lebih dulu di panel `Payment Review`.
+                </div>
+            ) : null}
 
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
                 <div className="space-y-6">

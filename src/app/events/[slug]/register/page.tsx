@@ -96,6 +96,26 @@ const initialState: FormState = {
     referralName: "",
 };
 
+function normalizeFormForCompare(form: FormState) {
+    return {
+        participantMode: form.participantMode,
+        agreedTerms: form.agreedTerms,
+        agreedRefundPolicy: form.agreedRefundPolicy,
+        fullName: form.fullName.trim(),
+        birthPlace: form.birthPlace.trim(),
+        birthDate: form.birthDate,
+        gender: form.gender,
+        domicileAddress: form.domicileAddress.trim(),
+        whatsapp: form.whatsapp.trim(),
+        institution: form.institution.trim(),
+        titlePrefix: form.titlePrefix.trim(),
+        titleSuffix: form.titleSuffix.trim(),
+        sourceChannel: form.sourceChannel,
+        sourceOtherText: form.sourceOtherText.trim(),
+        referralName: form.referralName.trim(),
+    };
+}
+
 export default function EventRegistrationPage() {
     const params = useParams<{ slug: string }>();
     const router = useRouter();
@@ -299,6 +319,56 @@ export default function EventRegistrationPage() {
         { label: "2. Data diri", complete: identityComplete },
         { label: "3. Dokumen & sumber info", complete: documentsComplete },
     ];
+    const hasNewFiles = Object.values(files).some(Boolean);
+    const isFormDirty = existingRegistration
+        ? JSON.stringify(normalizeFormForCompare(form)) !== JSON.stringify(normalizeFormForCompare({
+            participantMode: (existingRegistration.participantMode as FormState["participantMode"]) || "ONLINE",
+            agreedTerms: existingRegistration.agreedTerms,
+            agreedRefundPolicy: existingRegistration.agreedRefundPolicy,
+            fullName: existingRegistration.fullName || "",
+            birthPlace: existingRegistration.birthPlace || "",
+            birthDate: existingRegistration.birthDate ? existingRegistration.birthDate.slice(0, 10) : "",
+            gender: existingRegistration.gender || "",
+            domicileAddress: existingRegistration.domicileAddress || "",
+            whatsapp: existingRegistration.whatsapp || "",
+            institution: existingRegistration.institution || "",
+            titlePrefix: existingRegistration.titlePrefix || "",
+            titleSuffix: existingRegistration.titleSuffix || "",
+            sourceChannel: (existingRegistration.sourceChannel as FormState["sourceChannel"]) || "",
+            sourceOtherText: existingRegistration.sourceOtherText || "",
+            referralName: existingRegistration.referralName || "",
+        })) || hasNewFiles
+        : true;
+    const submitButtonLabel = existingRegistration?.status === "SUBMITTED"
+        ? (isFormDirty ? "Kirim pembaruan" : "Sudah terkirim")
+        : existingRegistration?.status === "APPROVED" || existingRegistration?.status === "ACTIVE"
+            ? (isFormDirty ? "Kirim pembaruan" : "Status sedang diproses")
+            : existingRegistration?.status === "COMPLETED"
+                ? (isFormDirty ? "Kirim pembaruan" : "Pendaftaran selesai")
+                : "Submit pendaftaran";
+
+    const handleSubmit = () => {
+        if (saveMutation.isPending) return;
+
+        if (existingRegistration && !isFormDirty) {
+            if (existingRegistration.status === "SUBMITTED") {
+                toast.info("Pendaftaran Anda sudah terkirim dan belum ada perubahan baru untuk dikirim ulang.");
+                return;
+            }
+
+            if (existingRegistration.status === "APPROVED" || existingRegistration.status === "ACTIVE") {
+                toast.info("Pendaftaran Anda sedang diproses. Tidak ada perubahan baru untuk dikirim saat ini.");
+                return;
+            }
+
+            if (existingRegistration.status === "COMPLETED") {
+                toast.info("Pendaftaran ini sudah selesai dan tidak memiliki perubahan baru untuk dikirim ulang.");
+                return;
+            }
+        }
+
+        saveMutation.mutate(true);
+    };
 
     return (
         <RouteGuard allowedRoles={["LEARNER"]}>
@@ -601,8 +671,8 @@ export default function EventRegistrationPage() {
                                     <button type="button" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300">
                                         {saveMutation.isPending ? "Menyimpan..." : "Simpan draft"}
                                     </button>
-                                    <button type="button" onClick={() => saveMutation.mutate(true)} disabled={saveMutation.isPending} className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
-                                        {saveMutation.isPending ? "Memproses..." : "Submit pendaftaran"}
+                                    <button type="button" onClick={handleSubmit} disabled={saveMutation.isPending} className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
+                                        {saveMutation.isPending ? "Memproses..." : submitButtonLabel}
                                     </button>
                                 </div>
                             </div>

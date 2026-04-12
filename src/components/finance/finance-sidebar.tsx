@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
     Receipt,
+    ShieldCheck,
     FileText,
     RotateCcw,
     ChevronLeft,
@@ -15,6 +16,7 @@ import {
 
 const navItems = [
     { name: "Overview", href: "/finance", icon: LayoutDashboard },
+    { name: "Payment Review", href: "/finance/registrations", icon: ShieldCheck },
     { name: "Transactions", href: "/finance/transactions", icon: Receipt },
     { name: "Invoices", href: "/finance/invoices", icon: FileText },
     { name: "Refunds", href: "/finance/refunds", icon: RotateCcw },

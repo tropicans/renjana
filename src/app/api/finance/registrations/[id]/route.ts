@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { error } = await requireRole("ADMIN");
+    const { error } = await requireRole("FINANCE", "ADMIN");
     if (error) return error;
 
     const { id } = await params;
@@ -11,16 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         where: { id },
         include: {
             user: { select: { id: true, fullName: true, email: true, phone: true } },
-            event: {
-                include: {
-                    course: {
-                        select: {
-                            id: true,
-                            title: true,
-                        },
-                    },
-                },
-            },
+            event: { select: { id: true, slug: true, title: true, category: true, modality: true } },
             documents: { orderBy: { createdAt: "asc" } },
         },
     });
@@ -33,53 +24,57 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { error } = await requireRole("ADMIN");
+    const { error } = await requireRole("FINANCE", "ADMIN");
     if (error) return error;
 
     const { id } = await params;
     const body = await req.json().catch(() => null);
 
-    const status = typeof body?.status === "string" ? body.status : undefined;
     const paymentStatus = typeof body?.paymentStatus === "string" ? body.paymentStatus : undefined;
     const adminNote = typeof body?.adminNote === "string" ? body.adminNote.trim() : undefined;
     const documentUpdates = Array.isArray(body?.documentUpdates) ? body.documentUpdates : [];
+
+    if (body?.status !== undefined) {
+        return NextResponse.json({ error: "Finance cannot change registration status" }, { status: 403 });
+    }
+
+    if (paymentStatus && !["PENDING", "UPLOADED", "VERIFIED", "REJECTED"].includes(paymentStatus)) {
+        return NextResponse.json({ error: "Invalid payment status" }, { status: 400 });
+    }
 
     const registration = await prisma.registration.findUnique({ where: { id } });
     if (!registration) {
         return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    if (status === "APPROVED" && registration.paymentStatus !== "VERIFIED") {
-        return NextResponse.json({ error: "Payment must be verified by Finance before approval" }, { status: 400 });
-    }
+    for (const document of documentUpdates as Array<{ id: string; reviewStatus?: string; adminNote?: string | null }>) {
+        const registrationDocument = await prisma.registrationDocument.findUnique({ where: { id: document.id } });
+        if (!registrationDocument || registrationDocument.registrationId !== id) {
+            return NextResponse.json({ error: "Document not found" }, { status: 404 });
+        }
 
-    if (documentUpdates.length > 0) {
-        await Promise.all(documentUpdates.map((document: { id: string; reviewStatus?: string; adminNote?: string | null }) =>
-            prisma.registrationDocument.update({
-                where: { id: document.id },
-                data: {
-                    ...(document.reviewStatus ? { reviewStatus: document.reviewStatus as never } : {}),
-                    ...(document.adminNote !== undefined ? { adminNote: document.adminNote?.trim() || null } : {}),
-                },
-            })
-        ));
+        if (registrationDocument.type !== "PAYMENT_PROOF") {
+            return NextResponse.json({ error: "Finance can only review payment proof documents" }, { status: 403 });
+        }
+
+        await prisma.registrationDocument.update({
+            where: { id: document.id },
+            data: {
+                ...(document.reviewStatus ? { reviewStatus: document.reviewStatus as never } : {}),
+                ...(document.adminNote !== undefined ? { adminNote: document.adminNote?.trim() || null } : {}),
+            },
+        });
     }
 
     const updated = await prisma.registration.update({
         where: { id },
         data: {
-            ...(status ? { status: status as never } : {}),
             ...(paymentStatus ? { paymentStatus: paymentStatus as never } : {}),
             ...(adminNote !== undefined ? { adminNote: adminNote || null } : {}),
-            ...(status === "APPROVED" ? { approvedAt: new Date() } : {}),
         },
         include: {
             user: { select: { id: true, fullName: true, email: true, phone: true } },
-            event: {
-                include: {
-                    course: { select: { id: true, title: true } },
-                },
-            },
+            event: { select: { id: true, slug: true, title: true, category: true, modality: true } },
             documents: { orderBy: { createdAt: "asc" } },
         },
     });
