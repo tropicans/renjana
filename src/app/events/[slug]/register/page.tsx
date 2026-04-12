@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, ChevronDown, FileText, Loader2, UploadCloud } from "lucide-react";
 import { RouteGuard } from "@/components/auth/route-guard";
@@ -98,6 +98,7 @@ const initialState: FormState = {
 
 export default function EventRegistrationPage() {
     const params = useParams<{ slug: string }>();
+    const router = useRouter();
     const slug = params.slug;
     const queryClient = useQueryClient();
     const toast = useToast();
@@ -221,7 +222,7 @@ export default function EventRegistrationPage() {
             }
             toast.success(submit ? "Pendaftaran berhasil dikirim untuk verifikasi." : "Draft pendaftaran tersimpan.");
             if (submit) {
-                window.location.href = "/my-registrations";
+                router.push(`/my-registrations?submitted=1&event=${event?.slug ?? slug}`);
             }
         },
         onError: (error: Error) => {
@@ -276,6 +277,28 @@ export default function EventRegistrationPage() {
     const refundPreview = refundItems.slice(0, 2);
     const registrationPeriod = formatEventDateRange(event.registrationStart, event.registrationEnd);
     const eventPeriod = formatEventDateRange(event.eventStart, event.eventEnd);
+    const uploadedTypes = new Set(existingRegistration?.documents.map((document) => document.type) ?? []);
+    for (const definition of documentDefinitions) {
+        if (files[definition.type]) {
+            uploadedTypes.add(definition.type);
+        }
+    }
+    const agreementsComplete = form.agreedTerms && form.agreedRefundPolicy && !!form.participantMode;
+    const identityComplete = [
+        form.fullName,
+        form.birthPlace,
+        form.birthDate,
+        form.gender,
+        form.domicileAddress,
+        form.whatsapp,
+        form.institution,
+    ].every((value) => value.trim());
+    const documentsComplete = documentDefinitions.every((definition) => uploadedTypes.has(definition.type));
+    const flowSections = [
+        { label: "1. Persetujuan & mode", complete: agreementsComplete },
+        { label: "2. Data diri", complete: identityComplete },
+        { label: "3. Dokumen & sumber info", complete: documentsComplete },
+    ];
 
     return (
         <RouteGuard allowedRoles={["LEARNER"]}>
@@ -292,13 +315,12 @@ export default function EventRegistrationPage() {
                                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Registration Flow</p>
                                 <h1 className="mt-3 text-2xl font-bold">{event.title}</h1>
                                 <div className="mt-6 space-y-3 text-sm">
-                                    {[
-                                        "1. Persetujuan & mode",
-                                        "2. Data diri",
-                                        "3. Dokumen & sumber info",
-                                    ].map((label) => (
-                                        <div key={label} className="rounded-2xl border border-slate-200 bg-primary/5 px-4 py-3 text-primary dark:border-slate-800">
-                                            {label}
+                                    {flowSections.map((section) => (
+                                        <div key={section.label} className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${section.complete ? "border-primary bg-primary/5 text-primary" : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400"}`}>
+                                            <span className={section.complete ? "font-bold" : "font-medium"}>{section.label}</span>
+                                            <span className={`rounded-full px-2 py-0.5 text-[11px] ${section.complete ? "bg-primary/10 font-bold text-primary" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+                                                {section.complete ? "Selesai" : "Pending"}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
@@ -501,6 +523,7 @@ export default function EventRegistrationPage() {
                                     <div>
                                         <h2 className="text-2xl font-bold">Data diri peserta</h2>
                                         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Data ini dipakai untuk administrasi, verifikasi, dan sertifikat.</p>
+                                        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Gelar depan dan gelar belakang sebaiknya opsional. Isi hanya jika ingin dicantumkan pada administrasi atau sertifikat.</p>
                                     </div>
 
                                     <div className="grid gap-5 md:grid-cols-2">
@@ -514,8 +537,8 @@ export default function EventRegistrationPage() {
                                         </select>
                                         <input value={form.whatsapp} onChange={(e) => setForm((prev) => ({ ...prev, whatsapp: e.target.value }))} placeholder="Nomor WhatsApp" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
                                         <input value={form.institution} onChange={(e) => setForm((prev) => ({ ...prev, institution: e.target.value }))} placeholder="Instansi / Universitas" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
-                                        <input value={form.titlePrefix} onChange={(e) => setForm((prev) => ({ ...prev, titlePrefix: e.target.value }))} placeholder="Gelar depan" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
-                                        <input value={form.titleSuffix} onChange={(e) => setForm((prev) => ({ ...prev, titleSuffix: e.target.value }))} placeholder="Gelar belakang" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
+                                        <input value={form.titlePrefix} onChange={(e) => setForm((prev) => ({ ...prev, titlePrefix: e.target.value }))} placeholder="Gelar depan (opsional)" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
+                                        <input value={form.titleSuffix} onChange={(e) => setForm((prev) => ({ ...prev, titleSuffix: e.target.value }))} placeholder="Gelar belakang (opsional)" className="rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
                                     </div>
 
                                     <textarea value={form.domicileAddress} onChange={(e) => setForm((prev) => ({ ...prev, domicileAddress: e.target.value }))} placeholder="Alamat domisili" rows={4} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />

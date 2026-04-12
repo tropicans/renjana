@@ -1,15 +1,18 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight, FileWarning, Loader2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronRight, FileWarning, Loader2 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { SiteHeader } from "@/components/ui/site-header";
 import { fetchMyRegistrations } from "@/lib/api";
 import { useUser } from "@/lib/context/user-context";
 import { formatRupiah } from "@/lib/events";
 
-export default function MyRegistrationsPage() {
+function MyRegistrationsContent() {
+    const searchParams = useSearchParams();
     const { isAuthenticated, isLoading: authLoading } = useUser();
     const { data, isLoading } = useQuery({
         queryKey: ["my-registrations"],
@@ -18,13 +21,33 @@ export default function MyRegistrationsPage() {
     });
 
     const registrations = data?.registrations ?? [];
+    const submitted = searchParams.get("submitted") === "1";
+    const submittedEventSlug = searchParams.get("event");
+    const submittedRegistration = submittedEventSlug
+        ? registrations.find((registration) => registration.event.slug === submittedEventSlug)
+        : null;
 
     return (
-        <RouteGuard allowedRoles={["LEARNER"]}>
-            <div className="min-h-screen bg-background-light dark:bg-background-dark">
-                <SiteHeader />
-                <main className="mx-auto max-w-[1200px] px-6 pb-12 pt-24 lg:px-10">
+        <div className="min-h-screen bg-background-light dark:bg-background-dark">
+            <SiteHeader />
+            <main className="mx-auto max-w-[1200px] px-6 pb-12 pt-24 lg:px-10">
                     {authLoading || isLoading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : null}
+
+                    {!authLoading && !isLoading && submitted ? (
+                        <div className="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-5 text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-300">
+                            <div className="flex items-start gap-3">
+                                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                                <div>
+                                    <p className="font-bold">Pendaftaran berhasil dikirim</p>
+                                    <p className="mt-1 text-sm leading-6">
+                                        {submittedRegistration
+                                            ? `Pendaftaran untuk ${submittedRegistration.event.title} sudah masuk ke tahap verifikasi admin. Pantau status pembayaran, dokumen, dan tindak lanjut berikutnya dari halaman ini.`
+                                            : "Pendaftaran Anda sudah masuk ke tahap verifikasi admin. Pantau status pembayaran, dokumen, dan tindak lanjut berikutnya dari halaman ini."}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
 
                     {!authLoading && !isLoading && registrations.length === 0 ? (
                         <div className="rounded-[28px] border border-dashed border-slate-300 px-8 py-16 text-center text-slate-500 dark:border-slate-700">
@@ -49,7 +72,7 @@ export default function MyRegistrationsPage() {
                                         </div>
                                     </div>
                                     <Link href={`/events/${registration.event.slug}/register`} className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
-                                        Lanjutkan <ChevronRight className="h-4 w-4" />
+                                        {registrationActionLabel(registration.status)} <ChevronRight className="h-4 w-4" />
                                     </Link>
                                 </div>
                                 <div className="mt-5 flex flex-wrap gap-6 text-sm text-slate-500 dark:text-slate-400">
@@ -60,8 +83,24 @@ export default function MyRegistrationsPage() {
                             </article>
                         ))}
                     </div>
-                </main>
-            </div>
+            </main>
+        </div>
+    );
+}
+
+export default function MyRegistrationsPage() {
+    return (
+        <RouteGuard allowedRoles={["LEARNER"]}>
+            <React.Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                <MyRegistrationsContent />
+            </React.Suspense>
         </RouteGuard>
     );
+}
+
+function registrationActionLabel(status: string) {
+    if (status === "SUBMITTED") return "Lihat status pendaftaran";
+    if (status === "APPROVED" || status === "ACTIVE") return "Kelola pendaftaran";
+    if (status === "COMPLETED") return "Lihat ringkasan";
+    return "Lanjutkan";
 }
