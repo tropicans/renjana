@@ -78,12 +78,14 @@ function MyRegistrationsContent() {
                     ) : null}
 
                     <div className="grid gap-5">
-                        {registrations.map((registration) => (
+                        {registrations.map((registration) => {
+                            const latestPayment = registration.payments?.[0];
+                            const canPayNow = paymentGatewayEnabled && ["PENDING", "REJECTED"].includes(registration.paymentStatus);
+                            const classAccessReady = registration.paymentStatus === "VERIFIED" && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status) && !!registration.classGroup;
+                            const canOpenZoom = classAccessReady && registration.classGroup?.modality === "ONLINE" && !!registration.classGroup.zoomLink;
+
+                            return (
                             <article key={registration.id} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
-                                {(() => {
-                                    const latestPayment = registration.payments?.[0];
-                                    const canPayNow = paymentGatewayEnabled && ["PENDING", "REJECTED"].includes(registration.paymentStatus);
-                                    return (
                                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                     <div className="space-y-2">
                                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{registration.event.category}</p>
@@ -105,13 +107,16 @@ function MyRegistrationsContent() {
                                                 Buka invoice <ChevronRight className="h-4 w-4" />
                                             </a>
                                         ) : null}
+                                        {canOpenZoom ? (
+                                            <a href={registration.classGroup!.zoomLink!} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                                                Masuk kelas live <ChevronRight className="h-4 w-4" />
+                                            </a>
+                                        ) : null}
                                         <Link href={`/events/${registration.event.slug}/register`} className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
                                             {registrationActionLabel(registration.status)} <ChevronRight className="h-4 w-4" />
                                         </Link>
                                     </div>
                                 </div>
-                                    );
-                                })()}
                                 <div className="mt-5 flex flex-wrap gap-6 text-sm text-slate-500 dark:text-slate-400">
                                     <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> {registration.event.eventStart ? new Date(registration.event.eventStart).toLocaleDateString("id-ID") : "Tanggal menyusul"}</div>
                                     <div>Total biaya: {formatRupiah(registration.totalFee)}</div>
@@ -126,12 +131,26 @@ function MyRegistrationsContent() {
                                             <p>Mode: {registration.classGroup.modality}</p>
                                             {registration.classGroup.location ? <p>Lokasi: {registration.classGroup.location}</p> : null}
                                             {registration.classGroup.startAt ? <p>Mulai: {new Date(registration.classGroup.startAt).toLocaleString("id-ID")}</p> : null}
-                                            {registration.classGroup.zoomLink ? <p>Link live akan dibuka dari detail kelas saat diperlukan.</p> : null}
+                                            {registration.classGroup.modality === "ONLINE" ? (
+                                                classAccessReady ? (
+                                                    <>
+                                                        {registration.classGroup.zoomLink ? <p>Link Zoom sudah tersedia untuk peserta yang lolos verifikasi.</p> : <p>Link Zoom akan diisi admin sebelum kelas dimulai.</p>}
+                                                        {registration.classGroup.zoomPasscode ? <p>Passcode: {registration.classGroup.zoomPasscode}</p> : null}
+                                                    </>
+                                                ) : (
+                                                    <p>Link Zoom akan dibuka setelah pembayaran terverifikasi, pendaftaran disetujui, dan peserta ditempatkan ke kelas.</p>
+                                                )
+                                            ) : null}
                                         </div>
                                     </div>
-                                ) : null}
+                                ) : (
+                                    <div className="mt-4 rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                                        Kelas operasional Anda sedang disiapkan admin. Informasi ruang offline atau link Zoom akan muncul setelah penempatan kelas selesai.
+                                    </div>
+                                )}
                             </article>
-                        ))}
+                            );
+                        })}
                     </div>
             </main>
         </div>
