@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowLeft, Scale, Shield, Award, Users } from "lucide-react";
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -111,7 +112,9 @@ export default function LoginPage() {
                             </div>
                         </div>
 
-                        <LoginForm />
+                        <Suspense fallback={<div className="py-12 text-center text-sm text-gray-500">Loading login form...</div>}>
+                            <LoginForm />
+                        </Suspense>
 
                         <p className="mt-8 text-center text-xs text-gray-500">
                             By signing in, you agree to our{" "}

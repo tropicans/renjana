@@ -22,8 +22,6 @@ export default function FinanceDashboardPage() {
     const enrollments = enrollData?.enrollments ?? [];
     const basePrice = 2500000; // IDR per enrollment (configurable)
     const totalRevenue = enrollments.length * basePrice;
-    const completedRevenue = enrollments.filter(e => e.status === "COMPLETED").length * basePrice;
-
     return (
         <div className="space-y-8">
             <div>

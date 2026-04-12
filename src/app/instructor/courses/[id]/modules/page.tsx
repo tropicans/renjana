@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchCourseById } from "@/lib/api";
+import { fetchCourseById, type ApiCourseDetail } from "@/lib/api";
 import { Loader2, Plus, GripVertical, Edit2, Trash2, Video, FileText, CheckSquare, Save } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
@@ -43,6 +43,7 @@ export default function InstructorModuleManagementPage() {
 
     if (isLoading) return <div className="flex h-64 justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
     const course = data?.course;
+    const modules = course?.modules ?? [];
 
     const handleCreateSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,7 +59,7 @@ export default function InstructorModuleManagementPage() {
             </div>
 
             <div className="space-y-4">
-                {course?.modules?.map((mod: any, index: number) => (
+                {modules.map((mod: ApiCourseDetail["modules"][number], index: number) => (
                     <div key={mod.id} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
                         {/* Module Header */}
                         <div className="bg-gray-50 dark:bg-gray-900/50 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center gap-4">
@@ -83,7 +84,7 @@ export default function InstructorModuleManagementPage() {
                             {mod.lessons?.length === 0 && (
                                 <p className="text-sm text-gray-500 italic text-center py-4">Belum ada materi di modul ini.</p>
                             )}
-                            {mod.lessons?.map((lesson: any, lIndex: number) => (
+                            {mod.lessons?.map((lesson: ApiCourseDetail["modules"][number]["lessons"][number]) => (
                                 <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20 group transition-all">
                                     <span className="text-gray-300 dark:text-gray-600"><GripVertical className="h-4 w-4" /></span>
                                     <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">

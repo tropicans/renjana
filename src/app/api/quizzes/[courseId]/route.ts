@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
 
 // GET /api/quizzes/[courseId] — list quizzes (pre/post) for a course
 export async function GET(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     const { user, error } = await requireAuth();
@@ -16,6 +17,13 @@ export async function GET(
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) {
         return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const registrationId = searchParams.get("registrationId");
+    const { access, registration } = await getAccessibleRegistrationForCourse(user!.id, courseId, registrationId);
+    if (!access.allowed) {
+        return NextResponse.json({ error: "Quiz access is not available until your event registration is approved" }, { status: 403 });
     }
 
     const quizzes = await prisma.quiz.findMany({
@@ -40,6 +48,7 @@ export async function GET(
     const result = quizzes.map((q) => ({
         id: q.id,
         courseId: q.courseId,
+        registrationId: registration?.id ?? null,
         type: q.type,
         title: q.title,
         timeLimit: q.timeLimit,

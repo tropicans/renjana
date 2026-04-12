@@ -85,6 +85,16 @@ export async function GET(req: Request) {
         where,
         include: {
             course: { select: { id: true, title: true } },
+            questions: {
+                orderBy: { order: "asc" },
+                select: {
+                    id: true,
+                    question: true,
+                    options: true,
+                    correctIdx: true,
+                    order: true,
+                },
+            },
             _count: { select: { questions: true, attempts: true } },
         },
         orderBy: { createdAt: "desc" },

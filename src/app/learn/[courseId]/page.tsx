@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCourseById, fetchMyEnrollments, fetchProgress, markLessonComplete, fetchQuizzes } from "@/lib/api";
+import { fetchCourseById, fetchMyEnrollments, fetchMyRegistrations, fetchProgress, markLessonComplete, fetchQuizzes } from "@/lib/api";
 import { useState, useMemo } from "react";
 import {
     ArrowLeft,
@@ -13,7 +13,6 @@ import {
     FileText,
     HelpCircle,
     CheckCircle2,
-    Circle,
     Clock,
     ChevronDown,
     ChevronRight,
@@ -50,8 +49,17 @@ export default function LearnPage() {
         enabled: !!user,
     });
 
+    const { data: registrationData } = useQuery({
+        queryKey: ["my-registrations"],
+        queryFn: fetchMyRegistrations,
+        enabled: !!user,
+    });
+
     const course = courseData?.course;
     const enrollment = enrollmentData?.enrollments?.find((e) => e.courseId === courseId);
+    const linkedRegistrations = registrationData?.registrations?.filter((registration) => registration.event.courseId === courseId) ?? [];
+    const approvedRegistration = linkedRegistrations.find((registration) => ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status));
+    const requiresApprovedRegistration = linkedRegistrations.length > 0;
 
     // Fetch progress for this enrollment
     const { data: progressData } = useQuery({
@@ -138,6 +146,11 @@ export default function LearnPage() {
     // Redirect if not enrolled
     if (!courseLoading && !authLoading && user && course && !enrollment) {
         router.push(`/course/${courseId}`);
+        return null;
+    }
+
+    if (!courseLoading && !authLoading && user && course && requiresApprovedRegistration && !approvedRegistration) {
+        router.push("/my-registrations");
         return null;
     }
 

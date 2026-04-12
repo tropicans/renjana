@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCourses, fetchAttendances } from "@/lib/api";
+import { fetchAttendances } from "@/lib/api";
 import {
     Calendar,
     Check,
@@ -15,13 +15,7 @@ import {
 } from "lucide-react";
 
 export default function InstructorAttendancePage() {
-    const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-
-    const { data: coursesData, isLoading: coursesLoading } = useQuery({
-        queryKey: ["courses"],
-        queryFn: () => fetchCourses(),
-    });
 
     // Note: For instructor view, we fetch attendances without lessonId filter
     // to show all records (instructor/admin role allows this)
@@ -30,7 +24,6 @@ export default function InstructorAttendancePage() {
         queryFn: () => fetchAttendances(),
     });
 
-    const courses = coursesData?.courses ?? [];
     const allAttendances = attendanceData?.attendances ?? [];
 
     // Group attendances by date
@@ -46,7 +39,7 @@ export default function InstructorAttendancePage() {
         return acc;
     }, {});
 
-    const isLoading = coursesLoading || attendanceLoading;
+    const isLoading = attendanceLoading;
 
     if (isLoading) {
         return (

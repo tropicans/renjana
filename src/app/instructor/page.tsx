@@ -50,9 +50,9 @@ export default function InstructorDashboardPage() {
             </div>
 
             {/* Trends Chart */}
-            {((stats as any)?.courses ?? []).length > 0 && (
+            {(stats?.courses ?? []).length > 0 && (
                 <div className="mt-8">
-                    <InstructorTrendChart courses={(stats as any).courses} />
+                    <InstructorTrendChart courses={stats?.courses ?? []} />
                 </div>
             )}
 

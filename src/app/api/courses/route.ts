@@ -35,8 +35,7 @@ export async function GET(req: Request) {
             (sum, m) => sum + m.lessons.reduce((s, l) => s + (l.durationMin ?? 0), 0),
             0
         );
-        const { modules: _modules, ...rest } = c;
-        return { ...rest, totalLessons, totalDurationMin };
+        return { ...c, totalLessons, totalDurationMin };
     });
 
     return NextResponse.json({ courses: result });

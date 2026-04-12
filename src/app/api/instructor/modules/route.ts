@@ -30,8 +30,8 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ module: newModule }, { status: 201 });
-    } catch (e: any) {
-        console.error("Error creating module:", e);
+    } catch (error) {
+        console.error("Error creating module:", error);
         return NextResponse.json({ error: "Failed to create module" }, { status: 500 });
     }
 }

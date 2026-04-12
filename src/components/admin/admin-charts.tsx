@@ -9,7 +9,6 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Legend
 } from "recharts";
 import { TrendingUp } from "lucide-react";
 

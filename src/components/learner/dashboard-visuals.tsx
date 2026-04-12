@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 interface ProgressChartProps {
     completionPercentage: number;
@@ -13,8 +13,6 @@ export function ProgressChart({ completionPercentage }: ProgressChartProps) {
         { name: "Completed", value: completionPercentage },
         { name: "Remaining", value: 100 - completionPercentage },
     ];
-
-    const COLORS = ["#000000", "#e5e7eb"]; // Black for primary, gray for remaining
 
     return (
         <div className="relative w-32 h-32 flex-shrink-0">

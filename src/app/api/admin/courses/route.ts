@@ -23,7 +23,7 @@ export async function GET() {
 
 // POST /api/admin/courses — create a new course
 export async function POST(req: Request) {
-    const { user, error } = await requireRole("ADMIN");
+    const { error } = await requireRole("ADMIN");
     if (error) return error;
 
     const { title, description, status, modules } = await req.json();

@@ -18,8 +18,8 @@ export function SiteHeader({ className }: { className?: string }) {
     const [isScrolled, setIsScrolled] = React.useState(false)
 
     const menuItems = [
-        { name: t.nav.courses, href: '/courses' },
-        { name: 'Mentorship', href: '#' },
+        { name: 'Kegiatan', href: '/events' },
+        { name: 'Program', href: '/courses' },
         { name: 'Partners', href: '/#partners' },
         { name: t.nav.about, href: '/about-us' },
     ]

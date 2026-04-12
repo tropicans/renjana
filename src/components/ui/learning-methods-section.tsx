@@ -1,4 +1,4 @@
-import { BookOpen, Laptop, Users, Building, GraduationCap, Zap } from "lucide-react";
+import { BookOpen, Laptop, Users, Building } from "lucide-react";
 
 export function LearningMethodsSection() {
     return (

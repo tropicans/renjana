@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InsightsCard, ProgressChart } from "@/components/learner/dashboard-visuals";
 import { useUser } from "@/lib/context/user-context";
-import { fetchDashboardStats, fetchMyEnrollments } from "@/lib/api";
+import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations } from "@/lib/api";
 import {
     BookOpen,
     CheckCircle,
@@ -32,9 +32,17 @@ export default function DashboardPage() {
         enabled: !!user,
     });
 
+    const { data: registrationData, isLoading: registrationsLoading } = useQuery({
+        queryKey: ["my-registrations"],
+        queryFn: fetchMyRegistrations,
+        enabled: !!user,
+    });
+
     const enrollments = enrollmentData?.enrollments ?? [];
+    const registrations = registrationData?.registrations ?? [];
     const activeEnrollment = enrollments.find((e) => e.status === "ACTIVE");
-    const isLoading = userLoading || statsLoading || enrollmentsLoading;
+    const activeRegistration = registrations.find((registration) => ["SUBMITTED", "UNDER_REVIEW", "REVISION_REQUIRED", "APPROVED", "ACTIVE"].includes(registration.status));
+    const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading;
 
     if (isLoading) {
         return (
@@ -59,14 +67,14 @@ export default function DashboardPage() {
             {/* Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Enrolled Programs"
-                    value={stats?.enrolledCourses ?? enrollments.length}
+                    title="Registrations"
+                    value={registrations.length}
                     icon={BookOpen}
-                    description="Active courses"
+                    description="Active event records"
                 />
                 <StatCard
                     title="Completed Courses"
-                    value={stats?.completedCourses ?? 0}
+                    value={stats?.completedCourses ?? enrollments.filter((item) => item.status === "COMPLETED").length}
                     icon={CheckCircle}
                     trend={
                         stats?.completedCourses
@@ -75,10 +83,10 @@ export default function DashboardPage() {
                     }
                 />
                 <StatCard
-                    title="In Progress"
-                    value={stats?.activeCourses ?? 0}
+                    title="Approved Events"
+                    value={registrations.filter((registration) => ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)).length}
                     icon={Sparkles}
-                    description="Keep learning!"
+                    description="Ready for learning access"
                 />
                 <StatCard
                     title="Hours Learned"
@@ -121,20 +129,41 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
+            ) : activeRegistration ? (
+                <div className="rounded-3xl border-2 border-sky-200 bg-sky-50 p-8 dark:border-sky-800 dark:bg-sky-950/20">
+                    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                        <div className="space-y-3">
+                            <span className="rounded-full bg-sky-600 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-white">
+                                Registration Status
+                            </span>
+                            <h2 className="text-2xl font-bold">{activeRegistration.event.title}</h2>
+                            <p className="text-gray-500 dark:text-gray-400">
+                                Status saat ini: <span className="font-semibold text-sky-700 dark:text-sky-300">{activeRegistration.status}</span>. Lengkapi revisi atau tunggu verifikasi admin sebelum akses pembelajaran dibuka.
+                            </p>
+                        </div>
+                        <Link
+                            href="/my-registrations"
+                            className="bg-sky-600 text-white px-8 py-4 rounded-full font-bold hover:bg-sky-700 transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 shrink-0"
+                        >
+                            Lihat Registrasi
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                </div>
             ) : enrollments.length === 0 ? (
                 <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-3">
                             <h2 className="text-2xl font-bold">Start Your Learning Journey</h2>
                             <p className="text-gray-500 dark:text-gray-400">
-                                Browse our catalog and enroll in your first course today!
+                                Jelajahi kegiatan aktif lalu lanjutkan pendaftaran event pertama Anda.
                             </p>
                         </div>
                         <Link
-                            href="/courses"
+                            href="/events"
                             className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
                         >
-                            Explore Courses
+                            Explore Events
                             <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>
@@ -162,8 +191,8 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold">My Courses</h2>
-                            <Link href="/courses" className="text-sm text-primary hover:underline">
-                                View All
+                            <Link href="/events" className="text-sm text-primary hover:underline">
+                                View All Events
                             </Link>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -200,28 +229,28 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-bold">Quick Actions</h2>
                 <div className="grid gap-4 md:grid-cols-3">
                     <Link
-                        href="/courses"
+                        href="/events"
                         className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
                     >
                         <BookOpen className="h-8 w-8 text-primary mb-4" />
-                        <h3 className="font-bold group-hover:text-primary transition-colors">Browse Courses</h3>
-                        <p className="text-sm text-gray-500 mt-1">Explore our catalog</p>
+                        <h3 className="font-bold group-hover:text-primary transition-colors">Browse Events</h3>
+                        <p className="text-sm text-gray-500 mt-1">Lihat kegiatan yang sedang dibuka</p>
                     </Link>
                     <Link
-                        href="/dashboard/evidence"
+                        href="/my-registrations"
                         className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
                     >
                         <Sparkles className="h-8 w-8 text-primary mb-4" />
-                        <h3 className="font-bold group-hover:text-primary transition-colors">Upload Evidence</h3>
-                        <p className="text-sm text-gray-500 mt-1">Submit your work</p>
+                        <h3 className="font-bold group-hover:text-primary transition-colors">My Registrations</h3>
+                        <p className="text-sm text-gray-500 mt-1">Pantau status, dokumen, dan pembayaran</p>
                     </Link>
                     <Link
-                        href="/dashboard/feedback"
+                        href="/dashboard/evaluations"
                         className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
                     >
                         <CheckCircle className="h-8 w-8 text-primary mb-4" />
-                        <h3 className="font-bold group-hover:text-primary transition-colors">View Feedback</h3>
-                        <p className="text-sm text-gray-500 mt-1">Check instructor notes</p>
+                        <h3 className="font-bold group-hover:text-primary transition-colors">Evaluations</h3>
+                        <p className="text-sm text-gray-500 mt-1">Isi evaluasi penyelenggaraan saat dibuka</p>
                     </Link>
                 </div>
             </div>

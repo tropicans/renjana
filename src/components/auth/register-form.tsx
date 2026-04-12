@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { User, Mail, Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
 
 export function RegisterForm() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     const passwordRequirements = [
         { label: "At least 8 characters", met: password.length >= 8 },
@@ -18,13 +25,36 @@ export function RegisterForm() {
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setIsLoading(true);
+        setError(null);
 
-        // Simulate API call
-        setTimeout(() => {
+        const registerRes = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fullName, email, password }),
+        });
+
+        const body = await registerRes.json().catch(() => ({}));
+
+        if (!registerRes.ok) {
+            setError(body.error || "Failed to create account");
             setIsLoading(false);
-            // Redirect to login on success
-            window.location.href = "/login";
-        }, 1500);
+            return;
+        }
+
+        const signInResult = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+        });
+
+        if (!signInResult?.ok) {
+            setError("Akun berhasil dibuat, tetapi login otomatis gagal.");
+            setIsLoading(false);
+            return;
+        }
+
+        router.push(searchParams.get("redirect") || searchParams.get("callbackUrl") || "/events");
+        router.refresh();
     }
 
     return (
@@ -32,8 +62,14 @@ export function RegisterForm() {
             {/* Header */}
             <div className="text-center lg:text-left">
                 <h1 className="text-3xl font-extrabold tracking-tight">Create your account</h1>
-                <p className="mt-2 text-gray-500">Start your learning journey today</p>
+                <p className="mt-2 text-gray-500">Create an account to register for upcoming programs and events</p>
             </div>
+
+            {error && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400">
+                    {error}
+                </div>
+            )}
 
             {/* Form */}
             <form onSubmit={onSubmit} className="space-y-5">
@@ -48,6 +84,8 @@ export function RegisterForm() {
                             placeholder="John Doe"
                             required
                             disabled={isLoading}
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
                             className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50"
                         />
                     </div>
@@ -64,6 +102,8 @@ export function RegisterForm() {
                             placeholder="name@example.com"
                             required
                             disabled={isLoading}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50"
                         />
                     </div>

@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorStats } from "@/lib/api";
-import { Users, Target, TrendingUp, BookOpen, Loader2, CheckCircle, Clock } from "lucide-react";
+import { Users, Target, TrendingUp, Loader2, CheckCircle, Clock } from "lucide-react";
 
 function StatCard({ title, value, icon: Icon, color, sub }: { title: string; value: string | number; icon: React.ElementType; color: string; sub?: string }) {
     return (

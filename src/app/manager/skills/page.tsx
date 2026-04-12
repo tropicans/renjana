@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorLearners } from "@/lib/api";
-import { Loader2, TrendingUp, Users, Award, BarChart3 } from "lucide-react";
+import { Loader2, TrendingUp, Award, BarChart3 } from "lucide-react";
 
 export default function ManagerSkillsPage() {
     const { data, isLoading } = useQuery({

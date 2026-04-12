@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
 
 // GET /api/quizzes/[courseId]/[quizId] — get quiz detail with questions (without correct answers)
 export async function GET(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-    const { error } = await requireAuth();
+    const { user, error } = await requireAuth();
     if (error) return error;
 
     const { courseId, quizId } = await params;
+    const { searchParams } = new URL(req.url);
+    const registrationId = searchParams.get("registrationId");
+
+    const { access, registration } = await getAccessibleRegistrationForCourse(user!.id, courseId, registrationId);
+    if (!access.allowed) {
+        return NextResponse.json({ error: "Quiz access is not available until your event registration is approved" }, { status: 403 });
+    }
 
     const quiz = await prisma.quiz.findFirst({
         where: { id: quizId, courseId },
@@ -36,6 +44,7 @@ export async function GET(
         quiz: {
             id: quiz.id,
             courseId: quiz.courseId,
+            registrationId: registration?.id ?? null,
             type: quiz.type,
             title: quiz.title,
             timeLimit: quiz.timeLimit,

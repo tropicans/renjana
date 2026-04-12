@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchMyEnrollments, fetchCertificate } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 import {
     Award,
     Download,
@@ -10,22 +11,29 @@ import {
     BookOpen,
     CheckCircle,
     Clock,
+    AlertTriangle,
 } from "lucide-react";
 
 function CertificateCard({ enrollment }: { enrollment: { id: string; courseId: string; course: { title: string }; status: string; completionPercentage: number } }) {
+    const toast = useToast();
     const isCompleted = enrollment.status === "COMPLETED";
 
-    const { data, isLoading, refetch, isFetching } = useQuery({
+    const { data } = useQuery({
         queryKey: ["certificate", enrollment.id],
         queryFn: () => fetchCertificate(enrollment.id),
         enabled: false, // only fetch on demand
     });
 
+    const generateMutation = useMutation({
+        mutationFn: () => fetchCertificate(enrollment.id),
+        onError: (error: Error) => toast.error(error.message),
+    });
+
     const handleGenerate = () => {
-        refetch();
+        generateMutation.mutate();
     };
 
-    const certificate = data?.certificate;
+    const certificate = generateMutation.data?.certificate ?? data?.certificate;
 
     return (
         <div className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
@@ -65,10 +73,10 @@ function CertificateCard({ enrollment }: { enrollment: { id: string; courseId: s
                             ) : (
                                 <button
                                     onClick={handleGenerate}
-                                    disabled={isLoading || isFetching}
+                                    disabled={generateMutation.isPending}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50"
                                 >
-                                    {isLoading || isFetching ? (
+                                    {generateMutation.isPending ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                             Generating...
@@ -81,6 +89,13 @@ function CertificateCard({ enrollment }: { enrollment: { id: string; courseId: s
                                     )}
                                 </button>
                             )}
+
+                            {generateMutation.error ? (
+                                <div className="mt-3 inline-flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5" />
+                                    <span>{generateMutation.error.message}</span>
+                                </div>
+                            ) : null}
                         </div>
                     )}
                 </div>

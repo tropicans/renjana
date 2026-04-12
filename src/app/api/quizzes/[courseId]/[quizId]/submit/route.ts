@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
 
 // POST /api/quizzes/[courseId]/[quizId]/submit — submit quiz answers
 export async function POST(
@@ -11,10 +12,15 @@ export async function POST(
     if (error) return error;
 
     const { courseId, quizId } = await params;
-    const { answers } = await req.json();
+    const { answers, registrationId } = await req.json();
 
     if (!answers || !Array.isArray(answers)) {
         return NextResponse.json({ error: "answers array is required" }, { status: 400 });
+    }
+
+    const { access, registration } = await getAccessibleRegistrationForCourse(user!.id, courseId, registrationId);
+    if (!access.allowed) {
+        return NextResponse.json({ error: "Quiz access is not available until your event registration is approved" }, { status: 403 });
     }
 
     // Get quiz with questions
@@ -68,6 +74,7 @@ export async function POST(
     return NextResponse.json({
         attempt: {
             id: attempt.id,
+            registrationId: registration?.id ?? null,
             score: attempt.score,
             passed: attempt.passed,
             totalQuestions,

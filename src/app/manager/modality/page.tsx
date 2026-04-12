@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorStats } from "@/lib/api";
-import { Loader2, Monitor, Users, MapPin, Wifi } from "lucide-react";
+import { Loader2, Monitor, MapPin, Wifi } from "lucide-react";
 
 export default function ManagerModalityPage() {
     const { data, isLoading } = useQuery({

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAdminCourses, createCourse, deleteCourse, updateCourse } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
-import { BookOpen, Plus, Loader2, Users, Layers, Trash2, Edit, CheckCircle, Clock, Archive } from "lucide-react";
+import { BookOpen, Plus, Loader2, Users, Layers, Trash2, CheckCircle, Clock, Archive } from "lucide-react";
 
 const statusConfig = {
     PUBLISHED: { label: "Published", icon: CheckCircle, class: "text-green-600 bg-green-50 dark:bg-green-900/20" },

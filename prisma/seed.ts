@@ -44,6 +44,63 @@ const mockCourses = [
     },
 ];
 
+type SeedEvent = (typeof mockEvents)[number];
+
+const mockEvents = [
+    {
+        title: "PKPA FH UNDIP 2026 Batch V",
+        slug: "pkpa-fh-undip-2026-batch-v",
+        category: "PKPA",
+        modality: "HYBRID" as const,
+        summary: "Program pendidikan profesi advokat dengan alur registrasi, dokumen, pembayaran, pembelajaran, pre/post test, dan evaluasi.",
+        scheduleSummary: "Mulai 2 Mei 2026 - selesai, setiap Sabtu dan Minggu.",
+        registrationFee: 500000,
+        onlineTuitionFee: 5250000,
+        offlineTuitionFee: 5500000,
+        alumniRegistrationFee: 0,
+        registrationStart: new Date("2026-04-09T00:00:00.000Z"),
+        registrationEnd: new Date("2026-05-01T23:59:59.000Z"),
+        eventStart: new Date("2026-05-02T00:00:00.000Z"),
+        location: "Fakultas Hukum UNDIP / Zoom",
+        contactName: "Renjana",
+        contactPhone: "081717777247",
+        status: "REGISTRATION_OPEN" as const,
+        learningEnabled: true,
+        preTestEnabled: true,
+        postTestEnabled: true,
+        evaluationEnabled: true,
+        certificateEnabled: true,
+        isFeatured: true,
+        courseIndex: 2,
+    },
+    {
+        title: "Workshop Legal Drafting for In-House Counsel",
+        slug: "workshop-legal-drafting-in-house-counsel",
+        category: "WORKSHOP",
+        modality: "ONLINE" as const,
+        summary: "Workshop intensif satu hari untuk memperkuat struktur kontrak dan drafting clause kritikal.",
+        scheduleSummary: "Sesi intensif 1 hari via Zoom.",
+        registrationFee: 250000,
+        onlineTuitionFee: 1250000,
+        offlineTuitionFee: null,
+        alumniRegistrationFee: null,
+        registrationStart: new Date("2026-06-01T00:00:00.000Z"),
+        registrationEnd: new Date("2026-06-20T23:59:59.000Z"),
+        eventStart: new Date("2026-06-28T00:00:00.000Z"),
+        platform: "Zoom Meeting",
+        contactName: "Renjana Learning Desk",
+        contactPhone: "081717777247",
+        status: "PUBLISHED" as const,
+        learningEnabled: true,
+        preTestEnabled: false,
+        postTestEnabled: true,
+        evaluationEnabled: true,
+        certificateEnabled: true,
+        isFeatured: false,
+        courseIndex: 0,
+    },
+];
+
 async function main() {
     console.log("🌱 Mulai seeding database Renjana LMS...\n");
 
@@ -77,7 +134,7 @@ async function main() {
                 title: courseData.title,
                 description: courseData.description,
                 status: courseData.status,
-                type: (courseData as any).type || "ONLINE",
+                type: "type" in courseData ? courseData.type : "ONLINE",
                 modules: {
                     create: courseData.modules.map((mod) => ({
                         title: mod.title,
@@ -87,7 +144,7 @@ async function main() {
                                 title: lesson.title,
                                 type: lesson.type,
                                 order: lesson.order,
-                                durationMin: (lesson as any).durationMin ?? null,
+                                durationMin: "durationMin" in lesson ? lesson.durationMin ?? null : null,
                             })),
                         },
                     })),
@@ -96,6 +153,70 @@ async function main() {
         });
         createdCourses.push(course);
         console.log(`   ✅ Kursus: ${course.title}`);
+    }
+
+    console.log("\n🗓️ Membuat event offerings...");
+    const createdEvents = [];
+    for (const eventData of mockEvents) {
+        const event = await prisma.event.upsert({
+            where: { slug: eventData.slug },
+            update: {
+                title: eventData.title,
+                category: eventData.category,
+                modality: eventData.modality,
+                summary: eventData.summary,
+                scheduleSummary: eventData.scheduleSummary,
+                registrationFee: eventData.registrationFee,
+                onlineTuitionFee: eventData.onlineTuitionFee,
+                offlineTuitionFee: eventData.offlineTuitionFee,
+                alumniRegistrationFee: eventData.alumniRegistrationFee,
+                registrationStart: eventData.registrationStart,
+                registrationEnd: eventData.registrationEnd,
+                eventStart: eventData.eventStart,
+                location: eventDataLocation(eventData),
+                platform: eventDataPlatform(eventData),
+                contactName: eventData.contactName,
+                contactPhone: eventData.contactPhone,
+                status: eventData.status,
+                learningEnabled: eventData.learningEnabled,
+                preTestEnabled: eventData.preTestEnabled,
+                postTestEnabled: eventData.postTestEnabled,
+                evaluationEnabled: eventData.evaluationEnabled,
+                certificateEnabled: eventData.certificateEnabled,
+                isFeatured: eventData.isFeatured,
+                courseId: createdCourses[eventData.courseIndex].id,
+            },
+            create: {
+                title: eventData.title,
+                slug: eventData.slug,
+                category: eventData.category,
+                modality: eventData.modality,
+                summary: eventData.summary,
+                description: eventData.summary,
+                scheduleSummary: eventData.scheduleSummary,
+                registrationFee: eventData.registrationFee,
+                onlineTuitionFee: eventData.onlineTuitionFee,
+                offlineTuitionFee: eventData.offlineTuitionFee,
+                alumniRegistrationFee: eventData.alumniRegistrationFee,
+                registrationStart: eventData.registrationStart,
+                registrationEnd: eventData.registrationEnd,
+                eventStart: eventData.eventStart,
+                location: eventDataLocation(eventData),
+                platform: eventDataPlatform(eventData),
+                contactName: eventData.contactName,
+                contactPhone: eventData.contactPhone,
+                status: eventData.status,
+                learningEnabled: eventData.learningEnabled,
+                preTestEnabled: eventData.preTestEnabled,
+                postTestEnabled: eventData.postTestEnabled,
+                evaluationEnabled: eventData.evaluationEnabled,
+                certificateEnabled: eventData.certificateEnabled,
+                isFeatured: eventData.isFeatured,
+                courseId: createdCourses[eventData.courseIndex].id,
+            },
+        });
+        createdEvents.push(event);
+        console.log(`   ✅ Event: ${event.title}`);
     }
 
     // --- Seed Enrollments for Learners ---
@@ -115,6 +236,41 @@ async function main() {
         console.log(`   ✅ ${learner.fullName} → ${createdCourses[0].title}`);
     }
 
+    console.log("\n📝 Membuat sample registrations...");
+    for (const learner of learners) {
+        await prisma.registration.upsert({
+            where: {
+                userId_eventId: {
+                    userId: learner.id,
+                    eventId: createdEvents[0].id,
+                },
+            },
+            update: {},
+            create: {
+                userId: learner.id,
+                eventId: createdEvents[0].id,
+                participantMode: learner.email === "siti@example.com" ? "OFFLINE" : "ONLINE",
+                status: learner.email === "siti@example.com" ? "SUBMITTED" : "DRAFT",
+                paymentStatus: learner.email === "siti@example.com" ? "UPLOADED" : "PENDING",
+                fullName: learner.fullName,
+                birthPlace: "Semarang",
+                birthDate: new Date("1998-01-10T00:00:00.000Z"),
+                gender: learner.email === "siti@example.com" ? "Perempuan" : "Laki-Laki",
+                domicileAddress: "Semarang, Jawa Tengah",
+                whatsapp: "081234567890",
+                institution: "Universitas Diponegoro",
+                titlePrefix: "",
+                titleSuffix: "S.H.",
+                agreedTerms: true,
+                agreedRefundPolicy: true,
+                sourceChannel: learner.email === "siti@example.com" ? "INSTAGRAM" : "TIKTOK",
+                totalFee: learner.email === "siti@example.com" ? 6000000 : 5750000,
+                submittedAt: learner.email === "siti@example.com" ? new Date() : null,
+            },
+        });
+        console.log(`   ✅ Registration: ${learner.fullName} → ${createdEvents[0].title}`);
+    }
+
     console.log("\n✨ Seeding selesai!");
     console.log("\n📋 Kredensial Login:");
     console.log("   admin@renjana.com   → admin123");
@@ -122,6 +278,14 @@ async function main() {
     console.log("   budi@example.com    → password123");
     console.log("   diana@example.com   → password123");
     console.log("   eko@example.com     → password123");
+}
+
+function eventDataLocation(eventData: SeedEvent) {
+    return "location" in eventData ? eventData.location ?? null : null;
+}
+
+function eventDataPlatform(eventData: SeedEvent) {
+    return "platform" in eventData ? eventData.platform ?? null : null;
 }
 
 main()

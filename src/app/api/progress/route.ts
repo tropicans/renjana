@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getCourseLifecycleAccess } from "@/lib/registration-access";
 
 // PUT /api/progress — mark a lesson as complete
 export async function PUT(req: Request) {
@@ -28,6 +29,11 @@ export async function PUT(req: Request) {
 
     if (!enrollment || enrollment.userId !== user!.id) {
         return NextResponse.json({ error: "Enrollment not found" }, { status: 404 });
+    }
+
+    const access = await getCourseLifecycleAccess(user!.id, enrollment.courseId);
+    if (!access.allowed) {
+        return NextResponse.json({ error: "Learning access is not available until your event registration is approved" }, { status: 403 });
     }
 
     // Upsert progress record
@@ -64,23 +70,6 @@ export async function PUT(req: Request) {
         },
     });
 
-    // Auto-create certificate record when course completes
-    let certificateCreated = false;
-    if (completionPercentage === 100) {
-        const existing = await prisma.certificate.findUnique({
-            where: { enrollmentId },
-        });
-        if (!existing) {
-            await prisma.certificate.create({
-                data: {
-                    enrollmentId,
-                    userId: user!.id,
-                },
-            });
-            certificateCreated = true;
-        }
-    }
-
     return NextResponse.json({
         progress,
         enrollment: {
@@ -88,7 +77,7 @@ export async function PUT(req: Request) {
             completionPercentage: updatedEnrollment.completionPercentage,
             status: updatedEnrollment.status,
         },
-        certificateCreated,
+        certificateCreated: false,
     });
 }
 

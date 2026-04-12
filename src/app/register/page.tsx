@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ArrowLeft, Scale, BookOpen, Trophy, Clock } from "lucide-react";
 import { RegisterForm } from "@/components/auth/register-form";
 
@@ -111,7 +112,9 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                        <RegisterForm />
+                        <Suspense fallback={<div className="py-12 text-center text-sm text-gray-500">Loading registration form...</div>}>
+                            <RegisterForm />
+                        </Suspense>
 
                         <p className="mt-8 text-center text-xs text-gray-500">
                             By creating an account, you agree to our{" "}

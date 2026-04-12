@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 // Routes that are always public (no auth needed)
-const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password"];
+const PUBLIC_ROUTES = ["/", "/login", "/register", "/forgot-password", "/events", "/courses", "/course", "/about-us", "/contact", "/career", "/news"];
 
 // Route prefix → required role(s)
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -11,6 +11,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
     "/manager": ["MANAGER", "ADMIN"],
     "/finance": ["FINANCE", "ADMIN"],
     "/dashboard": ["LEARNER", "INSTRUCTOR", "MANAGER", "FINANCE", "ADMIN"],
+    "/my-registrations": ["LEARNER", "ADMIN"],
 };
 
 export const proxy = auth((req) => {
@@ -29,7 +30,7 @@ export const proxy = auth((req) => {
     // Not logged in → redirect to login
     if (!req.auth) {
         const loginUrl = new URL("/login", req.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
+        loginUrl.searchParams.set("redirect", pathname);
         return NextResponse.redirect(loginUrl);
     }
 

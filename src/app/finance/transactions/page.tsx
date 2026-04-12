@@ -3,7 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAdminEnrollments } from "@/lib/api";
-import { Loader2, Receipt } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function TransactionsPage() {
     const { data, isLoading } = useQuery({ queryKey: ["admin-enrollments"], queryFn: fetchAdminEnrollments });

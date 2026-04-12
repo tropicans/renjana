@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
 
 // POST /api/evaluations — submit course evaluation
 export async function POST(req: Request) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const { courseId, rating, comment, answers } = await req.json();
+    const { courseId, registrationId, rating, comment, answers } = await req.json();
 
     if (!courseId) {
         return NextResponse.json({ error: "courseId is required" }, { status: 400 });
@@ -16,12 +17,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "rating must be between 1 and 5" }, { status: 400 });
     }
 
-    // Verify user is enrolled in this course
-    const enrollment = await prisma.enrollment.findUnique({
-        where: { userId_courseId: { userId: user!.id, courseId } },
-    });
-    if (!enrollment) {
-        return NextResponse.json({ error: "You are not enrolled in this course" }, { status: 403 });
+    const { access, registration } = await getAccessibleRegistrationForCourse(user!.id, courseId, registrationId);
+    if (!access.allowed || !registration) {
+        return NextResponse.json({ error: "Evaluation access is not available until your event registration is approved" }, { status: 403 });
+    }
+
+    if (!registration.event.evaluationEnabled) {
+        return NextResponse.json({ error: "Evaluation is not open for this event yet" }, { status: 403 });
     }
 
     // Check if already evaluated (unique constraint)
@@ -38,7 +40,7 @@ export async function POST(req: Request) {
             userId: user!.id,
             rating,
             comment: comment ?? null,
-            answers: answers ?? null,
+            answers: { registrationId: registration.id, payload: answers ?? null },
         },
         include: {
             course: { select: { id: true, title: true } },
@@ -55,6 +57,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get("courseId");
+    const registrationId = searchParams.get("registrationId");
 
     // Admin/Instructor can see all evaluations for a course
     if ((user!.role === "ADMIN" || user!.role === "INSTRUCTOR") && courseId) {
@@ -72,14 +75,21 @@ export async function GET(req: Request) {
             ? evaluations.reduce((sum, e) => sum + e.rating, 0) / evaluations.length
             : 0;
 
-        return NextResponse.json({ evaluations, avgRating, total: evaluations.length });
+        return NextResponse.json({
+            evaluations: evaluations.map((evaluation) => ({
+                ...evaluation,
+                registrationId: (evaluation.answers as { registrationId?: string } | null)?.registrationId ?? null,
+            })),
+            avgRating,
+            total: evaluations.length,
+        });
     }
 
     // Learner: get their own evaluations
     const where: { userId: string; courseId?: string } = { userId: user!.id };
     if (courseId) where.courseId = courseId;
 
-    const evaluations = await prisma.evaluation.findMany({
+    let evaluations = await prisma.evaluation.findMany({
         where,
         include: {
             course: { select: { id: true, title: true } },
@@ -87,5 +97,17 @@ export async function GET(req: Request) {
         orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ evaluations });
+    if (registrationId) {
+        evaluations = evaluations.filter((evaluation) => {
+            const value = evaluation.answers as { registrationId?: string } | null;
+            return value?.registrationId === registrationId;
+        });
+    }
+
+    return NextResponse.json({
+        evaluations: evaluations.map((evaluation) => ({
+            ...evaluation,
+            registrationId: (evaluation.answers as { registrationId?: string } | null)?.registrationId ?? null,
+        })),
+    });
 }

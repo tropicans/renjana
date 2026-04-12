@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchQuizDetail, submitQuiz, fetchQuizAttempts } from "@/lib/api";
+import { fetchMyRegistrations, fetchQuizDetail, submitQuiz, fetchQuizAttempts } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import {
     ArrowLeft,
@@ -31,6 +31,7 @@ export default function QuizPlayerPage() {
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [submitted, setSubmitted] = useState(false);
     const [result, setResult] = useState<{
+        registrationId: string | null;
         score: number;
         passed: boolean;
         totalQuestions: number;
@@ -38,18 +39,28 @@ export default function QuizPlayerPage() {
         answers: Array<{ questionId: string; selectedIdx: number; correctIdx: number; isCorrect: boolean }>;
     } | null>(null);
 
+    const { data: registrationData } = useQuery({
+        queryKey: ["my-registrations"],
+        queryFn: fetchMyRegistrations,
+        enabled: !!courseId,
+    });
+
+    const approvedRegistration = registrationData?.registrations.find(
+        (registration) => registration.event.courseId === courseId && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)
+    );
+
     // Fetch quiz detail
     const { data: quizData, isLoading: quizLoading } = useQuery({
         queryKey: ["quiz-detail", courseId, quizId],
-        queryFn: () => fetchQuizDetail(courseId, quizId),
-        enabled: !!courseId && !!quizId,
+        queryFn: () => fetchQuizDetail(courseId, quizId, approvedRegistration?.id),
+        enabled: !!courseId && !!quizId && !!approvedRegistration?.id,
     });
 
     // Fetch previous attempts
     const { data: attemptsData } = useQuery({
         queryKey: ["quiz-attempts", courseId, quizId],
-        queryFn: () => fetchQuizAttempts(courseId, quizId),
-        enabled: !!courseId && !!quizId,
+        queryFn: () => fetchQuizAttempts(courseId, quizId, approvedRegistration?.id),
+        enabled: !!courseId && !!quizId && !!approvedRegistration?.id,
     });
 
     // Submit mutation
@@ -59,7 +70,7 @@ export default function QuizPlayerPage() {
                 questionId,
                 selectedIdx,
             }));
-            return submitQuiz(courseId, quizId, answerArray);
+            return submitQuiz(courseId, quizId, answerArray, approvedRegistration?.id);
         },
         onSuccess: (data) => {
             setResult(data.attempt);
@@ -82,6 +93,22 @@ export default function QuizPlayerPage() {
 
     const answeredCount = useMemo(() => Object.keys(answers).length, [answers]);
     const allAnswered = answeredCount === questions.length;
+
+    if (!approvedRegistration) {
+        return (
+            <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] flex items-center justify-center px-6">
+                <div className="max-w-lg rounded-2xl border border-amber-200 bg-white p-8 text-center dark:border-amber-900/40 dark:bg-[#1a242f]">
+                    <h1 className="text-2xl font-bold">Akses quiz belum tersedia</h1>
+                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                        Quiz hanya tersedia untuk peserta dengan registration yang sudah disetujui.
+                    </p>
+                    <Link href="/my-registrations" className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 text-sm font-bold text-white">
+                        Lihat status pendaftaran
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     if (quizLoading || !quiz) {
         return (

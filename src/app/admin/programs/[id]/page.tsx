@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchAdminCourse, updateCourse } from "@/lib/api";
+import { fetchAdminCourse, type ApiAdminCourseDetail, updateCourse } from "@/lib/api";
 import { useParams } from "next/navigation";
 import { useToast } from "@/components/ui/toast";
 import Link from "next/link";
@@ -32,7 +32,8 @@ export default function AdminProgramDetailPage() {
     if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     if (!course) return <div className="text-center py-12 text-gray-500">Program tidak ditemukan</div>;
 
-    const totalLessons = course.modules?.reduce((acc: number, m: any) => acc + (m.lessons?.length ?? 0), 0) ?? 0;
+    const totalLessons = course.modules?.reduce((acc, module) => acc + (module.lessons?.length ?? 0), 0) ?? 0;
+    const enrollments = course.enrollments ?? [];
 
     return (
         <div className="space-y-8">
@@ -64,11 +65,11 @@ export default function AdminProgramDetailPage() {
             {/* Modules */}
             <div className="space-y-4">
                 <h2 className="text-xl font-bold">Silabus</h2>
-                {course.modules?.map((mod: any, i: number) => (
+                {course.modules?.map((mod, i: number) => (
                     <div key={mod.id} className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
                         <h3 className="font-bold">Modul {i + 1}: {mod.title}</h3>
                         <div className="mt-3 space-y-2">
-                            {mod.lessons?.map((lesson: any) => (
+                            {mod.lessons?.map((lesson) => (
                                 <div key={lesson.id} className="flex items-center gap-2 text-sm text-gray-500 pl-4">
                                     <BookOpen className="h-3.5 w-3.5" />
                                     <span>{lesson.title}</span>
@@ -81,14 +82,14 @@ export default function AdminProgramDetailPage() {
             </div>
 
             {/* Enrolled Users */}
-            {course.enrollments?.length > 0 && (
+            {enrollments.length > 0 && (
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold">Peserta Terdaftar</h2>
                     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
                         <table className="w-full text-sm">
                             <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-gray-500"><th className="p-4 font-semibold">Nama</th><th className="p-4 font-semibold">Email</th><th className="p-4 font-semibold">Progress</th><th className="p-4 font-semibold">Status</th></tr></thead>
                             <tbody>
-                                {course.enrollments.map((e: any) => (
+                                {enrollments.map((e: NonNullable<ApiAdminCourseDetail["enrollments"]>[number]) => (
                                     <tr key={e.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
                                         <td className="p-4 font-medium">{e.user.fullName}</td>
                                         <td className="p-4 text-gray-500">{e.user.email}</td>

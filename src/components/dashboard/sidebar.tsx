@@ -7,9 +7,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 import {
     Home,
-    ListTodo,
-    FileCheck,
-    MessageSquare,
+    CalendarDays,
     ChevronLeft,
     ChevronRight,
     Settings,
@@ -18,10 +16,8 @@ import {
 
 const navItems = [
     { name: "Home", href: "/dashboard", icon: Home },
-    { name: "Action Queue", href: "/dashboard/actions", icon: ListTodo },
-    { name: "Evidence", href: "/dashboard/evidence", icon: FileCheck },
+    { name: "My Registrations", href: "/my-registrations", icon: CalendarDays },
     { name: "Evaluasi", href: "/dashboard/evaluations", icon: ClipboardCheck },
-    { name: "Feedback", href: "/dashboard/feedback", icon: MessageSquare },
 ];
 
 interface SidebarProps {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useLanguage } from "@/lib/i18n";
@@ -17,6 +17,7 @@ const ROLE_DASHBOARD: Record<string, string> = {
 
 export function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -36,12 +37,13 @@ export function LoginForm() {
         });
 
         if (result?.ok) {
+            const redirectUrl = searchParams.get("redirect") || searchParams.get("callbackUrl");
             // Fetch session to get role then redirect
             const sessionRes = await fetch("/api/auth/session");
             const session = await sessionRes.json();
             const role = (session?.user?.role as string) ?? "LEARNER";
             const dashboardUrl = ROLE_DASHBOARD[role] ?? "/dashboard";
-            router.push(dashboardUrl);
+            router.push(redirectUrl || dashboardUrl);
             router.refresh();
         } else {
             setError(t.auth.invalidCredentials);

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchMyEnrollments, fetchEvaluations, submitEvaluation } from "@/lib/api";
+import { fetchEvaluations, fetchMyRegistrations, submitEvaluation } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import {
     ClipboardCheck,
@@ -21,10 +21,9 @@ export default function EvaluationsPage() {
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState("");
 
-    // Fetch enrollments
-    const { data: enrollmentData, isLoading: enrollmentsLoading } = useQuery({
-        queryKey: ["my-enrollments"],
-        queryFn: fetchMyEnrollments,
+    const { data: registrationData, isLoading: registrationsLoading } = useQuery({
+        queryKey: ["my-registrations"],
+        queryFn: fetchMyRegistrations,
     });
 
     // Fetch user's evaluations
@@ -35,7 +34,7 @@ export default function EvaluationsPage() {
 
     // Submit mutation
     const submitMutation = useMutation({
-        mutationFn: (data: { courseId: string; rating: number; comment?: string }) =>
+        mutationFn: (data: { registrationId: string; courseId: string; rating: number; comment?: string }) =>
             submitEvaluation(data),
         onSuccess: () => {
             toast.success("Evaluasi berhasil dikirim! Terima kasih atas feedback Anda.");
@@ -49,11 +48,11 @@ export default function EvaluationsPage() {
         },
     });
 
-    const enrollments = enrollmentData?.enrollments ?? [];
+    const registrations = registrationData?.registrations ?? [];
     const evaluations = evalData?.evaluations ?? [];
-    const evaluatedCourseIds = new Set(evaluations.map((e) => e.courseId));
+    const evaluatedRegistrationIds = new Set(evaluations.map((e) => e.registrationId).filter(Boolean));
 
-    const isLoading = enrollmentsLoading || evalsLoading;
+    const isLoading = registrationsLoading || evalsLoading;
 
     if (isLoading) {
         return (
@@ -63,17 +62,19 @@ export default function EvaluationsPage() {
         );
     }
 
-    const completedEnrollments = enrollments.filter((e) => e.status === "COMPLETED");
-    const activeEnrollments = enrollments.filter((e) => e.status === "ACTIVE");
+    const evaluationReadyRegistrations = registrations.filter((registration) =>
+        registration.event.courseId && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)
+    );
+    const activeRegistrations = registrations.filter((registration) => ["SUBMITTED", "UNDER_REVIEW", "REVISION_REQUIRED", "APPROVED", "ACTIVE"].includes(registration.status));
     const evaluatedCount = evaluations.length;
-    const pendingCount = completedEnrollments.filter((e) => !evaluatedCourseIds.has(e.courseId)).length;
+    const pendingCount = evaluationReadyRegistrations.filter((registration) => !evaluatedRegistrationIds.has(registration.id)).length;
 
-    const handleSubmit = (courseId: string) => {
+    const handleSubmit = (registrationId: string, courseId: string) => {
         if (rating === 0) {
             toast.error("Silakan beri rating terlebih dahulu");
             return;
         }
-        submitMutation.mutate({ courseId, rating, comment: comment || undefined });
+        submitMutation.mutate({ registrationId, courseId, rating, comment: comment || undefined });
     };
 
     return (
@@ -116,7 +117,7 @@ export default function EvaluationsPage() {
                             <MessageSquare className="h-5 w-5 text-blue-500" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">{activeEnrollments.length}</p>
+                            <p className="text-2xl font-bold">{activeRegistrations.length}</p>
                             <p className="text-xs text-gray-500">Sedang Berlangsung</p>
                         </div>
                     </div>
@@ -130,24 +131,24 @@ export default function EvaluationsPage() {
                         <ClipboardCheck className="h-5 w-5" /> Menunggu Evaluasi
                     </h2>
                     <div className="grid gap-4">
-                        {completedEnrollments
-                            .filter((e) => !evaluatedCourseIds.has(e.courseId))
-                            .map((enrollment) => (
+                        {evaluationReadyRegistrations
+                            .filter((registration) => !evaluatedRegistrationIds.has(registration.id))
+                            .map((registration) => (
                                 <div
-                                    key={enrollment.id}
+                                    key={registration.id}
                                     className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] space-y-4"
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
-                                            <h3 className="font-bold text-lg">{enrollment.course.title}</h3>
+                                            <h3 className="font-bold text-lg">{registration.event.title}</h3>
                                             <p className="text-sm text-green-600 flex items-center gap-1 mt-1">
-                                                <CheckCircle className="h-3.5 w-3.5" /> Course Selesai
+                                                <CheckCircle className="h-3.5 w-3.5" /> Registrasi terverifikasi
                                             </p>
                                         </div>
-                                        {activeEvaluation !== enrollment.courseId ? (
+                                        {activeEvaluation !== registration.id ? (
                                             <button
                                                 onClick={() => {
-                                                    setActiveEvaluation(enrollment.courseId);
+                                                    setActiveEvaluation(registration.id);
                                                     setRating(0);
                                                     setComment("");
                                                 }}
@@ -159,7 +160,7 @@ export default function EvaluationsPage() {
                                     </div>
 
                                     {/* Evaluation Form */}
-                                    {activeEvaluation === enrollment.courseId && (
+                                    {activeEvaluation === registration.id && (
                                         <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                                             {/* Rating */}
                                             <div>
@@ -212,7 +213,7 @@ export default function EvaluationsPage() {
                                             {/* Actions */}
                                             <div className="flex items-center gap-3">
                                                 <button
-                                                    onClick={() => handleSubmit(enrollment.courseId)}
+                                                    onClick={() => handleSubmit(registration.id, registration.event.courseId!)}
                                                     disabled={submitMutation.isPending}
                                                     className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-full font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50"
                                                 >
@@ -283,7 +284,7 @@ export default function EvaluationsPage() {
             )}
 
             {/* Empty State */}
-            {enrollments.length === 0 && (
+             {registrations.length === 0 && (
                 <div className="text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                     <ClipboardCheck className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p>Belum ada course yang diikuti.</p>

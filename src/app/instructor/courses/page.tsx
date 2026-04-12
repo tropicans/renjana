@@ -4,7 +4,8 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCourses } from "@/lib/api";
 import Link from "next/link";
-import { Loader2, Plus, BookOpen, Clock, Users, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { Loader2, Plus, BookOpen, Users, ArrowRight } from "lucide-react";
 
 export default function InstructorCoursesPage() {
     // Note: For simplicity, we are fetching all published courses. 
@@ -56,7 +57,7 @@ export default function InstructorCoursesPage() {
                     >
                         <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center relative">
                             {course.thumbnail ? (
-                                <img src={course.thumbnail} alt={course.title} className="object-cover w-full h-full" />
+                                <Image src={course.thumbnail} alt={course.title} fill className="object-cover" sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" />
                             ) : (
                                 <BookOpen className="h-12 w-12 text-gray-300 dark:text-gray-600" />
                             )}
