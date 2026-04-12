@@ -102,7 +102,6 @@ export default function EventRegistrationPage() {
     const queryClient = useQueryClient();
     const toast = useToast();
     const { isAuthenticated, isLoading: authLoading } = useUser();
-    const [step, setStep] = React.useState(1);
     const [form, setForm] = React.useState<FormState>(initialState);
     const [files, setFiles] = React.useState<Partial<Record<(typeof documentDefinitions)[number]["type"], File>>>({});
     const [expandedPolicies, setExpandedPolicies] = React.useState<{ terms: boolean; refund: boolean }>({
@@ -290,12 +289,16 @@ export default function EventRegistrationPage() {
                     <div className="mt-8 grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
                         <aside className="space-y-5 lg:sticky lg:top-24 lg:h-fit">
                             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
-                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Registration Wizard</p>
+                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Registration Flow</p>
                                 <h1 className="mt-3 text-2xl font-bold">{event.title}</h1>
                                 <div className="mt-6 space-y-3 text-sm">
-                                    {[1, 2, 3].map((item) => (
-                                        <div key={item} className={`rounded-2xl border px-4 py-3 ${step === item ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400"}`}>
-                                            {item === 1 ? "1. Persetujuan & mode" : item === 2 ? "2. Data diri" : "3. Dokumen & sumber info"}
+                                    {[
+                                        "1. Persetujuan & mode",
+                                        "2. Data diri",
+                                        "3. Dokumen & sumber info",
+                                    ].map((label) => (
+                                        <div key={label} className="rounded-2xl border border-slate-200 bg-primary/5 px-4 py-3 text-primary dark:border-slate-800">
+                                            {label}
                                         </div>
                                     ))}
                                 </div>
@@ -312,11 +315,11 @@ export default function EventRegistrationPage() {
                         </aside>
 
                         <section className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
-                            {step === 1 && (
-                                <div className="space-y-8">
+                            <div className="space-y-10">
+                                <div className="space-y-8 border-b border-slate-200 pb-10 dark:border-slate-800">
                                     <div>
                                         <h2 className="text-2xl font-bold">Persetujuan dan pilihan mode</h2>
-                                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Tahap awal ini menyimpan preferensi keikutsertaan dan legal agreement utama.</p>
+                                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Bagian ini langsung menjadi pembuka form. Setelah memahami persetujuan, pendaftar bisa lanjut isi data pada halaman yang sama tanpa tombol next.</p>
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -493,10 +496,8 @@ export default function EventRegistrationPage() {
                                         <span>Saya memahami kebijakan pembatalan dan biaya yang berlaku untuk pendaftaran ini.</span>
                                     </label>
                                 </div>
-                            )}
 
-                            {step === 2 && (
-                                <div className="space-y-6">
+                                <div className="space-y-6 border-b border-slate-200 pb-10 dark:border-slate-800">
                                     <div>
                                         <h2 className="text-2xl font-bold">Data diri peserta</h2>
                                         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Data ini dipakai untuk administrasi, verifikasi, dan sertifikat.</p>
@@ -519,9 +520,7 @@ export default function EventRegistrationPage() {
 
                                     <textarea value={form.domicileAddress} onChange={(e) => setForm((prev) => ({ ...prev, domicileAddress: e.target.value }))} placeholder="Alamat domisili" rows={4} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
                                 </div>
-                            )}
 
-                            {step === 3 && (
                                 <div className="space-y-6">
                                     <div>
                                         <h2 className="text-2xl font-bold">Dokumen dan sumber informasi</h2>
@@ -569,18 +568,11 @@ export default function EventRegistrationPage() {
                                         </div>
                                     ) : null}
                                 </div>
-                            )}
+                            </div>
 
                             <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between dark:border-slate-800">
-                                <div className="flex gap-3">
-                                    <button type="button" onClick={() => setStep((prev) => Math.max(1, prev - 1))} disabled={step === 1} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 disabled:opacity-40 dark:border-slate-700 dark:text-slate-300">
-                                        Kembali
-                                    </button>
-                                    {step < 3 && (
-                                        <button type="button" onClick={() => setStep((prev) => Math.min(3, prev + 1))} className="rounded-full border border-primary/30 px-5 py-2.5 text-sm font-semibold text-primary">
-                                            Lanjut
-                                        </button>
-                                    )}
+                                <div className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                                    Setelah persetujuan dicentang, pendaftar bisa langsung melengkapi seluruh data di halaman ini lalu submit tanpa perpindahan step.
                                 </div>
                                 <div className="flex gap-3">
                                     <button type="button" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300">
