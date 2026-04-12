@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, Loader2, ShieldAlert, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { formatRupiah } from "@/lib/events";
+import { assignAdminRegistrationClassGroup, fetchAdminClassGroups } from "@/lib/api";
 import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
 
 type AdminRegistrationDetail = {
@@ -30,6 +31,7 @@ type AdminRegistrationDetail = {
     referralName: string | null;
     adminNote: string | null;
     totalFee: number | null;
+    classGroup: { id: string; name: string; modality: string } | null;
     user: { id: string; fullName: string; email: string; phone: string | null };
     event: { id: string; slug: string; title: string; category: string; courseId: string | null; course: { id: string; title: string } | null };
     documents: Array<{ id: string; type: string; fileUrl: string; fileName: string; fileType: string; reviewStatus: string; adminNote: string | null }>;
@@ -72,6 +74,12 @@ export default function AdminRegistrationDetailPage() {
 
     const registration = data?.registration;
 
+    const { data: classGroupsData } = useQuery({
+        queryKey: ["admin-class-groups-for-registration", registration?.event.id],
+        queryFn: () => fetchAdminClassGroups(registration!.event.id),
+        enabled: !!registration?.event.id,
+    });
+
     React.useEffect(() => {
         if (!registration) return;
         setAdminNote(registration.adminNote || "");
@@ -88,6 +96,16 @@ export default function AdminRegistrationDetailPage() {
         onError: (error: Error) => toast.error(error.message),
     });
 
+    const assignGroupMutation = useMutation({
+        mutationFn: (classGroupId: string | null) => assignAdminRegistrationClassGroup(id, classGroupId),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ["admin-registration", id] });
+            await queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
+            toast.success("Penempatan kelas berhasil diperbarui.");
+        },
+        onError: (error: Error) => toast.error(error.message),
+    });
+
     if (isLoading || !registration) {
         return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
@@ -100,6 +118,7 @@ export default function AdminRegistrationDetailPage() {
     };
 
     const paymentVerified = registration.paymentStatus === "VERIFIED";
+    const assignableClassGroups = (classGroupsData?.classGroups ?? []).filter((group) => group.modality === registration.participantMode);
 
     return (
         <div className="space-y-8">
@@ -173,6 +192,30 @@ export default function AdminRegistrationDetailPage() {
                             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{getPaymentStatusLabel(registration.paymentStatus)}</strong></div>
                             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Total fee</span><strong>{formatRupiah(registration.totalFee)}</strong></div>
                         </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
+                        <h2 className="text-xl font-bold">Class Group</h2>
+                        <p className="mt-2 text-sm text-gray-500">Tetapkan peserta ke kelas operasional setelah pembayaran terverifikasi dan approval selesai.</p>
+                        <select
+                            value={registration.classGroup?.id || ""}
+                            onChange={(e) => assignGroupMutation.mutate(e.target.value || null)}
+                            disabled={assignGroupMutation.isPending || !paymentVerified || !["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)}
+                            className="mt-4 w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm disabled:opacity-60 dark:border-gray-700"
+                        >
+                            <option value="">Belum ditempatkan</option>
+                            {assignableClassGroups.map((group) => (
+                                <option key={group.id} value={group.id}>{group.name}</option>
+                            ))}
+                        </select>
+                        <p className="mt-3 text-xs text-gray-500">
+                            {registration.classGroup
+                                ? `Saat ini peserta berada di ${registration.classGroup.name}.`
+                                : "Peserta belum ditempatkan ke class group mana pun."}
+                        </p>
+                        <Link href={`/admin/events/${registration.event.id}/class-groups`} className="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">
+                            Kelola class groups untuk event ini
+                        </Link>
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">

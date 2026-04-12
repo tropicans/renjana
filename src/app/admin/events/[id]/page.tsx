@@ -338,9 +338,17 @@ export default function AdminEventDetailPage() {
                                     <Link href={`/admin/events/${event.id}/quizzes`} className="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">
                                         Kelola quiz course dari event ini
                                     </Link>
+                                    <Link href={`/admin/events/${event.id}/class-groups`} className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">
+                                        Kelola class groups event ini
+                                    </Link>
                                 </div>
                             ) : (
-                                <p>Event tanpa linked course hanya mendukung registration dan operasional tanpa learning delivery.</p>
+                                <div className="space-y-2">
+                                    <p>Event tanpa linked course hanya mendukung registration dan operasional tanpa learning delivery.</p>
+                                    <Link href={`/admin/events/${event.id}/class-groups`} className="inline-flex text-xs font-semibold text-primary hover:underline">
+                                        Kelola class groups event ini
+                                    </Link>
+                                </div>
                             )}
 
                             {form.courseId ? (

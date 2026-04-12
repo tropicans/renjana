@@ -32,6 +32,18 @@ export async function GET() {
                     fileUrl: true,
                 },
             },
+            classGroup: {
+                select: {
+                    id: true,
+                    name: true,
+                    modality: true,
+                    location: true,
+                    zoomLink: true,
+                    zoomPasscode: true,
+                    startAt: true,
+                    endAt: true,
+                },
+            },
             payments: {
                 orderBy: { createdAt: "desc" },
                 take: 1,
@@ -164,6 +176,18 @@ export async function POST(req: Request) {
         include: {
             event: true,
             documents: true,
+            classGroup: {
+                select: {
+                    id: true,
+                    name: true,
+                    modality: true,
+                    location: true,
+                    zoomLink: true,
+                    zoomPasscode: true,
+                    startAt: true,
+                    endAt: true,
+                },
+            },
             payments: {
                 orderBy: { createdAt: "desc" },
                 take: 1,

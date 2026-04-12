@@ -157,8 +157,35 @@ export interface ApiRegistration {
     createdAt: string;
     updatedAt: string;
     event: Pick<ApiEvent, "id" | "slug" | "title" | "category" | "modality" | "status" | "eventStart" | "registrationEnd" | "courseId">;
+    classGroup?: {
+        id: string;
+        name: string;
+        modality: string;
+        location: string | null;
+        zoomLink: string | null;
+        zoomPasscode: string | null;
+        startAt: string | null;
+        endAt: string | null;
+    } | null;
     documents: ApiRegistrationDocument[];
     payments?: ApiRegistrationPayment[];
+}
+
+export interface ApiClassGroup {
+    id: string;
+    eventId: string;
+    name: string;
+    modality: string;
+    capacity: number | null;
+    status: string;
+    description: string | null;
+    instructorName: string | null;
+    location: string | null;
+    zoomLink: string | null;
+    zoomPasscode: string | null;
+    startAt: string | null;
+    endAt: string | null;
+    _count?: { registrations: number };
 }
 
 export interface ApiAdminCourseDetail {
@@ -251,6 +278,37 @@ export async function createRegistrationPaymentCheckout(registrationId: string) 
     }
 
     return res.json() as Promise<{ payment: ApiRegistrationPayment; reused?: boolean }>;
+}
+
+export function fetchAdminClassGroups(eventId: string) {
+    return apiFetch<{ classGroups: ApiClassGroup[] }>(`/api/admin/events/${eventId}/class-groups`);
+}
+
+export function createAdminClassGroup(eventId: string, data: Record<string, unknown>) {
+    return apiFetch<{ classGroup: ApiClassGroup }>(`/api/admin/events/${eventId}/class-groups`, {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
+
+export function updateAdminClassGroup(classGroupId: string, data: Record<string, unknown>) {
+    return apiFetch<{ classGroup: ApiClassGroup }>(`/api/admin/class-groups/${classGroupId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+    });
+}
+
+export function deleteAdminClassGroup(classGroupId: string) {
+    return apiFetch<{ success: boolean }>(`/api/admin/class-groups/${classGroupId}`, {
+        method: "DELETE",
+    });
+}
+
+export function assignAdminRegistrationClassGroup(registrationId: string, classGroupId: string | null) {
+    return apiFetch<{ registration: ApiRegistration }>(`/api/admin/registrations/${registrationId}/assign-group`, {
+        method: "PUT",
+        body: JSON.stringify({ classGroupId }),
+    });
 }
 
 // ── Enrollments ────────────────────────────────────────────────

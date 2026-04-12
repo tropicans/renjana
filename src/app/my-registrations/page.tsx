@@ -116,7 +116,20 @@ function MyRegistrationsContent() {
                                     <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> {registration.event.eventStart ? new Date(registration.event.eventStart).toLocaleDateString("id-ID") : "Tanggal menyusul"}</div>
                                     <div>Total biaya: {formatRupiah(registration.totalFee)}</div>
                                     <div>{registration.documents.length} dokumen tersimpan</div>
+                                    <div>Kelas: {registration.classGroup?.name || "Sedang disiapkan admin"}</div>
                                 </div>
+                                {registration.classGroup ? (
+                                    <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                                        <p className="font-semibold text-slate-900 dark:text-white">Informasi kelas</p>
+                                        <div className="mt-2 space-y-1">
+                                            <p>Grup: {registration.classGroup.name}</p>
+                                            <p>Mode: {registration.classGroup.modality}</p>
+                                            {registration.classGroup.location ? <p>Lokasi: {registration.classGroup.location}</p> : null}
+                                            {registration.classGroup.startAt ? <p>Mulai: {new Date(registration.classGroup.startAt).toLocaleString("id-ID")}</p> : null}
+                                            {registration.classGroup.zoomLink ? <p>Link live akan dibuka dari detail kelas saat diperlukan.</p> : null}
+                                        </div>
+                                    </div>
+                                ) : null}
                             </article>
                         ))}
                     </div>

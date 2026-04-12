@@ -345,7 +345,7 @@ export default function AdminRegistrationsPage() {
                                             <p className="max-w-xs text-xs leading-relaxed text-gray-500">{registration.certificateReadiness.detail}</p>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-gray-500">{registration.documents.length} file</td>
+                                    <td className="p-4 text-gray-500">{registration.documents.length} file{registration.classGroup ? ` · ${registration.classGroup.name}` : " · Belum ada kelas"}</td>
                                     <td className="p-4">
                                         <div className="flex flex-wrap gap-2">
                                             <Link href={`/admin/registrations/${registration.id}`} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:border-primary/40 hover:text-primary dark:border-gray-700 dark:text-gray-200">

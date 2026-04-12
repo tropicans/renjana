@@ -21,6 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     },
                 },
             },
+            classGroup: true,
             documents: { orderBy: { createdAt: "asc" } },
         },
     });
@@ -92,6 +93,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                     course: { select: { id: true, title: true } },
                 },
             },
+            classGroup: true,
             documents: { orderBy: { createdAt: "asc" } },
         },
     });

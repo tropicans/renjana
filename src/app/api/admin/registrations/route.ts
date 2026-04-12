@@ -22,6 +22,13 @@ export async function GET() {
                     evaluationEnabled: true,
                 },
             },
+            classGroup: {
+                select: {
+                    id: true,
+                    name: true,
+                    modality: true,
+                },
+            },
             documents: { select: { id: true, type: true, reviewStatus: true } },
         },
         orderBy: { createdAt: "desc" },
