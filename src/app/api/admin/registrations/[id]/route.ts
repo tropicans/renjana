@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { createRegistrationNotification } from "@/lib/notifications";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
@@ -125,6 +126,28 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                 },
             },
         });
+    }
+
+    if (status && status !== registration.status) {
+        const notificationType = status === "APPROVED"
+            ? "REGISTRATION_APPROVED"
+            : status === "REVISION_REQUIRED"
+                ? "REGISTRATION_REVISION_REQUIRED"
+                : status === "REJECTED"
+                    ? "REGISTRATION_REJECTED"
+                    : null;
+
+        if (notificationType) {
+            await createRegistrationNotification({
+                userId: updated.user.id,
+                registrationId: updated.id,
+                eventId: updated.event.id,
+                eventSlug: updated.event.slug,
+                eventTitle: updated.event.title,
+                type: notificationType,
+                adminNote: updated.adminNote,
+            });
+        }
     }
 
     return NextResponse.json({ registration: updated });

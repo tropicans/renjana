@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { createRegistrationNotification } from "@/lib/notifications";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireRole("ADMIN");
@@ -54,6 +55,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             metadata: { classGroupId },
         },
     });
+
+    if (registration.classGroupId !== updated.classGroup?.id) {
+        await createRegistrationNotification({
+            userId: updated.user.id,
+            registrationId: updated.id,
+            eventId: updated.event.id,
+            eventSlug: updated.event.slug,
+            eventTitle: updated.event.title,
+            type: updated.classGroup ? "CLASS_GROUP_ASSIGNED" : "CLASS_GROUP_UPDATED",
+            classGroupName: updated.classGroup?.name,
+        });
+    }
 
     return NextResponse.json({ registration: updated });
 }

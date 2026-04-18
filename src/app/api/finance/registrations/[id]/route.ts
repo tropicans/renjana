@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { createRegistrationNotification } from "@/lib/notifications";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("FINANCE", "ADMIN");
@@ -115,6 +116,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                     },
                 },
             },
+        });
+    }
+
+    if (paymentStatus && paymentStatus !== registration.paymentStatus) {
+        await createRegistrationNotification({
+            userId: updated.user.id,
+            registrationId: updated.id,
+            eventId: updated.event.id,
+            eventSlug: updated.event.slug,
+            eventTitle: updated.event.title,
+            type: paymentStatus === "VERIFIED" ? "PAYMENT_VERIFIED" : "PAYMENT_REJECTED",
+            adminNote: updated.adminNote,
         });
     }
 

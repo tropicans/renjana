@@ -2,13 +2,15 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Bell, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher, useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useUser, getDashboardUrl } from '@/lib/context/user-context'
+import { fetchMyNotifications } from '@/lib/api'
 import { Loader2 } from 'lucide-react'
 
 export function SiteHeader({ className }: { className?: string }) {
@@ -16,6 +18,13 @@ export function SiteHeader({ className }: { className?: string }) {
     const { user, isAuthenticated, logout, isLoading } = useUser()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
+    const { data: notificationsData } = useQuery({
+        queryKey: ["my-notifications"],
+        queryFn: fetchMyNotifications,
+        enabled: isAuthenticated,
+    })
+
+    const unreadNotificationCount = notificationsData?.unreadCount ?? 0
 
     const menuItems = [
         { name: 'Kegiatan', href: '/events' },
@@ -66,6 +75,18 @@ export function SiteHeader({ className }: { className?: string }) {
                         </div>
                     ) : isAuthenticated ? (
                         <>
+                            <Link
+                                href="/my-registrations#notifications"
+                                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-black/80 transition-colors hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/10"
+                                aria-label="Notifikasi pendaftaran"
+                            >
+                                <Bell className="h-4 w-4" />
+                                {unreadNotificationCount > 0 ? (
+                                    <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-500 px-1 text-[10px] font-bold leading-4 text-white">
+                                        {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                                    </span>
+                                ) : null}
+                            </Link>
                             <Link href={getDashboardUrl(user!.role)} className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
                                 Dashboard
                             </Link>
@@ -116,6 +137,13 @@ export function SiteHeader({ className }: { className?: string }) {
                             </div>
                         ) : isAuthenticated ? (
                             <>
+                                <Link
+                                    href="/my-registrations#notifications"
+                                    onClick={() => setMenuState(false)}
+                                    className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
+                                >
+                                    Notifikasi{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}
+                                </Link>
                                 <Link
                                     href={getDashboardUrl(user!.role)}
                                     onClick={() => setMenuState(false)}

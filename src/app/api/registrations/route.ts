@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
 import { calculateEventTotalFee, getRequiredRegistrationDocumentTypes, isParticipantMode, isSourceChannel } from "@/lib/events";
 import { getDokuPublicConfig } from "@/lib/doku";
+import { createRegistrationNotification } from "@/lib/notifications";
 
 export async function GET() {
     const { user, error } = await requireAuth();
@@ -168,6 +169,15 @@ export async function POST(req: Request) {
             data: {
                 paymentStatus: uploadedTypes.has("PAYMENT_PROOF") ? "UPLOADED" : "PENDING",
             },
+        });
+
+        await createRegistrationNotification({
+            userId: user!.id,
+            registrationId: registration.id,
+            eventId: event.id,
+            eventSlug: event.slug,
+            eventTitle: event.title,
+            type: "REGISTRATION_SUBMITTED",
         });
     }
 

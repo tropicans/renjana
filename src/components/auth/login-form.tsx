@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useLanguage } from "@/lib/i18n";
@@ -15,8 +15,11 @@ const ROLE_DASHBOARD: Record<string, string> = {
     LEARNER: "/dashboard",
 };
 
+function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function LoginForm() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
@@ -30,22 +33,35 @@ export function LoginForm() {
         setIsLoading(true);
         setError(null);
 
-        const result = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-        });
-
-        if (result?.ok) {
+        try {
             const redirectUrl = searchParams.get("redirect") || searchParams.get("callbackUrl");
-            // Fetch session to get role then redirect
-            const sessionRes = await fetch("/api/auth/session");
-            const session = await sessionRes.json();
-            const role = (session?.user?.role as string) ?? "LEARNER";
-            const dashboardUrl = ROLE_DASHBOARD[role] ?? "/dashboard";
-            router.push(redirectUrl || dashboardUrl);
-            router.refresh();
-        } else {
+            const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+                callbackUrl: redirectUrl || "/dashboard",
+            });
+
+            if (!result?.ok) {
+                setError(t.auth.invalidCredentials);
+                setIsLoading(false);
+                return;
+            }
+
+            let dashboardUrl = "/dashboard";
+            for (let attempt = 0; attempt < 6; attempt += 1) {
+                const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+                const session = await sessionRes.json().catch(() => null);
+                const role = (session?.user?.role as string | undefined) ?? null;
+                if (role) {
+                    dashboardUrl = ROLE_DASHBOARD[role] ?? "/dashboard";
+                    break;
+                }
+                await wait(250);
+            }
+
+            window.location.assign(redirectUrl || result.url || dashboardUrl);
+        } catch {
             setError(t.auth.invalidCredentials);
             setIsLoading(false);
         }

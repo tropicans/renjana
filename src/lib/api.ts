@@ -129,6 +129,25 @@ export interface ApiRegistrationPayment {
     description: string | null;
 }
 
+export interface ApiNotification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    link: string | null;
+    isRead: boolean;
+    readAt: string | null;
+    createdAt: string;
+    metadata?: {
+        registrationId?: string;
+        eventId?: string | null;
+        eventSlug?: string;
+        eventTitle?: string;
+        classGroupName?: string;
+        adminNote?: string;
+    } | null;
+}
+
 export interface ApiRegistration {
     id: string;
     userId: string;
@@ -234,6 +253,22 @@ export interface ApiInstructorStats {
 
 export function fetchMyRegistrations() {
     return apiFetch<{ registrations: ApiRegistration[] }>("/api/registrations");
+}
+
+export function fetchMyNotifications() {
+    return apiFetch<{ notifications: ApiNotification[]; unreadCount: number }>("/api/notifications");
+}
+
+export function markAllNotificationsRead() {
+    return apiFetch<{ success: boolean }>("/api/notifications", {
+        method: "PATCH",
+    });
+}
+
+export function markNotificationRead(id: string) {
+    return apiFetch<{ success: boolean }>(`/api/notifications/${id}`, {
+        method: "PATCH",
+    });
 }
 
 export function fetchRegistration(id: string) {
