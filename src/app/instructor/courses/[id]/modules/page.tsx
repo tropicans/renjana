@@ -7,6 +7,13 @@ import { fetchCourseById, type ApiCourseDetail } from "@/lib/api";
 import { Loader2, Plus, GripVertical, Edit2, Trash2, Video, FileText, CheckSquare, Save } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
+function formatBytes(bytes?: number | null): string | null {
+    if (!bytes || bytes <= 0) return null;
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function InstructorModuleManagementPage() {
     const params = useParams();
     const courseId = params.id as string;
@@ -95,6 +102,13 @@ export default function InstructorModuleManagementPage() {
                                     <div className="flex-1">
                                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{lesson.title}</p>
                                         <p className="text-xs text-gray-500">{lesson.type} • {lesson.durationMin ?? 0} menit</p>
+                                        {lesson.contentUrl ? (
+                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+                                                <a href={lesson.contentUrl} target="_blank" rel="noreferrer" className="font-semibold text-emerald-600 hover:underline dark:text-emerald-400">Buka materi</a>
+                                                {lesson.materialFileName ? <span>• {lesson.materialFileName}</span> : null}
+                                                {formatBytes(lesson.materialFileSize) ? <span>• {formatBytes(lesson.materialFileSize)}</span> : null}
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                                         <button className="p-1.5 text-gray-400 hover:text-emerald-500 rounded"><Edit2 className="h-3.5 w-3.5" /></button>

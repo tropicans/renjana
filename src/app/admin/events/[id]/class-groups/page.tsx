@@ -71,7 +71,7 @@ export default function AdminEventClassGroupsPage() {
         mutationFn: () => createAdminClassGroup(id, { ...form, capacity: form.capacity.trim() ? Number(form.capacity) : null }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["admin-class-groups", id] });
-            toast.success("Class group berhasil dibuat.");
+            toast.success("Kelompok kelas berhasil dibuat.");
             setForm(emptyForm());
         },
         onError: (error: Error) => toast.error(error.message),
@@ -84,7 +84,7 @@ export default function AdminEventClassGroupsPage() {
         }),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["admin-class-groups", id] });
-            toast.success("Class group berhasil diperbarui.");
+            toast.success("Kelompok kelas berhasil diperbarui.");
             setEditingGroupId(null);
             setEditingForm(emptyForm());
         },
@@ -95,7 +95,7 @@ export default function AdminEventClassGroupsPage() {
         mutationFn: (groupId: string) => deleteAdminClassGroup(groupId),
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["admin-class-groups", id] });
-            toast.success("Class group berhasil dihapus.");
+            toast.success("Kelompok kelas berhasil dihapus.");
         },
         onError: (error: Error) => toast.error(error.message),
     });
@@ -109,27 +109,27 @@ export default function AdminEventClassGroupsPage() {
             <Link href={`/admin/events/${id}`} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary"><ArrowLeft className="h-4 w-4" /> Kembali ke event</Link>
 
             <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Class Groups</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Kelompok Kelas</p>
                 <h1 className="mt-2 text-3xl font-extrabold tracking-tight">{eventData?.event.title}</h1>
-                <p className="mt-1 text-gray-500">Buat kelas operasional online/offline untuk assignment peserta.</p>
+                <p className="mt-1 text-gray-500">Buat kelas operasional online/offline untuk penempatan peserta.</p>
             </div>
 
             <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                <h2 className="text-xl font-bold">Buat class group</h2>
+                <h2 className="text-xl font-bold">Buat Kelompok Kelas</h2>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama class group" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                    <input value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama kelompok kelas" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <select value={form.modality} onChange={(e) => setForm((prev) => ({ ...prev, modality: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700">
                         <option value="ONLINE">ONLINE</option>
                         <option value="OFFLINE">OFFLINE</option>
                     </select>
                     <input value={form.capacity} onChange={(e) => setForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
-                    <input value={form.instructorName} onChange={(e) => setForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instructor" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                    <input value={form.instructorName} onChange={(e) => setForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.zoomLink} onChange={(e) => setForm((prev) => ({ ...prev, zoomLink: e.target.value }))} placeholder="Link Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.zoomPasscode} onChange={(e) => setForm((prev) => ({ ...prev, zoomPasscode: e.target.value }))} placeholder="Passcode Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Deskripsi / instruksi kelas" rows={4} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700 md:col-span-2" />
                 </div>
-                <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.name.trim()} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"><Plus className="h-4 w-4" /> Buat class group</button>
+                <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.name.trim()} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"><Plus className="h-4 w-4" /> Buat kelompok kelas</button>
             </section>
 
             <section className="grid gap-4">
@@ -158,7 +158,7 @@ export default function AdminEventClassGroupsPage() {
                                     }}
                                     className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700"
                                 >
-                                    <Pencil className="h-4 w-4" /> Edit
+                                    <Pencil className="h-4 w-4" /> Ubah
                                 </button>
                                 <button onClick={() => deleteMutation.mutate(group.id)} disabled={deleteMutation.isPending} className="inline-flex items-center gap-2 rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 disabled:opacity-60"><Trash2 className="h-4 w-4" /> Hapus</button>
                             </div>
@@ -166,13 +166,13 @@ export default function AdminEventClassGroupsPage() {
 
                         {editingGroupId === group.id ? (
                             <div className="mt-6 grid gap-4 border-t border-gray-100 pt-6 dark:border-gray-800 md:grid-cols-2">
-                                <input value={editingForm.name} onChange={(e) => setEditingForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama class group" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                                <input value={editingForm.name} onChange={(e) => setEditingForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Nama kelompok kelas" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <select value={editingForm.modality} onChange={(e) => setEditingForm((prev) => ({ ...prev, modality: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700">
                                     <option value="ONLINE">ONLINE</option>
                                     <option value="OFFLINE">OFFLINE</option>
                                 </select>
                                 <input value={editingForm.capacity} onChange={(e) => setEditingForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
-                                <input value={editingForm.instructorName} onChange={(e) => setEditingForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instructor" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                                <input value={editingForm.instructorName} onChange={(e) => setEditingForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.location} onChange={(e) => setEditingForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.zoomLink} onChange={(e) => setEditingForm((prev) => ({ ...prev, zoomLink: e.target.value }))} placeholder="Link Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.zoomPasscode} onChange={(e) => setEditingForm((prev) => ({ ...prev, zoomPasscode: e.target.value }))} placeholder="Passcode Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -199,7 +199,7 @@ export default function AdminEventClassGroupsPage() {
                         ) : null}
                     </article>
                 ))}
-                {groups.length === 0 ? <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-[#1a242f]">Belum ada class group untuk event ini.</div> : null}
+                {groups.length === 0 ? <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-[#1a242f]">Belum ada kelompok kelas untuk event ini.</div> : null}
             </section>
         </div>
     );

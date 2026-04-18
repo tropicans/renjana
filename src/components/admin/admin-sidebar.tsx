@@ -18,9 +18,9 @@ import {
 const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Events", href: "/admin/events", icon: Layers },
-    { name: "Programs", href: "/admin/programs", icon: BookOpen },
+    { name: "Pelatihan", href: "/admin/pelatihan", icon: BookOpen },
     { name: "Registrations", href: "/admin/registrations", icon: UserPlus },
-    { name: "Audit Log", href: "/admin/audit", icon: FileText },
+    { name: "Log Audit", href: "/admin/audit", icon: FileText },
 ];
 
 interface AdminSidebarProps {
@@ -103,7 +103,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
                     )}
                 >
                     <Settings className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>Instructor View</span>}
+                    {!collapsed && <span>Tampilan Instruktur</span>}
                 </a>
                 <a
                     href="/dashboard"
@@ -113,7 +113,7 @@ export function AdminSidebar({ collapsed = false, onToggle }: AdminSidebarProps)
                     )}
                 >
                     <UserPlus className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>Learner View</span>}
+                    {!collapsed && <span>Tampilan Peserta</span>}
                 </a>
             </div>
 

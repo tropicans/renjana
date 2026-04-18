@@ -93,7 +93,7 @@ function validateQuizForm(form: QuizFormState) {
     if (form.timeLimit.trim()) {
         const timeLimit = Number(form.timeLimit);
         if (!Number.isInteger(timeLimit) || timeLimit <= 0) {
-            return "Time limit harus berupa angka bulat positif.";
+            return "Batas waktu harus berupa angka bulat positif.";
         }
     }
 
@@ -151,7 +151,7 @@ export default function AdminEventQuizzesPage() {
         mutationFn: async () => {
             const error = validateQuizForm(form);
             if (error) throw new Error(error);
-            if (!courseId) throw new Error("Event belum terhubung ke course.");
+            if (!courseId) throw new Error("Event belum terhubung ke pelatihan.");
 
             const payload = {
                 courseId,
@@ -215,7 +215,7 @@ export default function AdminEventQuizzesPage() {
                 </Link>
 
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-                    Event ini belum terhubung ke course. Hubungkan course terlebih dahulu di halaman `event detail` agar quiz bisa dikelola dari context event.
+                    Event ini belum terhubung ke pelatihan. Hubungkan pelatihan terlebih dahulu di halaman `event detail` agar quiz bisa dikelola dari konteks event.
                 </div>
             </div>
         );
@@ -229,12 +229,12 @@ export default function AdminEventQuizzesPage() {
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Quiz Management</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Manajemen Quiz</p>
                     <h1 className="mt-2 text-3xl font-extrabold tracking-tight">{event.title}</h1>
-                    <p className="mt-1 text-gray-500">Kelola PRE_TEST dan POST_TEST untuk course yang terhubung dengan event ini.</p>
+                    <p className="mt-1 text-gray-500">Kelola PRE_TEST dan POST_TEST untuk pelatihan yang terhubung dengan event ini.</p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white px-5 py-4 text-sm dark:border-gray-800 dark:bg-[#1a242f]">
-                    <p className="font-semibold text-gray-900 dark:text-white">Linked course</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">Pelatihan tertaut</p>
                     <p className="mt-1 text-gray-500">{event.course?.title}</p>
                 </div>
             </div>
@@ -253,8 +253,8 @@ export default function AdminEventQuizzesPage() {
                     <div className="flex items-center gap-3">
                         {event.postTestEnabled ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-amber-500" />}
                         <div>
-                            <p className="text-sm font-bold">Certificate dependency</p>
-                            <p className="text-xs text-gray-500">POST_TEST {event.postTestEnabled ? "enabled" : "not enabled"}</p>
+                            <p className="text-sm font-bold">Dependensi Sertifikat</p>
+                            <p className="text-xs text-gray-500">POST_TEST {event.postTestEnabled ? "aktif" : "belum aktif"}</p>
                         </div>
                     </div>
                 </div>
@@ -262,8 +262,8 @@ export default function AdminEventQuizzesPage() {
                     <div className="flex items-center gap-3">
                         {event.evaluationEnabled ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-amber-500" />}
                         <div>
-                            <p className="text-sm font-bold">Evaluation dependency</p>
-                            <p className="text-xs text-gray-500">Evaluation {event.evaluationEnabled ? "enabled" : "not enabled"}</p>
+                            <p className="text-sm font-bold">Dependensi Evaluasi</p>
+                            <p className="text-xs text-gray-500">Evaluasi {event.evaluationEnabled ? "aktif" : "belum aktif"}</p>
                         </div>
                     </div>
                 </div>
@@ -283,7 +283,7 @@ export default function AdminEventQuizzesPage() {
                                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${active ? "bg-primary text-white" : "border border-gray-200 text-gray-600 hover:border-primary/30 hover:text-primary dark:border-gray-700 dark:text-gray-300"}`}
                             >
                                 {type}
-                                <span className="ml-2 text-xs opacity-80">{existing ? "configured" : "empty"}</span>
+                                <span className="ml-2 text-xs opacity-80">{existing ? "sudah diatur" : "kosong"}</span>
                             </button>
                         );
                     })}
@@ -305,21 +305,21 @@ export default function AdminEventQuizzesPage() {
                             <p className="font-semibold text-gray-900 dark:text-white">{selectedQuiz ? selectedQuiz.title : `${activeType} belum dibuat`}</p>
                             <div className="mt-3 space-y-2 text-gray-500">
                                 <p>Soal: {selectedQuiz?._count.questions ?? 0}</p>
-                                <p>Attempts: {selectedQuiz?._count.attempts ?? 0}</p>
-                                <p>Passing score: {selectedQuiz?.passingScore ?? "-"}</p>
-                                <p>Time limit: {selectedQuiz?.timeLimit ? `${selectedQuiz.timeLimit} menit` : "Tanpa batas waktu"}</p>
+                                <p>Percobaan: {selectedQuiz?._count.attempts ?? 0}</p>
+                                <p>Nilai lulus: {selectedQuiz?.passingScore ?? "-"}</p>
+                                <p>Batas waktu: {selectedQuiz?.timeLimit ? `${selectedQuiz.timeLimit} menit` : "Tanpa batas waktu"}</p>
                             </div>
                         </div>
 
                         <div className={`rounded-xl px-4 py-3 text-xs ${selectedQuiz ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"}`}>
                             {selectedQuiz
                                 ? `${activeType} siap dipakai pada event ini.`
-                                : `Belum ada ${activeType}. Buat quiz untuk mengaktifkan readiness event dengan rapi.`}
+                                : `Belum ada ${activeType}. Buat quiz agar kesiapan event bisa dikelola dengan rapi.`}
                         </div>
 
                         {activeType === "POST_TEST" ? (
                             <div className={`rounded-xl px-4 py-3 text-xs ${event.postTestEnabled && event.evaluationEnabled ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"}`}>
-                                Sertifikat event ini baru benar-benar siap jika POST_TEST aktif, evaluation aktif, peserta lulus POST_TEST, dan peserta submit evaluation.
+                                Sertifikat event ini baru benar-benar siap jika POST_TEST aktif, evaluasi aktif, peserta lulus POST_TEST, dan peserta mengirim evaluasi.
                             </div>
                         ) : null}
                     </div>
@@ -328,8 +328,8 @@ export default function AdminEventQuizzesPage() {
                 <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 className="text-xl font-bold">{form.id ? "Edit quiz" : "Buat quiz baru"}</h2>
-                            <p className="mt-1 text-sm text-gray-500">Semua perubahan langsung terkait ke course yang dipakai event ini.</p>
+                            <h2 className="text-xl font-bold">{form.id ? "Ubah quiz" : "Buat quiz baru"}</h2>
+                            <p className="mt-1 text-sm text-gray-500">Semua perubahan langsung terkait ke pelatihan yang dipakai event ini.</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {form.id ? (
@@ -338,7 +338,7 @@ export default function AdminEventQuizzesPage() {
                                     onClick={() => setForm(normalizeForm(selectedQuiz!))}
                                     className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold dark:border-gray-700"
                                 >
-                                    <Pencil className="h-3.5 w-3.5" /> Reset perubahan
+                                    <Pencil className="h-3.5 w-3.5" /> Kembalikan perubahan
                                 </button>
                             ) : (
                                 <button
@@ -346,7 +346,7 @@ export default function AdminEventQuizzesPage() {
                                     onClick={() => setForm(createDefaultForm(activeType))}
                                     className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold dark:border-gray-700"
                                 >
-                                    <Plus className="h-3.5 w-3.5" /> Reset draft
+                                    <Plus className="h-3.5 w-3.5" /> Reset draf
                                 </button>
                             )}
                             {form.id ? (
@@ -379,20 +379,20 @@ export default function AdminEventQuizzesPage() {
                         <input
                             value={form.timeLimit}
                             onChange={(e) => setForm((prev) => ({ ...prev, timeLimit: e.target.value }))}
-                            placeholder="Time limit (menit, opsional)"
+                            placeholder="Batas waktu (menit, opsional)"
                             className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700"
                         />
                         <input
                             value={form.passingScore}
                             onChange={(e) => setForm((prev) => ({ ...prev, passingScore: e.target.value }))}
-                            placeholder="Passing score"
+                            placeholder="Nilai lulus"
                             className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700"
                         />
                     </div>
 
                     <div className="mt-6 space-y-4">
                         <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-lg font-bold">Questions</h3>
+                            <h3 className="text-lg font-bold">Pertanyaan</h3>
                             <button
                                 type="button"
                                 onClick={() => setForm((prev) => ({ ...prev, questions: [...prev.questions, createEmptyQuestion()] }))}
@@ -446,7 +446,7 @@ export default function AdminEventQuizzesPage() {
                                                             questions: prev.questions.map((item, index) => index === questionIdx ? { ...item, correctIdx: optionIdx } : item),
                                                         }))}
                                                     />
-                                                    Correct
+                                                    Jawaban benar
                                                 </label>
                                             </div>
                                             <input

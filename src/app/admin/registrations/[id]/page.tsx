@@ -93,7 +93,7 @@ export default function AdminRegistrationDetailPage() {
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: ["admin-registration", id] });
             await queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
-            toast.success("Registration updated.");
+            toast.success("Registrasi berhasil diperbarui.");
         },
         onError: (error: Error) => toast.error(error.message),
     });
@@ -136,8 +136,8 @@ export default function AdminRegistrationDetailPage() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <button onClick={() => mutation.mutate({ status: "REVISION_REQUIRED", adminNote })} className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-700">Minta revisi</button>
-                    <button onClick={() => mutation.mutate({ status: "APPROVED", adminNote })} disabled={!paymentVerified} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Approve</button>
-                    <button onClick={() => mutation.mutate({ status: "REJECTED", adminNote })} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Reject</button>
+                    <button onClick={() => mutation.mutate({ status: "APPROVED", adminNote })} disabled={!paymentVerified} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Setujui</button>
+                    <button onClick={() => mutation.mutate({ status: "REJECTED", adminNote })} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Tolak</button>
                 </div>
             </div>
 
@@ -177,8 +177,8 @@ export default function AdminRegistrationDetailPage() {
                                     </div>
                                     <textarea value={documentNotes[document.id] || ""} onChange={(e) => setDocumentNotes((prev) => ({ ...prev, [document.id]: e.target.value }))} placeholder="Catatan dokumen" rows={2} className="mt-4 w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                     <div className="mt-3 flex gap-3">
-                                        <button onClick={() => reviewDocument(document.id, "APPROVED")} className="rounded-full bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 dark:bg-green-900/20 dark:text-green-300">Approve file</button>
-                                        <button onClick={() => reviewDocument(document.id, "REJECTED")} className="rounded-full bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-300">Reject file</button>
+                                        <button onClick={() => reviewDocument(document.id, "APPROVED")} className="rounded-full bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 dark:bg-green-900/20 dark:text-green-300">Setujui file</button>
+                                        <button onClick={() => reviewDocument(document.id, "REJECTED")} className="rounded-full bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-300">Tolak file</button>
                                     </div>
                                 </div>
                             ))}
@@ -190,14 +190,14 @@ export default function AdminRegistrationDetailPage() {
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
                         <h2 className="text-xl font-bold">Status Operasional</h2>
                         <div className="mt-5 grid gap-4 text-sm">
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-primary" /> Registration</span><strong>{getRegistrationStatusLabel(registration.status)}</strong></div>
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-primary" /> Registrasi</span><strong>{getRegistrationStatusLabel(registration.status)}</strong></div>
                             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{getPaymentStatusLabel(registration.paymentStatus)}</strong></div>
                             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Total fee</span><strong>{formatRupiah(registration.totalFee)}</strong></div>
                         </div>
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Class Group</h2>
+                        <h2 className="text-xl font-bold">Kelompok Kelas</h2>
                         <p className="mt-2 text-sm text-gray-500">Tetapkan peserta ke kelas operasional setelah pembayaran terverifikasi dan approval selesai.</p>
                         <select
                             value={registration.classGroup?.id || ""}
@@ -216,17 +216,17 @@ export default function AdminRegistrationDetailPage() {
                                 : "Peserta belum ditempatkan ke class group mana pun."}
                         </p>
                         <Link href={`/admin/events/${registration.event.id}/class-groups`} className="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">
-                            Kelola class groups untuk event ini
+                            Kelola kelompok kelas untuk event ini
                         </Link>
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Source & Agreement</h2>
+                        <h2 className="text-xl font-bold">Sumber & Persetujuan</h2>
                         <div className="mt-5 space-y-3 text-sm">
-                            <div><p className="text-gray-400">Source channel</p><p className="font-medium">{registration.sourceChannel || "-"}{registration.sourceChannel === "OTHER" && registration.sourceOtherText ? ` - ${registration.sourceOtherText}` : ""}</p></div>
-                            <div><p className="text-gray-400">Referral</p><p className="font-medium">{registration.referralName || "-"}</p></div>
-                            <div><p className="text-gray-400">Agreement</p><p className="font-medium">Terms: {registration.agreedTerms ? "Yes" : "No"} · Refund policy: {registration.agreedRefundPolicy ? "Yes" : "No"}</p></div>
-                            <div><p className="text-gray-400">Linked course</p><p className="font-medium">{registration.event.course?.title || "Belum terhubung"}</p></div>
+                            <div><p className="text-gray-400">Sumber kanal</p><p className="font-medium">{registration.sourceChannel || "-"}{registration.sourceChannel === "OTHER" && registration.sourceOtherText ? ` - ${registration.sourceOtherText}` : ""}</p></div>
+                            <div><p className="text-gray-400">Referal</p><p className="font-medium">{registration.referralName || "-"}</p></div>
+                            <div><p className="text-gray-400">Persetujuan</p><p className="font-medium">Syarat: {registration.agreedTerms ? "Ya" : "Tidak"} · Kebijakan refund: {registration.agreedRefundPolicy ? "Ya" : "Tidak"}</p></div>
+                            <div><p className="text-gray-400">Pelatihan tertaut</p><p className="font-medium">{registration.event.course?.title || "Belum terhubung"}</p></div>
                         </div>
                     </section>
 

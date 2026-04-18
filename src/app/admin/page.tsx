@@ -49,39 +49,39 @@ export default function AdminDashboardPage() {
                 <div>
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
                     <p className="text-gray-500 dark:text-gray-400">
-                        Manage events, programs, registrations, and audit trails
+                        Kelola event, pelatihan, registrasi, dan audit trail
                     </p>
                 </div>
                 <Link
-                    href="/admin/programs/new"
+                    href="/admin/pelatihan/new"
                     className="bg-red-500 text-white px-6 py-3 rounded-full font-bold hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20"
                 >
                     <Plus className="h-4 w-4" />
-                    New Program
+                    Pelatihan Baru
                 </Link>
             </div>
 
             {/* Stats Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
-                    title="Total Courses"
+                    title="Total Pelatihan"
                     value={stats?.totalCourses ?? 0}
                     icon={BookOpen}
-                    description="Published programs"
+                    description="Pelatihan yang sudah dipublikasikan"
                 />
                 <StatCard
-                    title="Total Users"
+                    title="Total Pengguna"
                     value={stats?.totalUsers ?? 0}
                     icon={Users}
                 />
                 <StatCard
-                    title="Active Enrollments"
+                    title="Enrollment Aktif"
                     value={stats?.activeEnrollments ?? 0}
                     icon={Layers}
                     trend={{ value: 8, positive: true }}
                 />
                 <StatCard
-                    title="Completed"
+                    title="Selesai"
                     value={stats?.completedEnrollments ?? 0}
                     icon={Activity}
                     description="Enrollments completed"
@@ -91,14 +91,14 @@ export default function AdminDashboardPage() {
             {/* Quick Actions */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
-                    href="/admin/programs"
+                    href="/admin/pelatihan"
                     className="group rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] p-6 transition-all hover:border-red-500/50 hover:shadow-lg hover:-translate-y-0.5"
                 >
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
                         <BookOpen className="h-6 w-6 text-red-500" />
                     </div>
-                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Programs</h3>
-                    <p className="text-sm text-gray-500 mt-1">Create and manage learning programs</p>
+                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Pelatihan</h3>
+                    <p className="text-sm text-gray-500 mt-1">Buat dan kelola katalog pelatihan</p>
                 </Link>
                 <Link
                     href="/admin/events"
@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
                         <CalendarDays className="h-6 w-6 text-red-500" />
                     </div>
                     <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Events</h3>
-                    <p className="text-sm text-gray-500 mt-1">Control event lifecycle and learning readiness</p>
+                    <p className="text-sm text-gray-500 mt-1">Kelola lifecycle event dan kesiapan pembelajaran</p>
                 </Link>
                 <Link
                     href="/admin/registrations"
@@ -117,8 +117,8 @@ export default function AdminDashboardPage() {
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
                         <Layers className="h-6 w-6 text-red-500" />
                     </div>
-                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Registrations</h3>
-                    <p className="text-sm text-gray-500 mt-1">Review participant approvals and event intake</p>
+                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Registrasi</h3>
+                    <p className="text-sm text-gray-500 mt-1">Tinjau approval peserta dan intake event</p>
                 </Link>
                 <Link
                     href="/admin/audit"
@@ -127,8 +127,8 @@ export default function AdminDashboardPage() {
                     <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
                         <Activity className="h-6 w-6 text-red-500" />
                     </div>
-                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Audit Log</h3>
-                    <p className="text-sm text-gray-500 mt-1">View system activity</p>
+                    <h3 className="font-bold text-lg group-hover:text-red-500 transition-colors">Log Audit</h3>
+                    <p className="text-sm text-gray-500 mt-1">Lihat aktivitas sistem</p>
                 </Link>
             </div>
 
@@ -139,11 +139,11 @@ export default function AdminDashboardPage() {
                 </div>
             )}
 
-            {/* Recent Users */}
+            {/* Pengguna Terbaru */}
             {recentUsers.length > 0 && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold">Recent Users</h2>
+                        <h2 className="text-xl font-bold">Pengguna Terbaru</h2>
                     </div>
                     <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] overflow-hidden">
                         {recentUsers.map((u, index) => (
@@ -163,7 +163,7 @@ export default function AdminDashboardPage() {
                                         {u.role}
                                     </span>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        {u._count.enrollments} enrollments
+                                        {u._count.enrollments} enrollment
                                     </p>
                                 </div>
                             </div>
@@ -172,10 +172,10 @@ export default function AdminDashboardPage() {
                 </div>
             )}
 
-            {/* Courses Overview */}
+            {/* Pelatihan Overview */}
             {(coursesData?.courses ?? []).length > 0 && (
                 <div className="space-y-4">
-                    <h2 className="text-xl font-bold">All Courses</h2>
+                    <h2 className="text-xl font-bold">Semua Pelatihan</h2>
                     <div className="grid gap-4 md:grid-cols-2">
                         {(coursesData?.courses ?? []).map((c) => (
                             <div
@@ -185,9 +185,9 @@ export default function AdminDashboardPage() {
                                 <h3 className="font-bold">{c.title}</h3>
                                 <p className="text-sm text-gray-500 mt-1">{c.description}</p>
                                 <div className="flex gap-4 mt-3 text-xs text-gray-400">
-                                    <span>{c._count.modules} modules</span>
-                                    <span>{c.totalLessons} lessons</span>
-                                    <span>{c._count.enrollments} enrolled</span>
+                                    <span>{c._count.modules} modul</span>
+                                    <span>{c.totalLessons} lesson</span>
+                                    <span>{c._count.enrollments} peserta</span>
                                 </div>
                             </div>
                         ))}

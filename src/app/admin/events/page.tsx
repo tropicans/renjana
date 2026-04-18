@@ -104,7 +104,7 @@ export default function AdminEventsPage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">Events</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight">Event</h1>
                     <p className="mt-1 text-gray-500">Kelola kegiatan publik, lifecycle, dan kesiapan pembelajaran.</p>
                 </div>
                 <button onClick={() => setShowForm((value) => !value)} className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white">
@@ -115,7 +115,7 @@ export default function AdminEventsPage() {
             {legacySource ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sm text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/20 dark:text-sky-300 md:flex-row md:items-center md:justify-between">
                     <p>
-                        Flow admin untuk <span className="font-semibold">{legacySource}</span> sudah dipusatkan ke Events agar pengelolaan lifecycle, lokasi, dan aktivitas event tetap dalam satu panel.
+                        Flow admin untuk <span className="font-semibold">{legacySource}</span> sudah dipusatkan ke Event agar pengelolaan siklus, lokasi, dan aktivitas event tetap dalam satu panel.
                     </p>
                     <button onClick={() => setShowForm(true)} className="inline-flex items-center justify-center rounded-full bg-sky-700 px-4 py-2 text-xs font-bold text-white hover:bg-sky-800 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400">
                         Buat event baru
@@ -147,18 +147,18 @@ export default function AdminEventsPage() {
 
             <div className="flex flex-wrap gap-2">
                 {[
-                    { key: "all", label: `All (${events.length})` },
+                    { key: "all", label: `Semua (${events.length})` },
                     {
                         key: "certificate-ready",
-                        label: `Certificate Ready (${events.filter((event) => event.certificateEnabled && event.postTestEnabled && event.evaluationEnabled).length})`,
+                        label: `Sertifikat Siap (${events.filter((event) => event.certificateEnabled && event.postTestEnabled && event.evaluationEnabled).length})`,
                     },
                     {
                         key: "certificate-blocked",
-                        label: `Blocked (${events.filter((event) => event.certificateEnabled && (!event.postTestEnabled || !event.evaluationEnabled)).length})`,
+                        label: `Terblokir (${events.filter((event) => event.certificateEnabled && (!event.postTestEnabled || !event.evaluationEnabled)).length})`,
                     },
                     {
                         key: "foundation-ready",
-                        label: `Foundation (${events.filter((event) => !event.certificateEnabled && (event.postTestEnabled || event.evaluationEnabled)).length})`,
+                        label: `Fondasi (${events.filter((event) => !event.certificateEnabled && (event.postTestEnabled || event.evaluationEnabled)).length})`,
                     },
                 ].map((filter) => (
                     <button
@@ -184,31 +184,31 @@ export default function AdminEventsPage() {
                                 <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-gray-400">
                                     <span>{event.category}</span>
                                     <span className="rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-800">{event.modality}</span>
-                                    {event.isFeatured ? <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Featured</span> : null}
+                                    {event.isFeatured ? <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Unggulan</span> : null}
                                 </div>
                                 <h2 className="text-2xl font-bold">{event.title}</h2>
                                 <div className="flex flex-wrap gap-5 text-sm text-gray-500">
-                                    <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> {event._count.registrations} registrations</span>
+                                    <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> {event._count.registrations} registrasi</span>
                                     <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> {event.eventStart ? new Date(event.eventStart).toLocaleDateString("id-ID") : "Tanggal belum diatur"}</span>
                                     <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> {event.status}</span>
                                 </div>
                                 <div className="flex flex-wrap gap-2 pt-2 text-xs">
-                                    {event.learningEnabled ? <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">Learning</span> : null}
+                                    {event.learningEnabled ? <span className="rounded-full bg-sky-100 px-3 py-1 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">Pembelajaran</span> : null}
                                     {event.preTestEnabled ? <span className="rounded-full bg-indigo-100 px-3 py-1 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">Pre-test</span> : null}
                                     {event.postTestEnabled ? <span className="rounded-full bg-violet-100 px-3 py-1 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">Post-test</span> : null}
-                                    {event.evaluationEnabled ? <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Evaluation</span> : null}
-                                    {event.certificateEnabled ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Certificate</span> : null}
+                                    {event.evaluationEnabled ? <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Evaluasi</span> : null}
+                                    {event.certificateEnabled ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Sertifikat</span> : null}
                                 </div>
                                 {event.certificateEnabled ? (
                                     <div className={`inline-flex rounded-xl px-3 py-2 text-xs font-medium ${certificateReady ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"}`}>
                                         {certificateReady
-                                            ? "Certificate path ready: event sudah mengaktifkan POST_TEST dan evaluation."
-                                            : "Certificate belum siap: aktifkan POST_TEST dan evaluation agar penerbitan sertifikat valid."}
+                                            ? "Alur sertifikat siap: event sudah mengaktifkan POST_TEST dan evaluasi."
+                                            : "Sertifikat belum siap: aktifkan POST_TEST dan evaluasi agar penerbitan sertifikat valid."}
                                     </div>
                                 ) : null}
                                 {!event.certificateEnabled && (event.postTestEnabled || event.evaluationEnabled) ? (
                                     <div className="inline-flex rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                                        Foundation ready: POST_TEST / evaluation sudah aktif, certificate bisa dinyalakan saat siap.
+                                        Fondasi siap: POST_TEST / evaluasi sudah aktif, sertifikat bisa dinyalakan saat siap.
                                     </div>
                                 ) : null}
                             </div>
@@ -223,9 +223,9 @@ export default function AdminEventsPage() {
                                     ))}
                                 </select>
                                 <div className="flex flex-wrap justify-end gap-2">
-                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { learningEnabled: !event.learningEnabled } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.learningEnabled ? "Disable" : "Enable"} learning</button>
-                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { evaluationEnabled: !event.evaluationEnabled } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.evaluationEnabled ? "Disable" : "Enable"} evaluation</button>
-                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { isFeatured: !event.isFeatured } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.isFeatured ? "Unfeature" : "Feature"}</button>
+                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { learningEnabled: !event.learningEnabled } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.learningEnabled ? "Nonaktifkan" : "Aktifkan"} pembelajaran</button>
+                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { evaluationEnabled: !event.evaluationEnabled } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.evaluationEnabled ? "Nonaktifkan" : "Aktifkan"} evaluasi</button>
+                                    <button onClick={() => updateMutation.mutate({ id: event.id, data: { isFeatured: !event.isFeatured } })} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold dark:border-gray-700">{event.isFeatured ? "Batalkan unggulan" : "Jadikan unggulan"}</button>
                                     <Link href={`/admin/events/${event.id}`} className="rounded-full border border-gray-200 px-4 py-1.5 text-xs font-semibold text-gray-700 transition hover:border-primary/40 hover:text-primary dark:border-gray-700 dark:text-gray-200">
                                         Kelola
                                     </Link>
@@ -244,7 +244,7 @@ export default function AdminEventsPage() {
                 ))}
                 {filteredEvents.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-6 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-[#1a242f] dark:text-gray-400">
-                        Tidak ada event yang cocok dengan filter readiness saat ini.
+                        Tidak ada event yang cocok dengan filter kesiapan saat ini.
                     </div>
                 ) : null}
             </div>

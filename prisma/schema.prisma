@@ -160,6 +160,9 @@ model Lesson {
   title       String
   type        String   @default("VIDEO") // VIDEO, QUIZ, READING, ASSIGNMENT
   contentUrl  String?  @map("content_url")
+  materialFileName String? @map("material_file_name")
+  materialFileType String? @map("material_file_type")
+  materialFileSize Int?    @map("material_file_size")
   durationMin Int?     @map("duration_min")
   order       Int
   createdAt   DateTime @default(now()) @map("created_at")

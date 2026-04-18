@@ -22,7 +22,16 @@ import {
     Loader2,
     ClipboardCheck,
     AlertTriangle,
+    ExternalLink,
+    Download,
 } from "lucide-react";
+
+function formatBytes(bytes?: number | null): string | null {
+    if (!bytes || bytes <= 0) return null;
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function LearnPage() {
     const params = useParams();
@@ -431,6 +440,30 @@ export default function LearnPage() {
                                         Dalam implementasi nyata, konten video, quiz, atau materi bacaan akan ditampilkan di sini.
                                     </p>
                                 </div>
+
+                                {selectedLesson.contentUrl ? (
+                                    <div className="mb-8 rounded-2xl border border-primary/10 bg-primary/5 p-5">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary/70">Materi Lesson</p>
+                                                <p className="mt-2 font-semibold text-gray-900 dark:text-white">{selectedLesson.materialFileName || "Materi pembelajaran tersedia"}</p>
+                                                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    <span className="rounded-full bg-white/80 px-2.5 py-1 dark:bg-white/10">{selectedLesson.type}</span>
+                                                    {selectedLesson.materialFileType ? <span className="rounded-full bg-white/80 px-2.5 py-1 dark:bg-white/10">{selectedLesson.materialFileType}</span> : null}
+                                                    {formatBytes(selectedLesson.materialFileSize) ? <span className="rounded-full bg-white/80 px-2.5 py-1 dark:bg-white/10">{formatBytes(selectedLesson.materialFileSize)}</span> : null}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <a href={selectedLesson.contentUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:border-primary/40 dark:bg-slate-900">
+                                                    <ExternalLink className="h-4 w-4" /> Buka materi
+                                                </a>
+                                                <a href={selectedLesson.contentUrl} download className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-primary/30 hover:text-primary dark:border-gray-700 dark:bg-slate-900 dark:text-gray-200">
+                                                    <Download className="h-4 w-4" /> Unduh
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : null}
 
                                 {/* Complete Button */}
                                 {!completedLessonIds.has(selectedLesson.id) ? (

@@ -38,7 +38,7 @@ export async function POST(req: Request) {
             status: status ?? "DRAFT",
             modules: modules?.length
                 ? {
-                    create: modules.map((m: { title: string; order: number; lessons?: { title: string; type: string; order: number; durationMin?: number }[] }, i: number) => ({
+                    create: modules.map((m: { title: string; order: number; lessons?: { title: string; type: string; order: number; durationMin?: number; contentUrl?: string | null; materialFileName?: string | null; materialFileType?: string | null; materialFileSize?: number | null }[] }, i: number) => ({
                         title: m.title,
                         order: m.order ?? i + 1,
                         lessons: m.lessons?.length
@@ -48,6 +48,10 @@ export async function POST(req: Request) {
                                     type: l.type ?? "VIDEO",
                                     order: l.order ?? j + 1,
                                     durationMin: l.durationMin ?? null,
+                                    contentUrl: l.contentUrl ?? null,
+                                    materialFileName: l.materialFileName ?? null,
+                                    materialFileType: l.materialFileType ?? null,
+                                    materialFileSize: l.materialFileSize ?? null,
                                 })),
                             }
                             : undefined,

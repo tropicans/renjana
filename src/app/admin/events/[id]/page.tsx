@@ -144,10 +144,10 @@ export default function AdminEventDetailPage() {
                 throw new Error(validation.errors[0]);
             }
             if (form.preTestEnabled && !quizTypes.has("PRE_TEST")) {
-                throw new Error("Linked course must have a PRE_TEST quiz before pre-test can be enabled");
+                throw new Error("Pelatihan tertaut harus punya quiz PRE_TEST sebelum fitur pre-test bisa diaktifkan");
             }
             if (form.postTestEnabled && !quizTypes.has("POST_TEST")) {
-                throw new Error("Linked course must have a POST_TEST quiz before post-test can be enabled");
+                throw new Error("Pelatihan tertaut harus punya quiz POST_TEST sebelum fitur post-test bisa diaktifkan");
             }
             return updateAdminEvent(id, {
                 ...form,
@@ -222,20 +222,20 @@ export default function AdminEventDetailPage() {
 
             <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
-                    <div className="flex items-center gap-3"><Users className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{event._count.registrations}</p><p className="text-xs text-gray-500">Registrations</p></div></div>
+                    <div className="flex items-center gap-3"><Users className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{event._count.registrations}</p><p className="text-xs text-gray-500">Registrasi</p></div></div>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
-                    <div className="flex items-center gap-3"><CalendarDays className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{form.eventStart ? new Date(form.eventStart).toLocaleDateString("id-ID") : "TBA"}</p><p className="text-xs text-gray-500">Event start</p></div></div>
+                    <div className="flex items-center gap-3"><CalendarDays className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{form.eventStart ? new Date(form.eventStart).toLocaleDateString("id-ID") : "TBA"}</p><p className="text-xs text-gray-500">Mulai event</p></div></div>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
-                    <div className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{form.status}</p><p className="text-xs text-gray-500">Lifecycle</p></div></div>
+                    <div className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{form.status}</p><p className="text-xs text-gray-500">Siklus</p></div></div>
                 </div>
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
                 <div className="space-y-6">
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Basic Info</h2>
+                        <h2 className="text-xl font-bold">Informasi Dasar</h2>
                         <div className="mt-5 grid gap-4 md:grid-cols-2">
                             <input value={form.title} onChange={(e) => setForm((prev) => prev ? { ...prev, title: e.target.value } : prev)} placeholder="Judul event" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                             <input value={form.slug} onChange={(e) => setForm((prev) => prev ? { ...prev, slug: e.target.value } : prev)} placeholder="Slug" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -254,7 +254,7 @@ export default function AdminEventDetailPage() {
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Schedule & Contact</h2>
+                        <h2 className="text-xl font-bold">Jadwal & Kontak</h2>
                         <div className="mt-5 grid gap-4 md:grid-cols-2">
                             <input type="datetime-local" value={form.registrationStart} onChange={(e) => setForm((prev) => prev ? { ...prev, registrationStart: e.target.value } : prev)} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                             <input type="datetime-local" value={form.registrationEnd} onChange={(e) => setForm((prev) => prev ? { ...prev, registrationEnd: e.target.value } : prev)} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -269,7 +269,7 @@ export default function AdminEventDetailPage() {
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Policy Content</h2>
+                        <h2 className="text-xl font-bold">Konten Kebijakan</h2>
                         <div className="mt-5 grid gap-4">
                             <textarea value={form.termsSummary} onChange={(e) => setForm((prev) => prev ? { ...prev, termsSummary: e.target.value } : prev)} placeholder="Tata tertib / terms summary" rows={4} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                             <textarea value={form.refundPolicySummary} onChange={(e) => setForm((prev) => prev ? { ...prev, refundPolicySummary: e.target.value } : prev)} placeholder="Kebijakan refund / pembatalan" rows={4} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -279,7 +279,7 @@ export default function AdminEventDetailPage() {
 
                 <div className="space-y-6">
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Pricing</h2>
+                        <h2 className="text-xl font-bold">Biaya</h2>
                         <div className="mt-5 grid gap-4">
                             <input value={form.registrationFee} onChange={(e) => setForm((prev) => prev ? { ...prev, registrationFee: e.target.value } : prev)} placeholder="Biaya pendaftaran" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                             <input value={form.onlineTuitionFee} onChange={(e) => setForm((prev) => prev ? { ...prev, onlineTuitionFee: e.target.value } : prev)} placeholder="Biaya tuition online" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -293,15 +293,15 @@ export default function AdminEventDetailPage() {
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Feature Flags</h2>
+                        <h2 className="text-xl font-bold">Pengaturan Fitur</h2>
                         <div className="mt-5 space-y-3 text-sm">
                             {[
-                                ["learningEnabled", "Enable learning access"],
-                                ["preTestEnabled", "Enable pre-test"],
-                                ["postTestEnabled", "Enable post-test"],
-                                ["evaluationEnabled", "Enable event evaluation"],
-                                ["certificateEnabled", "Enable certificate issuance"],
-                                ["isFeatured", "Feature on public catalog"],
+                                ["learningEnabled", "Aktifkan akses pembelajaran"],
+                                ["preTestEnabled", "Aktifkan pre-test"],
+                                ["postTestEnabled", "Aktifkan post-test"],
+                                ["evaluationEnabled", "Aktifkan evaluasi event"],
+                                ["certificateEnabled", "Aktifkan penerbitan sertifikat"],
+                                ["isFeatured", "Tampilkan di katalog publik"],
                             ].map(([key, label]) => (
                                 <label key={key} className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 dark:border-gray-800">
                                     <span>{label}</span>
@@ -316,14 +316,14 @@ export default function AdminEventDetailPage() {
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Linked Program</h2>
+                        <h2 className="text-xl font-bold">Pelatihan Tertaut</h2>
                         <div className="mt-5 space-y-4 text-sm text-gray-500">
                             <select
                                 value={form.courseId}
                                 onChange={(e) => setForm((prev) => prev ? { ...prev, courseId: e.target.value } : prev)}
                                 className="w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700"
                             >
-                                <option value="">Tanpa linked course</option>
+                                <option value="">Tanpa pelatihan tertaut</option>
                                 {courses.map((course) => (
                                     <option key={course.id} value={course.id}>{course.title}</option>
                                 ))}
@@ -332,11 +332,11 @@ export default function AdminEventDetailPage() {
                             {form.courseId ? (
                                 <div className="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900">
                                     <p className="font-semibold text-gray-900 dark:text-white">
-                                        {courses.find((course) => course.id === form.courseId)?.title || "Program terpilih"}
+                                        {courses.find((course) => course.id === form.courseId)?.title || "Pelatihan terpilih"}
                                     </p>
-                                    <p className="mt-1 text-xs">Materi, progress, quiz, evaluasi, dan sertifikat event akan mengikuti course ini.</p>
+                                    <p className="mt-1 text-xs">Materi, progress, quiz, evaluasi, dan sertifikat event akan mengikuti pelatihan ini.</p>
                                     <Link href={`/admin/events/${event.id}/quizzes`} className="mt-3 inline-flex text-xs font-semibold text-primary hover:underline">
-                                        Kelola quiz course dari event ini
+                                        Kelola quiz pelatihan dari event ini
                                     </Link>
                                     <Link href={`/admin/events/${event.id}/class-groups`} className="mt-2 inline-flex text-xs font-semibold text-primary hover:underline">
                                         Kelola class groups event ini
@@ -344,7 +344,7 @@ export default function AdminEventDetailPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-2">
-                                    <p>Event tanpa linked course hanya mendukung registration dan operasional tanpa learning delivery.</p>
+                                    <p>Event tanpa pelatihan tertaut hanya mendukung registrasi dan operasional tanpa penyampaian pembelajaran.</p>
                                     <Link href={`/admin/events/${event.id}/class-groups`} className="inline-flex text-xs font-semibold text-primary hover:underline">
                                         Kelola class groups event ini
                                     </Link>
@@ -354,32 +354,32 @@ export default function AdminEventDetailPage() {
                             {form.courseId ? (
                                 <div className="rounded-xl border border-gray-100 px-4 py-4 dark:border-gray-800">
                                     <div className="flex items-center justify-between gap-3">
-                                        <p className="font-semibold text-gray-900 dark:text-white">Quiz readiness</p>
+                                        <p className="font-semibold text-gray-900 dark:text-white">Kesiapan Quiz</p>
                                         {quizzesLoading ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : null}
                                     </div>
                                      <div className="mt-3 space-y-2 text-xs">
                                          <div className="flex items-center gap-2">
                                              {readiness.hasPreTest ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                             <span>PRE_TEST {readiness.hasPreTest ? "available" : "missing"}</span>
+                                             <span>PRE_TEST {readiness.hasPreTest ? "tersedia" : "belum ada"}</span>
                                          </div>
                                          <div className="flex items-center gap-2">
                                              {readiness.hasPostTest ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                             <span>POST_TEST {readiness.hasPostTest ? "available" : "missing"}</span>
+                                             <span>POST_TEST {readiness.hasPostTest ? "tersedia" : "belum ada"}</span>
                                          </div>
                                          <div className="flex items-center gap-2">
                                              {form.evaluationEnabled ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                                             <span>Evaluation {form.evaluationEnabled ? "enabled" : "required for certificate"}</span>
+                                              <span>Evaluasi {form.evaluationEnabled ? "aktif" : "wajib untuk sertifikat"}</span>
                                          </div>
                                      </div>
                                      {(form.preTestEnabled && !readiness.hasPreTest) || (form.postTestEnabled && !readiness.hasPostTest) ? (
                                          <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-                                             Tambahkan quiz PRE_TEST / POST_TEST pada linked course sebelum mengaktifkan fitur test di event.
+                                              Tambahkan quiz PRE_TEST / POST_TEST pada pelatihan tertaut sebelum mengaktifkan fitur test di event.
                                          </div>
                                      ) : null}
                                      <div className={`mt-3 rounded-lg px-3 py-2 text-xs ${readiness.certificateDependenciesMet ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"}`}>
                                          {readiness.certificateDependenciesMet
-                                             ? "Certificate readiness: dependency dasar sudah siap. Peserta tetap harus lulus POST_TEST dan submit evaluation sebelum sertifikat bisa terbit."
-                                             : "Certificate readiness: event harus mengaktifkan POST_TEST dan evaluation. Sertifikat baru bisa terbit setelah peserta lulus POST_TEST dan submit evaluation."}
+                                              ? "Kesiapan sertifikat: dependensi dasar sudah siap. Peserta tetap harus lulus POST_TEST dan mengirim evaluasi sebelum sertifikat bisa terbit."
+                                              : "Kesiapan sertifikat: event harus mengaktifkan POST_TEST dan evaluasi. Sertifikat baru bisa terbit setelah peserta lulus POST_TEST dan mengirim evaluasi."}
                                      </div>
                                  </div>
                              ) : null}

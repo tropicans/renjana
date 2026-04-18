@@ -207,25 +207,25 @@ export default function AdminRegistrationsPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-extrabold tracking-tight">Registrations</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight">Registrasi</h1>
                 <p className="mt-1 text-gray-500">Daftar pendaftar lintas event, termasuk status pembayaran dan dokumen.</p>
             </div>
 
             {legacySource ? (
                 <div className="flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-4 text-sm text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/20 dark:text-sky-300 md:flex-row md:items-center md:justify-between">
                     <p>
-                        Flow admin untuk <span className="font-semibold">{legacySource}</span> sudah dipusatkan ke Registrations agar approval peserta, dokumen, dan status pembayaran tetap terkonsolidasi.
+                        Flow admin untuk <span className="font-semibold">{legacySource}</span> sudah dipusatkan ke Registrasi agar approval peserta, dokumen, dan status pembayaran tetap terkonsolidasi.
                     </p>
                     <Link href="#registrations-table" className="inline-flex items-center justify-center rounded-full bg-sky-700 px-4 py-2 text-xs font-bold text-white hover:bg-sky-800 dark:bg-sky-500 dark:text-slate-950 dark:hover:bg-sky-400">
-                        Review registrations
+                        Tinjau registrasi
                     </Link>
                 </div>
             ) : null}
 
             <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white px-5 py-4 dark:border-gray-800 dark:bg-[#1a242f] md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Event scope</p>
-                    <p className="mt-1 text-sm text-gray-500">Fokuskan registrations dan bulk issuance ke event tertentu.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400">Cakupan Event</p>
+                    <p className="mt-1 text-sm text-gray-500">Fokuskan registrasi dan penerbitan massal ke event tertentu.</p>
                 </div>
                 <select
                     value={eventFilter}
@@ -246,22 +246,22 @@ export default function AdminRegistrationsPage() {
 
             <div className="flex flex-wrap gap-2">
                 {[
-                    { key: "all", label: `All (${registrations.length})` },
+                    { key: "all", label: `Semua (${registrations.length})` },
                     {
                         key: "ready",
-                        label: `Ready (${readyCount})`,
+                        label: `Siap (${readyCount})`,
                     },
                     {
                         key: "attention",
-                        label: `Need attention (${attentionCount})`,
+                        label: `Perlu perhatian (${attentionCount})`,
                     },
                     {
                         key: "issued",
-                        label: `Issued (${issuedCount})`,
+                        label: `Diterbitkan (${issuedCount})`,
                     },
                     {
                         key: "not-applicable",
-                        label: `Not applicable (${notApplicableCount})`,
+                        label: `Tidak berlaku (${notApplicableCount})`,
                     },
                 ].map((filter) => (
                     <button
@@ -278,29 +278,29 @@ export default function AdminRegistrationsPage() {
             <div className="grid gap-4 md:grid-cols-4">
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
                     <p className="text-2xl font-bold">{readyCount}</p>
-                    <p className="mt-1 text-xs text-gray-500">Ready to issue</p>
+                    <p className="mt-1 text-xs text-gray-500">Siap diterbitkan</p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
                     <p className="text-2xl font-bold">{attentionCount}</p>
-                    <p className="mt-1 text-xs text-gray-500">Need attention</p>
+                    <p className="mt-1 text-xs text-gray-500">Perlu perhatian</p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
                     <p className="text-2xl font-bold">{issuedCount}</p>
-                    <p className="mt-1 text-xs text-gray-500">Certificate issued</p>
+                    <p className="mt-1 text-xs text-gray-500">Sertifikat terbit</p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-[#1a242f]">
                     <p className="text-2xl font-bold">{notApplicableCount}</p>
-                    <p className="mt-1 text-xs text-gray-500">Not applicable</p>
+                    <p className="mt-1 text-xs text-gray-500">Tidak berlaku</p>
                 </div>
             </div>
 
             <div className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-4 text-sm dark:border-emerald-900/30 dark:bg-emerald-950/20 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p className="font-semibold text-emerald-800 dark:text-emerald-300">Bulk certificate issuance</p>
+                    <p className="font-semibold text-emerald-800 dark:text-emerald-300">Penerbitan sertifikat massal</p>
                     <p className="mt-1 text-emerald-700/80 dark:text-emerald-200/80">
                         {visibleReadyRegistrations.length > 0
-                            ? `${visibleReadyRegistrations.length} registration pada scope saat ini siap diterbitkan sertifikatnya.`
-                            : "Belum ada registration siap issue pada scope dan filter yang sedang aktif."}
+                            ? `${visibleReadyRegistrations.length} registrasi pada cakupan saat ini siap diterbitkan sertifikatnya.`
+                            : "Belum ada registrasi siap terbit pada cakupan dan filter yang sedang aktif."}
                     </p>
                 </div>
                 <button
@@ -309,7 +309,7 @@ export default function AdminRegistrationsPage() {
                     disabled={bulkIssueMutation.isPending || visibleReadyRegistrations.length === 0 || issueCertificateMutation.isPending}
                     className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400"
                 >
-                    {bulkIssueMutation.isPending ? "Issuing visible ready items..." : "Issue all visible ready"}
+                    {bulkIssueMutation.isPending ? "Menerbitkan item siap yang terlihat..." : "Terbitkan semua yang siap"}
                 </button>
             </div>
 
@@ -323,9 +323,9 @@ export default function AdminRegistrationsPage() {
                                 <th className="p-4 font-semibold">Mode</th>
                                 <th className="p-4 font-semibold">Status</th>
                                 <th className="p-4 font-semibold">Pembayaran</th>
-                                <th className="p-4 font-semibold">Certificate readiness</th>
+                                <th className="p-4 font-semibold">Kesiapan Sertifikat</th>
                                 <th className="p-4 font-semibold">Dokumen</th>
-                                <th className="p-4 font-semibold">Actions</th>
+                                <th className="p-4 font-semibold">Aksi</th>
                                 <th className="p-4 font-semibold text-right">Total</th>
                             </tr>
                         </thead>
@@ -349,7 +349,7 @@ export default function AdminRegistrationsPage() {
                                     <td className="p-4">
                                         <div className="flex flex-wrap gap-2">
                                             <Link href={`/admin/registrations/${registration.id}`} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:border-primary/40 hover:text-primary dark:border-gray-700 dark:text-gray-200">
-                                                Review
+                                                Tinjau
                                             </Link>
                                             {registration.event.courseId ? (
                                                 <Link href={`/admin/events/${registration.event.id}/quizzes`} className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:border-primary/40 hover:text-primary dark:border-gray-700 dark:text-gray-200">
@@ -368,10 +368,10 @@ export default function AdminRegistrationsPage() {
                                                         disabled={issueCertificateMutation.isPending || bulkIssueMutation.isPending || !registration.certificateReadiness.enrollmentId}
                                                         className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 disabled:opacity-60 dark:border-emerald-900/50 dark:text-emerald-300"
                                                     >
-                                                        {issueCertificateMutation.isPending ? "Issuing..." : "Issue certificate"}
+                                                        {issueCertificateMutation.isPending ? "Menerbitkan..." : "Terbitkan sertifikat"}
                                                     </button>
                                                     <Link href={`/admin/events/${registration.event.id}`} className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 dark:border-emerald-900/50 dark:text-emerald-300">
-                                                        Final check
+                                                        Cek akhir
                                                     </Link>
                                                 </>
                                             ) : null}
@@ -382,7 +382,7 @@ export default function AdminRegistrationsPage() {
                                                     rel="noreferrer"
                                                     className="rounded-full border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:border-emerald-400 dark:border-emerald-900/50 dark:text-emerald-300"
                                                 >
-                                                    View certificate
+                                                    Lihat sertifikat
                                                 </a>
                                             ) : null}
                                         </div>
@@ -393,7 +393,7 @@ export default function AdminRegistrationsPage() {
                             {filteredRegistrations.length === 0 ? (
                                 <tr>
                                     <td colSpan={9} className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                                        Tidak ada registration yang cocok dengan filter readiness saat ini.
+                                        Tidak ada registrasi yang cocok dengan filter kesiapan saat ini.
                                     </td>
                                 </tr>
                             ) : null}

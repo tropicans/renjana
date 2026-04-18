@@ -39,6 +39,10 @@ export interface ApiCourseDetail extends Omit<ApiCourse, "_count"> {
             type: string;
             durationMin: number | null;
             order: number;
+            contentUrl?: string | null;
+            materialFileName?: string | null;
+            materialFileType?: string | null;
+            materialFileSize?: number | null;
         }[];
     }[];
     enrollments: { id: string; userId: string }[];
@@ -223,6 +227,10 @@ export interface ApiAdminCourseDetail {
             type: string;
             order: number;
             durationMin: number | null;
+            contentUrl?: string | null;
+            materialFileName?: string | null;
+            materialFileType?: string | null;
+            materialFileSize?: number | null;
         }>;
     }>;
     enrollments?: Array<{
@@ -512,6 +520,34 @@ export async function uploadEvidence(title: string, file: File) {
     return res.json() as Promise<{ evidence: ApiEvidence }>;
 }
 
+export async function uploadAdminLessonMaterial(file: File) {
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch("/api/admin/lesson-materials", { method: "POST", body: form });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Upload failed ${res.status}`);
+    }
+
+    return res.json() as Promise<{ fileUrl: string; fileName: string; fileType: string; fileSize: number }>;
+}
+
+export async function deleteAdminLessonMaterials(fileUrls: string[]) {
+    const res = await fetch("/api/admin/lesson-materials", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileUrls }),
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Delete failed ${res.status}`);
+    }
+
+    return res.json() as Promise<{ success: boolean }>;
+}
+
 // ── Certificates ──────────────────────────────────────────────
 export interface ApiCertificate {
     id: string;
@@ -707,14 +743,50 @@ export function fetchAdminRegistrations() {
     }>("/api/admin/registrations");
 }
 
-export function createCourse(data: { title: string; description?: string; status?: string }) {
+export function createCourse(data: {
+    title: string;
+    description?: string;
+    status?: string;
+    modules?: Array<{
+        title: string;
+        order: number;
+        lessons?: Array<{
+            title: string;
+            type: string;
+            order: number;
+            durationMin?: number | null;
+            contentUrl?: string | null;
+            materialFileName?: string | null;
+            materialFileType?: string | null;
+            materialFileSize?: number | null;
+        }>;
+    }>;
+}) {
     return apiFetch<{ course: ApiAdminCourseDetail }>("/api/admin/courses", {
         method: "POST",
         body: JSON.stringify(data),
     });
 }
 
-export function updateCourse(id: string, data: { title?: string; description?: string; status?: string }) {
+export function updateCourse(id: string, data: {
+    title?: string;
+    description?: string;
+    status?: string;
+    modules?: Array<{
+        title: string;
+        order: number;
+        lessons?: Array<{
+            title: string;
+            type: string;
+            order: number;
+            durationMin?: number | null;
+            contentUrl?: string | null;
+            materialFileName?: string | null;
+            materialFileType?: string | null;
+            materialFileSize?: number | null;
+        }>;
+    }>;
+}) {
     return apiFetch<{ course: ApiAdminCourseDetail }>(`/api/admin/courses/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),
@@ -760,7 +832,7 @@ export function fetchAuditLogs(limit?: number) {
     return apiFetch<{
         logs: Array<{
             id: string; action: string; entity: string; entityId: string | null;
-            metadata: unknown; createdAt: string;
+            metadata: Record<string, unknown> | null; createdAt: string;
             user: { id: string; fullName: string; email: string };
         }>
     }>(`/api/admin/audit${qs}`);
