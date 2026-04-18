@@ -28,15 +28,18 @@ export default function EventsPage() {
                             <Sparkles className="h-3.5 w-3.5" /> Featured Event
                         </span>
                         <div className="space-y-4">
+                            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-slate-500 dark:bg-slate-900/60 dark:text-slate-300">
+                                Batch & Event
+                            </span>
                             <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight md:text-6xl">
-                                Temukan kegiatan profesional dan mulai perjalanan belajar Anda.
+                                Temukan batch dan event profesional yang siap Anda ikuti.
                             </h1>
                             <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-                                Pilih kegiatan yang sedang dibuka, daftar secara online, lengkapi dokumen, lalu ikuti pembelajaran, pre/post test, dan evaluasi saat akses sudah tersedia.
+                                Pilih batch atau event yang sedang dibuka, daftar secara online, lengkapi dokumen, lalu ikuti pembelajaran, pre/post test, dan evaluasi saat akses sudah tersedia.
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400">
-                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Kegiatan aktif</span>
+                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Batch aktif</span>
                             <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Pendaftaran online</span>
                             <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Hybrid learning</span>
                             <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Evaluasi & sertifikat</span>
@@ -73,8 +76,8 @@ export default function EventsPage() {
                     <div className="space-y-12">
                         <div className="flex items-end justify-between gap-4">
                             <div>
-                                <h2 className="text-3xl font-extrabold tracking-tight">Daftar Kegiatan</h2>
-                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Pilih kegiatan yang sedang dibuka untuk pendaftaran, pembelajaran, atau evaluasi.</p>
+                                <h2 className="text-3xl font-extrabold tracking-tight">Daftar Batch & Event</h2>
+                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Pilih batch atau event yang sedang dibuka untuk pendaftaran, pembelajaran, atau evaluasi.</p>
                             </div>
                             <div className="text-sm text-slate-400">{events.length} event</div>
                         </div>

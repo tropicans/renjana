@@ -156,14 +156,14 @@ export default function DashboardPage() {
                         <div className="space-y-3">
                             <h2 className="text-2xl font-bold">Mulai langkah pertama Anda</h2>
                             <p className="text-gray-500 dark:text-gray-400">
-                                Anda belum memiliki registrasi atau kelas aktif. Jelajahi kegiatan yang sedang dibuka lalu daftarkan diri Anda.
+                                Anda belum memiliki registrasi atau kelas aktif. Jelajahi batch dan event yang sedang dibuka lalu daftarkan diri Anda.
                             </p>
                         </div>
                         <Link
                             href="/events"
                             className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
                         >
-                            Lihat Kegiatan
+                            Lihat Batch & Event
                             <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold">My Courses</h2>
                             <Link href="/events" className="text-sm text-primary hover:underline">
-                                View All Events
+                                Lihat Semua Batch & Event
                             </Link>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -226,15 +226,15 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <div className="space-y-4">
-                <h2 className="text-xl font-bold">Quick Actions</h2>
+                        <h2 className="text-xl font-bold">Aksi Cepat</h2>
                 <div className="grid gap-4 md:grid-cols-3">
                     <Link
                         href="/events"
                         className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] hover:border-primary/50 transition-all group"
                     >
                         <BookOpen className="h-8 w-8 text-primary mb-4" />
-                        <h3 className="font-bold group-hover:text-primary transition-colors">Browse Events</h3>
-                        <p className="text-sm text-gray-500 mt-1">Lihat kegiatan yang sedang dibuka</p>
+                        <h3 className="font-bold group-hover:text-primary transition-colors">Lihat Batch & Event</h3>
+                        <p className="text-sm text-gray-500 mt-1">Temukan batch dan event yang sedang dibuka</p>
                     </Link>
                     <Link
                         href="/my-registrations"

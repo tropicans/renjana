@@ -24,9 +24,12 @@ export default function CoursesPage() {
                 {/* Hero Header */}
                 <ScrollReveal>
                     <div className="text-center mb-16">
-                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">Choose Your Program</h1>
+                        <span className="mb-5 inline-flex rounded-full bg-primary/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary">
+                            Pelatihan
+                        </span>
+                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">Pilih pelatihan yang paling sesuai untuk Anda</h1>
                         <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-medium">
-                            Elevate your legal practice with world-class training designed for the modern professional.
+                            Jelajahi pelatihan profesional Renjana dengan kurikulum terstruktur untuk memperkuat praktik hukum modern.
                         </p>
                     </div>
                 </ScrollReveal>
@@ -41,7 +44,7 @@ export default function CoursesPage() {
                 {/* Error */}
                 {error && (
                     <div className="text-center py-24 text-red-500">
-                        Failed to load courses. Please try again.
+                        Gagal memuat daftar pelatihan. Silakan coba lagi.
                     </div>
                 )}
 
@@ -68,22 +71,22 @@ export default function CoursesPage() {
                                         <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
                                             <span className="flex items-center gap-1">
                                                 <BookOpen className="h-3.5 w-3.5" />
-                                                {course._count.modules} modules
+                                                {course._count.modules} modul
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Clock className="h-3.5 w-3.5" />
-                                                {course.totalDurationMin} min
+                                                {course.totalDurationMin} menit
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Users className="h-3.5 w-3.5" />
-                                                {course._count.enrollments} enrolled
+                                                {course._count.enrollments} peserta
                                             </span>
                                         </div>
                                         <Link
                                             href={`/course/${course.id}`}
                                             className="flex items-center gap-1 text-primary font-bold text-sm hover:gap-2 transition-all"
                                         >
-                                            See Details <ChevronRight className="size-4" />
+                                            Lihat Detail <ChevronRight className="size-4" />
                                         </Link>
                                     </div>
                                 </div>
@@ -95,29 +98,29 @@ export default function CoursesPage() {
                 {/* Empty State */}
                 {!isLoading && !error && courses.length === 0 && (
                     <div className="text-center py-24 text-gray-500">
-                        No courses available yet. Check back soon!
+                        Belum ada pelatihan yang tersedia. Cek lagi sebentar lagi.
                     </div>
                 )}
 
                 {/* CTA Section */}
                 <ScrollReveal delay={200}>
                     <div className="mt-24 bg-primary/5 dark:bg-primary/10 rounded-2xl p-12 md:p-16 text-center border border-primary/10">
-                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Ready to advance your legal career?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Siap melangkah ke level berikutnya?</h2>
                         <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-10 text-lg">
-                            Join thousands of legal professionals who have enhanced their skills through our premium development programs.
+                            Bergabunglah dengan profesional hukum lain yang mengembangkan kompetensinya lewat pelatihan premium Renjana.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link
                                 href="/register"
                                 className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                             >
-                                Get Started Now
+                                Daftar Sekarang
                             </Link>
                             <Link
                                 href="/contact"
                                 className="flex items-center gap-2 font-bold text-primary hover:underline underline-offset-4"
                             >
-                                Contact Admissions <ArrowRight className="size-4" />
+                                Hubungi Tim Admission <ArrowRight className="size-4" />
                             </Link>
                         </div>
                     </div>

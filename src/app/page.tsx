@@ -26,7 +26,7 @@ export default function Home() {
               href="/courses"
               className="bg-primary text-white text-base font-bold px-8 py-4 rounded-full min-w-[200px] hover:shadow-lg hover:scale-105 transition-all text-center"
             >
-              Explore Courses
+              Jelajahi Pelatihan
             </Link>
             <button className="flex items-center gap-2 text-primary text-base font-semibold hover:underline group">
               Watch the film <PlayCircle className="size-6 group-hover:scale-110 transition-transform" />
@@ -60,16 +60,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Exclusive Courses Grid */}
+      {/* Pelatihan Pilihan */}
       <section className="py-24 px-6 bg-[#fbfbfb] dark:bg-[#151d28]">
         <div className="max-w-[1200px] mx-auto">
           <div className="flex justify-between items-end mb-12">
             <div className="max-w-xl">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Curated Excellence</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Master the complexities of modern law with our exclusive masterclasses.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Pelajari topik hukum modern melalui pelatihan pilihan dengan kurikulum yang terarah.</p>
             </div>
             <Link className="text-primary font-semibold hover:underline hidden md:flex items-center gap-1 group" href="/courses">
-              View all courses <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+              Lihat semua pelatihan <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
@@ -199,7 +199,7 @@ export default function Home() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-6">Explore</h4>
               <ul className="space-y-4 text-sm font-medium">
-                <li><Link className="hover:text-primary transition-colors" href="/courses">All Courses</Link></li>
+                <li><Link className="hover:text-primary transition-colors" href="/courses">Semua Pelatihan</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Masterclasses</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Corporate Training</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Certifications</Link></li>

@@ -27,8 +27,8 @@ export function SiteHeader({ className }: { className?: string }) {
     const unreadNotificationCount = notificationsData?.unreadCount ?? 0
 
     const menuItems = [
-        { name: 'Kegiatan', href: '/events' },
-        { name: 'Program', href: '/courses' },
+        { name: 'Batch & Event', href: '/events' },
+        { name: 'Pelatihan', href: '/courses' },
         { name: 'Partners', href: '/#partners' },
         { name: t.nav.about, href: '/about-us' },
     ]

@@ -34,10 +34,10 @@ export default function CourseDetailPage() {
                 <SiteHeader />
                 <div className="flex items-center justify-center pt-32">
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold mb-2">Course Not Found</h1>
-                        <p className="text-gray-500 mb-6">The course you&apos;re looking for doesn&apos;t exist.</p>
+                        <h1 className="text-2xl font-bold mb-2">Pelatihan tidak ditemukan</h1>
+                        <p className="text-gray-500 mb-6">Pelatihan yang Anda cari tidak tersedia.</p>
                         <Link href="/courses" className="text-primary font-bold hover:underline">
-                            ← Back to Courses
+                            ← Kembali ke Pelatihan
                         </Link>
                     </div>
                 </div>
@@ -63,7 +63,7 @@ export default function CourseDetailPage() {
                     <div className="max-w-[1200px] mx-auto px-6 py-4">
                         <Link href="/courses" className="text-gray-500 hover:text-primary flex items-center gap-2 text-sm transition font-medium">
                             <ArrowLeft className="w-4 h-4" />
-                            Back to Courses
+                            Kembali ke Pelatihan
                         </Link>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ export default function CourseDetailPage() {
                                     <EnrollButton courseId={course.id} variant="large" className="w-full" isOfflineEvent={isOfflineEvent} />
 
                                     <p className="text-center text-gray-400 text-xs mt-4">
-                                        {isOfflineEvent ? "Free registration for invitees" : "Free enrollment for all members"}
+                                        {isOfflineEvent ? "Pendaftaran gratis untuk peserta undangan" : "Akses pelatihan gratis untuk semua anggota"}
                                     </p>
                                 </div>
                             </div>
@@ -189,7 +189,7 @@ export default function CourseDetailPage() {
                         <div className="lg:col-span-2 space-y-12">
                             <div>
                                 <h2 className="text-3xl font-bold mb-6">
-                                    {isOfflineEvent ? "Event Rundown" : "Syllabus / Curriculum"}
+                                    {isOfflineEvent ? "Rundown Event" : "Silabus / Kurikulum"}
                                 </h2>
                                 <div className="space-y-4">
                                     {course.modules.map((module, i) => (
