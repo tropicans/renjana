@@ -39,7 +39,7 @@ export function LoginForm() {
                 email,
                 password,
                 redirect: false,
-                callbackUrl: redirectUrl || "/dashboard",
+                callbackUrl: redirectUrl || "/auth/redirect",
             });
 
             if (!result?.ok) {
@@ -48,7 +48,7 @@ export function LoginForm() {
                 return;
             }
 
-            let dashboardUrl = "/dashboard";
+            let dashboardUrl: string | null = null;
             for (let attempt = 0; attempt < 6; attempt += 1) {
                 const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
                 const session = await sessionRes.json().catch(() => null);
@@ -60,7 +60,7 @@ export function LoginForm() {
                 await wait(250);
             }
 
-            window.location.assign(redirectUrl || result.url || dashboardUrl);
+            window.location.assign(redirectUrl || dashboardUrl || result.url || "/auth/redirect");
         } catch {
             setError(t.auth.invalidCredentials);
             setIsLoading(false);
