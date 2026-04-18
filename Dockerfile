@@ -43,11 +43,14 @@ RUN adduser --system --uid 1001 nextjs
 # Copy Prisma engine binaries (needed at runtime by NextAuth)
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
 # Copy necessary files from builder
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Create writable upload directories for evidence and certificates
 RUN mkdir -p ./public/uploads/evidence ./public/uploads/certificates \
@@ -60,4 +63,6 @@ EXPOSE 3214
 ENV PORT=3214
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+RUN chmod +x ./docker-entrypoint.sh
+
+CMD ["./docker-entrypoint.sh"]

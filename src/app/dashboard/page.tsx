@@ -154,16 +154,16 @@ export default function DashboardPage() {
                 <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 p-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-3">
-                            <h2 className="text-2xl font-bold">Start Your Learning Journey</h2>
+                            <h2 className="text-2xl font-bold">Mulai langkah pertama Anda</h2>
                             <p className="text-gray-500 dark:text-gray-400">
-                                Jelajahi kegiatan aktif lalu lanjutkan pendaftaran event pertama Anda.
+                                Anda belum memiliki registrasi atau kelas aktif. Jelajahi kegiatan yang sedang dibuka lalu daftarkan diri Anda.
                             </p>
                         </div>
                         <Link
                             href="/events"
                             className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
                         >
-                            Explore Events
+                            Lihat Kegiatan
                             <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>

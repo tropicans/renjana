@@ -29,17 +29,17 @@ export default function EventsPage() {
                         </span>
                         <div className="space-y-4">
                             <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight md:text-6xl">
-                                Kelola pendaftaran, pembelajaran, pre/post test, dan evaluasi dalam satu alur.
+                                Temukan kegiatan profesional dan mulai perjalanan belajar Anda.
                             </h1>
                             <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-                                Temukan kegiatan profesional Renjana, daftar secara online, lengkapi dokumen, lalu lanjut ke pembelajaran dan evaluasi saat event sudah aktif.
+                                Pilih kegiatan yang sedang dibuka, daftar secara online, lengkapi dokumen, lalu ikuti pembelajaran, pre/post test, dan evaluasi saat akses sudah tersedia.
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400">
-                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Multi-event catalog</span>
-                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Hybrid delivery</span>
-                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Pre/Post test</span>
-                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Evaluasi penyelenggaraan</span>
+                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Kegiatan aktif</span>
+                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Pendaftaran online</span>
+                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Hybrid learning</span>
+                            <span className="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-800">Evaluasi & sertifikat</span>
                         </div>
                     </div>
 
@@ -74,7 +74,7 @@ export default function EventsPage() {
                         <div className="flex items-end justify-between gap-4">
                             <div>
                                 <h2 className="text-3xl font-extrabold tracking-tight">Daftar Kegiatan</h2>
-                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Pilih event yang sedang dibuka untuk pendaftaran atau pembelajaran.</p>
+                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Pilih kegiatan yang sedang dibuka untuk pendaftaran, pembelajaran, atau evaluasi.</p>
                             </div>
                             <div className="text-sm text-slate-400">{events.length} event</div>
                         </div>

@@ -53,7 +53,7 @@ export function RegisterForm() {
             return;
         }
 
-        router.push(searchParams.get("redirect") || searchParams.get("callbackUrl") || "/events");
+        router.push(searchParams.get("redirect") || searchParams.get("callbackUrl") || "/dashboard");
         router.refresh();
     }
 
