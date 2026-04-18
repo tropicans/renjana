@@ -5,6 +5,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Wallet } from "lucide-react";
+import { OpsAuditTimeline, type OpsAuditLog } from "@/components/registrations/ops-audit-timeline";
 import { useToast } from "@/components/ui/toast";
 import { formatRupiah } from "@/lib/events";
 import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
@@ -19,6 +20,7 @@ type FinanceRegistrationDetail = {
     user: { fullName: string; email: string; phone: string | null };
     event: { title: string; category: string; slug: string };
     documents: Array<{ id: string; type: string; fileUrl: string; fileName: string; reviewStatus: string; adminNote: string | null }>;
+    auditLogs: OpsAuditLog[];
 };
 
 async function fetchFinanceRegistration(id: string) {
@@ -129,6 +131,11 @@ export default function FinanceRegistrationDetailPage() {
                         <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Tambahkan catatan verifikasi pembayaran" rows={6} className="mt-4 w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                         <button onClick={() => mutation.mutate({ adminNote })} disabled={mutation.isPending} className="mt-4 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">Simpan catatan</button>
                     </section>
+
+                    <OpsAuditTimeline
+                        logs={registration.auditLogs}
+                        emptyLabel="Belum ada aksi review pembayaran yang tercatat untuk registrasi ini."
+                    />
                 </div>
             </div>
         </div>

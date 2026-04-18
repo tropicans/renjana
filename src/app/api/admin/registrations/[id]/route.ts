@@ -31,7 +31,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ registration });
+    const auditLogs = await prisma.auditLog.findMany({
+        where: {
+            entityId: id,
+            entity: {
+                in: ["REGISTRATION", "PAYMENT"],
+            },
+        },
+        include: {
+            user: { select: { id: true, fullName: true, email: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+    });
+
+    return NextResponse.json({ registration: { ...registration, auditLogs } });
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
