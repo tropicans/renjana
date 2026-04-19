@@ -389,6 +389,7 @@ export interface ApiDashboardStats {
     totalHoursLearned?: number;
     totalUsers?: number;
     totalCourses?: number;
+    totalEvents?: number;
     totalEnrollments?: number;
     activeEnrollments?: number;
     completedEnrollments?: number;

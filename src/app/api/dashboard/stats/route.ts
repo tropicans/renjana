@@ -10,10 +10,11 @@ export async function GET() {
     const role = user!.role;
 
     if (role === "ADMIN") {
-        const [totalUsers, totalCourses, totalEnrollments, activeEnrollments, completedEnrollments] =
+        const [totalUsers, totalCourses, totalEvents, totalEnrollments, activeEnrollments, completedEnrollments] =
             await Promise.all([
                 prisma.user.count(),
                 prisma.course.count(),
+                prisma.event.count(),
                 prisma.enrollment.count(),
                 prisma.enrollment.count({ where: { status: "ACTIVE" } }),
                 prisma.enrollment.count({ where: { status: "COMPLETED" } }),
@@ -23,6 +24,7 @@ export async function GET() {
             role,
             totalUsers,
             totalCourses,
+            totalEvents,
             totalEnrollments,
             activeEnrollments,
             completedEnrollments,

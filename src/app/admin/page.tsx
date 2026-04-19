@@ -70,6 +70,12 @@ export default function AdminDashboardPage() {
                     description="Pelatihan yang sudah dipublikasikan"
                 />
                 <StatCard
+                    title="Total Event"
+                    value={stats?.totalEvents ?? 0}
+                    icon={CalendarDays}
+                    description="Event yang sudah dibuat"
+                />
+                <StatCard
                     title="Total Pengguna"
                     value={stats?.totalUsers ?? 0}
                     icon={Users}
@@ -79,12 +85,6 @@ export default function AdminDashboardPage() {
                     value={stats?.activeEnrollments ?? 0}
                     icon={Layers}
                     trend={{ value: 8, positive: true }}
-                />
-                <StatCard
-                    title="Selesai"
-                    value={stats?.completedEnrollments ?? 0}
-                    icon={Activity}
-                    description="Enrollments completed"
                 />
             </div>
 
