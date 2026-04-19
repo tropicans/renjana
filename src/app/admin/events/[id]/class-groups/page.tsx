@@ -12,6 +12,8 @@ type ClassGroupFormState = {
     name: string;
     modality: string;
     capacity: string;
+    startAt: string;
+    endAt: string;
     location: string;
     zoomLink: string;
     zoomPasscode: string;
@@ -24,6 +26,8 @@ function emptyForm(): ClassGroupFormState {
         name: "",
         modality: "ONLINE",
         capacity: "",
+        startAt: "",
+        endAt: "",
         location: "",
         zoomLink: "",
         zoomPasscode: "",
@@ -36,6 +40,8 @@ function toEditableForm(group: {
     name: string;
     modality: string;
     capacity: number | null;
+    startAt: string | null;
+    endAt: string | null;
     location: string | null;
     zoomLink: string | null;
     zoomPasscode: string | null;
@@ -46,6 +52,8 @@ function toEditableForm(group: {
         name: group.name,
         modality: group.modality,
         capacity: group.capacity?.toString() || "",
+        startAt: group.startAt ? group.startAt.slice(0, 16) : "",
+        endAt: group.endAt ? group.endAt.slice(0, 16) : "",
         location: group.location || "",
         zoomLink: group.zoomLink || "",
         zoomPasscode: group.zoomPasscode || "",
@@ -124,11 +132,14 @@ export default function AdminEventClassGroupsPage() {
                     </select>
                     <input value={form.capacity} onChange={(e) => setForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.instructorName} onChange={(e) => setForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                    <input type="datetime-local" value={form.startAt} onChange={(e) => setForm((prev) => ({ ...prev, startAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                    <input type="datetime-local" value={form.endAt} onChange={(e) => setForm((prev) => ({ ...prev, endAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.zoomLink} onChange={(e) => setForm((prev) => ({ ...prev, zoomLink: e.target.value }))} placeholder="Link Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.zoomPasscode} onChange={(e) => setForm((prev) => ({ ...prev, zoomPasscode: e.target.value }))} placeholder="Passcode Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <textarea value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Deskripsi / instruksi kelas" rows={4} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700 md:col-span-2" />
                 </div>
+                <p className="mt-4 text-xs text-gray-500">Isi jadwal sesi untuk membantu peserta webinar dan seminar melihat waktu hadir yang tepat.</p>
                 <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.name.trim()} className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"><Plus className="h-4 w-4" /> Buat kelompok kelas</button>
             </section>
 
@@ -146,6 +157,8 @@ export default function AdminEventClassGroupsPage() {
                                     <p>Kapasitas: {group.capacity ?? "Tidak dibatasi"}</p>
                                     <p>Peserta terpasang: {group._count?.registrations ?? 0}</p>
                                     <p>PIC: {group.instructorName || "Belum diisi"}</p>
+                                    <p>Mulai: {group.startAt ? new Date(group.startAt).toLocaleString("id-ID") : "Belum diatur"}</p>
+                                    <p>Selesai: {group.endAt ? new Date(group.endAt).toLocaleString("id-ID") : "Belum diatur"}</p>
                                     <p>Lokasi: {group.location || "-"}</p>
                                     <p>Zoom: {group.zoomLink || "-"}</p>
                                 </div>
@@ -173,6 +186,8 @@ export default function AdminEventClassGroupsPage() {
                                 </select>
                                 <input value={editingForm.capacity} onChange={(e) => setEditingForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.instructorName} onChange={(e) => setEditingForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                                <input type="datetime-local" value={editingForm.startAt} onChange={(e) => setEditingForm((prev) => ({ ...prev, startAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                                <input type="datetime-local" value={editingForm.endAt} onChange={(e) => setEditingForm((prev) => ({ ...prev, endAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.location} onChange={(e) => setEditingForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.zoomLink} onChange={(e) => setEditingForm((prev) => ({ ...prev, zoomLink: e.target.value }))} placeholder="Link Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.zoomPasscode} onChange={(e) => setEditingForm((prev) => ({ ...prev, zoomPasscode: e.target.value }))} placeholder="Passcode Zoom" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />

@@ -13,6 +13,28 @@ import { useUser } from "@/lib/context/user-context";
 import { formatRupiah } from "@/lib/events";
 import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
 
+function getParticipantModeLabel(mode: string) {
+    return mode === "OFFLINE" ? "Seminar" : "Webinar";
+}
+
+function getParticipantModeHint(mode: string) {
+    return mode === "OFFLINE"
+        ? "Ikut hadir langsung di venue seminar"
+        : "Ikut hadir online melalui sesi webinar live";
+}
+
+function formatSessionDateTime(value: string | null | undefined) {
+    if (!value) return null;
+
+    return new Date(value).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
 function MyRegistrationsContent() {
     const searchParams = useSearchParams();
     const toast = useToast();
@@ -182,6 +204,8 @@ function MyRegistrationsContent() {
                             const canPayNow = paymentGatewayEnabled && ["PENDING", "REJECTED"].includes(registration.paymentStatus);
                             const classAccessReady = registration.paymentStatus === "VERIFIED" && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status) && !!registration.classGroup;
                             const canOpenZoom = classAccessReady && registration.classGroup?.modality === "ONLINE" && !!registration.classGroup.zoomLink;
+                            const participantModeLabel = getParticipantModeLabel(registration.participantMode);
+                            const sessionStartLabel = formatSessionDateTime(registration.classGroup?.startAt || registration.event.eventStart);
 
                             return (
                             <article key={registration.id} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
@@ -192,8 +216,9 @@ function MyRegistrationsContent() {
                                         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                                             <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-800">{getRegistrationStatusLabel(registration.status)}</span>
                                             <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-800">Pembayaran: {getPaymentStatusLabel(registration.paymentStatus)}</span>
-                                            <span>{registration.participantMode}</span>
+                                            <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-800">{participantModeLabel}</span>
                                         </div>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">{getParticipantModeHint(registration.participantMode)}</p>
                                     </div>
                                     <div className="flex flex-wrap gap-3">
                                         {canPayNow ? (
@@ -217,7 +242,7 @@ function MyRegistrationsContent() {
                                     </div>
                                 </div>
                                 <div className="mt-5 flex flex-wrap gap-6 text-sm text-slate-500 dark:text-slate-400">
-                                    <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> {registration.event.eventStart ? new Date(registration.event.eventStart).toLocaleDateString("id-ID") : "Tanggal menyusul"}</div>
+                                    <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> {sessionStartLabel || "Tanggal menyusul"}</div>
                                     <div>Total biaya: {formatRupiah(registration.totalFee)}</div>
                                     <div>{registration.documents.length} dokumen tersimpan</div>
                                     <div>Kelas: {registration.classGroup?.name || "Sedang disiapkan admin"}</div>
@@ -230,27 +255,33 @@ function MyRegistrationsContent() {
                                 ) : null}
                                 {registration.classGroup ? (
                                     <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                                        <p className="font-semibold text-slate-900 dark:text-white">Informasi kelas</p>
+                                        <p className="font-semibold text-slate-900 dark:text-white">Informasi {registration.classGroup.modality === "ONLINE" ? "webinar" : "seminar"}</p>
                                         <div className="mt-2 space-y-1">
                                             <p>Grup: {registration.classGroup.name}</p>
-                                            <p>Mode: {registration.classGroup.modality}</p>
+                                            <p>Mode: {registration.classGroup.modality === "ONLINE" ? "Webinar online" : "Seminar offline"}</p>
                                             {registration.classGroup.location ? <p>Lokasi: {registration.classGroup.location}</p> : null}
-                                            {registration.classGroup.startAt ? <p>Mulai: {new Date(registration.classGroup.startAt).toLocaleString("id-ID")}</p> : null}
+                                            {registration.classGroup.startAt ? <p>Mulai: {formatSessionDateTime(registration.classGroup.startAt)}</p> : null}
+                                            {registration.classGroup.endAt ? <p>Selesai: {formatSessionDateTime(registration.classGroup.endAt)}</p> : null}
                                             {registration.classGroup.modality === "ONLINE" ? (
                                                 classAccessReady ? (
                                                     <>
-                                                        {registration.classGroup.zoomLink ? <p>Link Zoom sudah tersedia untuk peserta yang lolos verifikasi.</p> : <p>Link Zoom akan diisi admin sebelum kelas dimulai.</p>}
+                                                        {registration.classGroup.zoomLink ? <p>Link webinar live sudah tersedia untuk peserta yang lolos verifikasi.</p> : <p>Link webinar akan diisi admin sebelum sesi dimulai.</p>}
                                                         {registration.classGroup.zoomPasscode ? <p>Passcode: {registration.classGroup.zoomPasscode}</p> : null}
                                                     </>
                                                 ) : (
-                                                    <p>Link Zoom akan dibuka setelah pembayaran terverifikasi, pendaftaran disetujui, dan peserta ditempatkan ke kelas.</p>
+                                                    <p>Akses webinar akan dibuka setelah pembayaran terverifikasi, pendaftaran disetujui, dan peserta ditempatkan ke kelas.</p>
                                                 )
-                                            ) : null}
+                                            ) : (
+                                                <>
+                                                    {registration.classGroup.location ? <p>Silakan hadir ke venue seminar sesuai jadwal yang ditetapkan panitia.</p> : <p>Lokasi seminar akan diisi admin sebelum sesi dimulai.</p>}
+                                                    <p>Informasi check-in dan arahan onsite akan muncul di sini setelah penempatan seminar selesai.</p>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="mt-4 rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                                        Kelas operasional Anda sedang disiapkan admin. Informasi ruang offline atau link Zoom akan muncul setelah penempatan kelas selesai.
+                                        Penempatan {participantModeLabel.toLowerCase()} Anda sedang disiapkan admin. Informasi venue seminar atau akses webinar akan muncul setelah penempatan kelas selesai.
                                     </div>
                                 )}
                             </article>

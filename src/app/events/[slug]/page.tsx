@@ -8,6 +8,18 @@ import { SiteHeader } from "@/components/ui/site-header";
 import { fetchEventBySlug } from "@/lib/api";
 import { formatRupiah } from "@/lib/events";
 
+function formatEventDateTime(value: string | null | undefined) {
+    if (!value) return "TBA";
+
+    return new Date(value).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
 export default function EventDetailPage() {
     const params = useParams<{ slug: string }>();
     const slug = params.slug;
@@ -30,6 +42,14 @@ export default function EventDetailPage() {
 
     const onlineTotal = (event.onlineTuitionFee ?? 0) + (event.registrationFee ?? 0);
     const offlineTotal = (event.offlineTuitionFee ?? 0) + (event.registrationFee ?? 0);
+    const isHybrid = event.modality === "HYBRID";
+    const learningLabel = event.learningEnabled ? "Akses materi & assessment" : "Akses live event saja";
+    const featureLabel = [
+        event.preTestEnabled ? "pre-test" : null,
+        event.postTestEnabled ? "post-test" : null,
+        event.evaluationEnabled ? "evaluasi" : null,
+        event.learningEnabled ? "pembelajaran" : null,
+    ].filter(Boolean).join(", ") || "registrasi dan kehadiran";
 
     return (
         <div className="min-h-screen bg-background-light text-[#111418] dark:bg-background-dark dark:text-white">
@@ -50,11 +70,17 @@ export default function EventDetailPage() {
                             </div>
                             <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">{event.title}</h1>
                             <p className="mt-4 text-lg leading-8 text-slate-600 dark:text-slate-300">{event.description || event.summary}</p>
+                            {isHybrid ? (
+                                <div className="mt-6 rounded-[28px] border border-primary/15 bg-primary/5 p-5 text-sm text-slate-700 dark:border-primary/20 dark:bg-primary/10 dark:text-slate-200">
+                                    <p className="font-bold text-slate-900 dark:text-white">Event hybrid: webinar online + seminar offline</p>
+                                    <p className="mt-2 leading-6">Keduanya berlangsung pada jadwal yang sama. Pilih jalur webinar jika ingin hadir secara online, atau seminar jika ingin hadir langsung di lokasi.</p>
+                                </div>
+                            ) : null}
 
                             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
                                     <p className="text-xs text-slate-400">Mulai kegiatan</p>
-                                    <p className="mt-1 font-semibold">{event.eventStart ? new Date(event.eventStart).toLocaleDateString("id-ID") : "TBA"}</p>
+                                    <p className="mt-1 font-semibold">{formatEventDateTime(event.eventStart)}</p>
                                 </div>
                                 <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
                                     <p className="text-xs text-slate-400">Pendaftaran</p>
@@ -66,27 +92,51 @@ export default function EventDetailPage() {
                                 </div>
                                 <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
                                     <p className="text-xs text-slate-400">Pembelajaran</p>
-                                    <p className="mt-1 font-semibold">{event.learningEnabled ? "Aktif" : "Registrasi saja"}</p>
+                                    <p className="mt-1 font-semibold">{learningLabel}</p>
                                 </div>
                             </div>
                         </div>
+
+                        {isHybrid ? (
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="rounded-[28px] border border-sky-200 bg-sky-50 p-6 shadow-sm dark:border-sky-900/40 dark:bg-sky-950/20">
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-600 dark:text-sky-300">Webinar</p>
+                                    <h2 className="mt-3 text-xl font-bold text-slate-900 dark:text-white">Ikut online di waktu yang sama</h2>
+                                    <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <div className="flex items-start gap-3"><CalendarDays className="mt-0.5 h-4 w-4 text-sky-600 dark:text-sky-300" /> Jadwal live: {formatEventDateTime(event.eventStart)}</div>
+                                        <div className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 text-sky-600 dark:text-sky-300" /> Platform: {event.platform || "Akan diumumkan panitia"}</div>
+                                        <div className="flex items-start gap-3"><Users className="mt-0.5 h-4 w-4 text-sky-600 dark:text-sky-300" /> Cocok untuk peserta yang ingin hadir jarak jauh dengan akses live.</div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-[28px] border border-amber-200 bg-amber-50 p-6 shadow-sm dark:border-amber-900/40 dark:bg-amber-950/20">
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-300">Seminar</p>
+                                    <h2 className="mt-3 text-xl font-bold text-slate-900 dark:text-white">Ikut offline di venue yang sama</h2>
+                                    <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <div className="flex items-start gap-3"><CalendarDays className="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-300" /> Jadwal hadir: {formatEventDateTime(event.eventStart)}</div>
+                                        <div className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-300" /> Lokasi: {event.location || "Venue akan diumumkan panitia"}</div>
+                                        <div className="flex items-start gap-3"><Users className="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-300" /> Cocok untuk peserta yang ingin hadir langsung, check-in di venue, dan mengikuti sesi tatap muka.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
                                 <h2 className="text-xl font-bold">Informasi Utama</h2>
                                 <div className="mt-5 space-y-4 text-sm text-slate-600 dark:text-slate-300">
                                     <div className="flex items-start gap-3"><CalendarDays className="mt-0.5 h-4 w-4 text-primary" /> {event.scheduleSummary || "Jadwal detail akan diinformasikan oleh panitia."}</div>
-                                    <div className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 text-primary" /> {event.location || event.platform || "Lokasi/platform akan diumumkan"}</div>
-                                    <div className="flex items-start gap-3"><Users className="mt-0.5 h-4 w-4 text-primary" /> Feature aktif: {event.preTestEnabled ? "pre-test, " : ""}{event.postTestEnabled ? "post-test, " : ""}{event.evaluationEnabled ? "evaluasi" : "pembelajaran"}</div>
+                                    <div className="flex items-start gap-3"><MapPin className="mt-0.5 h-4 w-4 text-primary" /> {isHybrid ? `Online via ${event.platform || "platform menyusul"} dan offline di ${event.location || "venue menyusul"}` : event.location || event.platform || "Lokasi/platform akan diumumkan"}</div>
+                                    <div className="flex items-start gap-3"><Users className="mt-0.5 h-4 w-4 text-primary" /> Fitur aktif: {featureLabel}</div>
                                 </div>
                             </div>
 
                             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
                                 <h2 className="text-xl font-bold">Persyaratan Alur</h2>
                                 <div className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                                    <div className="flex items-start gap-3"><FileCheck2 className="mt-0.5 h-4 w-4 text-primary" /> Lengkapi form biodata dan dokumen.</div>
-                                    <div className="flex items-start gap-3"><FileCheck2 className="mt-0.5 h-4 w-4 text-primary" /> Upload bukti pembayaran sebelum submit final.</div>
-                                    <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" /> Setelah diverifikasi, peserta dapat mengakses materi dan assessment.</div>
+                                    <div className="flex items-start gap-3"><FileCheck2 className="mt-0.5 h-4 w-4 text-primary" /> Pilih jalur kehadiran webinar atau seminar sebelum melengkapi biodata.</div>
+                                    <div className="flex items-start gap-3"><FileCheck2 className="mt-0.5 h-4 w-4 text-primary" /> Lengkapi dokumen dan pembayaran sesuai alur registrasi.</div>
+                                    <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" /> Setelah diverifikasi, peserta webinar mendapat akses live online dan peserta seminar mendapat info venue/check-in.</div>
                                     <div className="flex items-start gap-3"><ScrollText className="mt-0.5 h-4 w-4 text-primary" /> Evaluasi penyelenggaraan dibuka setelah phase event aktif.</div>
                                 </div>
                             </div>
@@ -125,12 +175,14 @@ export default function EventDetailPage() {
                             <h2 className="text-xl font-bold">Pendaftaran</h2>
                             <div className="mt-5 space-y-4 rounded-2xl bg-slate-50 p-4 text-sm dark:bg-slate-900">
                                 <div>
-                                    <p className="text-xs text-slate-400">Mode online</p>
+                                    <p className="text-xs text-slate-400">Webinar online</p>
                                     <p className="mt-1 font-semibold">{formatRupiah(onlineTotal)}</p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Akses live via {event.platform || "platform menyusul"}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-400">Mode offline</p>
+                                    <p className="text-xs text-slate-400">Seminar offline</p>
                                     <p className="mt-1 font-semibold">{formatRupiah(offlineTotal)}</p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Hadir langsung di {event.location || "venue menyusul"}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-400">Narahubung</p>
@@ -139,11 +191,11 @@ export default function EventDetailPage() {
                             </div>
 
                             <Link href={`/events/${event.slug}/register`} className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-bold text-white transition hover:opacity-90">
-                                Daftar sekarang
+                                Pilih webinar atau seminar
                             </Link>
 
                             <div className="mt-5 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                                Pendaftaran dilakukan dalam beberapa langkah: buat akun, isi biodata, upload dokumen, upload bukti pembayaran, lalu submit untuk verifikasi admin.
+                                Pendaftaran dilakukan dalam beberapa langkah: pilih mode kehadiran, isi biodata, upload dokumen, selesaikan pembayaran, lalu submit untuk verifikasi admin.
                             </div>
                         </div>
                     </aside>

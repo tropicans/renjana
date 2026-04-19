@@ -68,6 +68,22 @@ function formatEventDateRange(start: string | null | undefined, end: string | nu
     return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
 }
 
+function getParticipantModeCopy(mode: FormState["participantMode"]) {
+    return mode === "OFFLINE"
+        ? {
+            badge: "Seminar",
+            title: "Hadir langsung di venue",
+            shortTitle: "Seminar offline",
+            detail: "Cocok untuk peserta yang ingin hadir tatap muka, check-in di lokasi, dan mengikuti sesi secara langsung.",
+        }
+        : {
+            badge: "Webinar",
+            title: "Hadir online secara live",
+            shortTitle: "Webinar online",
+            detail: "Cocok untuk peserta yang ingin mengikuti sesi dari mana saja dengan akses live dari panitia.",
+        };
+}
+
 const fieldLabels: Record<string, string> = {
     fullName: "Nama lengkap",
     birthPlace: "Tempat lahir",
@@ -312,6 +328,8 @@ export default function EventRegistrationPage() {
     const refundPreview = refundItems.slice(0, 2);
     const registrationPeriod = formatEventDateRange(event.registrationStart, event.registrationEnd);
     const eventPeriod = formatEventDateRange(event.eventStart, event.eventEnd);
+    const isHybrid = event.modality === "HYBRID";
+    const selectedModeCopy = getParticipantModeCopy(form.participantMode);
     const uploadedTypes = new Set(existingRegistration?.documents.map((document) => document.type) ?? []);
     for (const definition of activeDocumentDefinitions) {
         if (files[definition.type]) {
@@ -399,6 +417,11 @@ export default function EventRegistrationPage() {
                             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
                                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Registration Flow</p>
                                 <h1 className="mt-3 text-2xl font-bold">{event.title}</h1>
+                                {isHybrid ? (
+                                    <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                                        Event ini berjalan hybrid. Pilih jalur `Webinar` untuk ikut online atau `Seminar` untuk hadir offline pada jadwal yang sama.
+                                    </p>
+                                ) : null}
                                 <div className="mt-6 space-y-3 text-sm">
                                     {flowSections.map((section) => (
                                         <div key={section.label} className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${section.complete ? "border-primary bg-primary/5 text-primary" : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400"}`}>
@@ -414,9 +437,13 @@ export default function EventRegistrationPage() {
                             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70">
                                 <h2 className="text-lg font-bold">Ringkasan biaya</h2>
                                 <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                                    <div className="flex items-center justify-between"><span>Online</span><span className="font-semibold">{formatRupiah(onlineTotal)}</span></div>
-                                    <div className="flex items-center justify-between"><span>Offline</span><span className="font-semibold">{formatRupiah(offlineTotal)}</span></div>
-                                    <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-3 dark:border-slate-800"><span>Mode dipilih</span><span className="font-semibold">{form.participantMode === "OFFLINE" ? formatRupiah(offlineTotal) : formatRupiah(onlineTotal)}</span></div>
+                                    <div className="flex items-center justify-between"><span>Webinar</span><span className="font-semibold">{formatRupiah(onlineTotal)}</span></div>
+                                    <div className="flex items-center justify-between"><span>Seminar</span><span className="font-semibold">{formatRupiah(offlineTotal)}</span></div>
+                                    <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-3 dark:border-slate-800"><span>{selectedModeCopy.badge} dipilih</span><span className="font-semibold">{form.participantMode === "OFFLINE" ? formatRupiah(offlineTotal) : formatRupiah(onlineTotal)}</span></div>
+                                </div>
+                                <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                                    <p className="font-semibold text-slate-900 dark:text-white">{selectedModeCopy.shortTitle}</p>
+                                    <p className="mt-2 leading-6">{form.participantMode === "OFFLINE" ? `Lokasi: ${event.location || "akan diumumkan panitia"}` : `Platform: ${event.platform || "akan diumumkan panitia"}`}</p>
                                 </div>
                             </div>
                         </aside>
@@ -426,17 +453,24 @@ export default function EventRegistrationPage() {
                                 <div className="space-y-8 border-b border-slate-200 pb-10 dark:border-slate-800">
                                     <div>
                                         <h2 className="text-2xl font-bold">Persetujuan dan pilihan mode</h2>
-                                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Bagian ini langsung menjadi pembuka form. Setelah memahami persetujuan, pendaftar bisa lanjut isi data pada halaman yang sama tanpa tombol next.</p>
+                                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Tentukan lebih dulu apakah Anda akan mengikuti event sebagai peserta webinar online atau seminar offline. Setelah itu, seluruh form dapat dilanjutkan di halaman yang sama.</p>
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
                                         {(["ONLINE", "OFFLINE"] as const).map((mode) => (
                                             <button key={mode} type="button" onClick={() => setForm((prev) => ({ ...prev, participantMode: mode }))} className={`rounded-[24px] border p-5 text-left transition ${form.participantMode === mode ? "border-primary bg-primary/5" : "border-slate-200 hover:border-primary/40 dark:border-slate-800"}`}>
-                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{mode}</p>
-                                                <p className="mt-3 text-lg font-bold">{mode === "ONLINE" ? "Kelas online" : "Kelas offline"}</p>
-                                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{mode === "ONLINE" ? formatRupiah(onlineTotal) : formatRupiah(offlineTotal)}</p>
+                                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{mode === "ONLINE" ? "Webinar" : "Seminar"}</p>
+                                                <p className="mt-3 text-lg font-bold">{mode === "ONLINE" ? "Ikut online secara live" : "Hadir langsung di venue"}</p>
+                                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{mode === "ONLINE" ? `Platform: ${event.platform || "akan diumumkan"}` : `Lokasi: ${event.location || "akan diumumkan"}`}</p>
+                                                <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{mode === "ONLINE" ? formatRupiah(onlineTotal) : formatRupiah(offlineTotal)}</p>
                                             </button>
                                         ))}
+                                    </div>
+
+                                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
+                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Pilihan Anda</p>
+                                        <p className="mt-2 text-lg font-bold text-slate-900 dark:text-white">{selectedModeCopy.badge} - {selectedModeCopy.title}</p>
+                                        <p className="mt-2 leading-6">{selectedModeCopy.detail}</p>
                                     </div>
 
                                     <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/60">
@@ -681,7 +715,7 @@ export default function EventRegistrationPage() {
 
                             <div className="mt-10 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between dark:border-slate-800">
                                 <div className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-                                    Setelah persetujuan dicentang, pendaftar bisa langsung melengkapi seluruh data di halaman ini lalu submit tanpa perpindahan step.
+                                    Setelah memilih webinar atau seminar, pendaftar bisa langsung melengkapi seluruh data di halaman ini lalu submit tanpa perpindahan step.
                                 </div>
                                 <div className="flex gap-3">
                                     <button type="button" onClick={() => saveMutation.mutate(false)} disabled={saveMutation.isPending} className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300">
