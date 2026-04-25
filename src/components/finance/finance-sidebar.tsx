@@ -95,13 +95,13 @@ export function FinanceSidebar({ collapsed = false, onToggle }: FinanceSidebarPr
             {/* Footer */}
             <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-3">
                 <Link
-                    href="/admin"
+                    href="/finance/registrations"
                     className={cn(
                         "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 hover:border-violet-500/50 transition-all",
                         collapsed && "px-2"
                     )}
                 >
-                    {collapsed ? "A" : "Admin View"}
+                    {collapsed ? "P" : "Payment Queue"}
                 </Link>
             </div>
 

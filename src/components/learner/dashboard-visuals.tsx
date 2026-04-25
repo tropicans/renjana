@@ -9,37 +9,45 @@ interface ProgressChartProps {
 }
 
 export function ProgressChart({ completionPercentage }: ProgressChartProps) {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     const data = [
         { name: "Completed", value: completionPercentage },
         { name: "Remaining", value: 100 - completionPercentage },
     ];
 
     return (
-        <div className="relative w-32 h-32 flex-shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie
-                        data={data}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={55}
-                        startAngle={90}
-                        endAngle={-270}
-                        dataKey="value"
-                        stroke="none"
-                    >
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={index === 0 ? "var(--color-primary, #000)" : "var(--color-muted, #f3f4f6)"}
-                                className="dark:opacity-80"
-                            />
-                        ))}
-                    </Pie>
-                    <Tooltip cursor={false} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                </PieChart>
-            </ResponsiveContainer>
+        <div className="relative w-32 h-32 min-w-0 flex-shrink-0">
+            {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={data}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={55}
+                            startAngle={90}
+                            endAngle={-270}
+                            dataKey="value"
+                            stroke="none"
+                        >
+                            {data.map((entry, index) => (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={index === 0 ? "var(--color-primary, #000)" : "var(--color-muted, #f3f4f6)"}
+                                    className="dark:opacity-80"
+                                />
+                            ))}
+                        </Pie>
+                        <Tooltip cursor={false} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    </PieChart>
+                </ResponsiveContainer>
+            ) : null}
             <div className="absolute inset-0 flex items-center justify-center flex-col">
                 <span className="text-xl font-bold">{completionPercentage}%</span>
             </div>

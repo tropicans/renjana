@@ -9,6 +9,7 @@ import {
     Target,
     AlertTriangle,
     TrendingUp,
+    Monitor,
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
@@ -18,6 +19,7 @@ const navItems = [
     { name: "Skill Coverage", href: "/manager/skills", icon: Target },
     { name: "Risk Heatmap", href: "/manager/risks", icon: AlertTriangle },
     { name: "Training Impact", href: "/manager/impact", icon: TrendingUp },
+    { name: "Modality", href: "/manager/modality", icon: Monitor },
 ];
 
 interface ManagerSidebarProps {
@@ -93,13 +95,13 @@ export function ManagerSidebar({ collapsed = false, onToggle }: ManagerSidebarPr
             {/* Footer */}
             <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-3">
                 <Link
-                    href="/dashboard"
+                    href="/manager/modality"
                     className={cn(
                         "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 hover:border-orange-500/50 transition-all",
                         collapsed && "px-2"
                     )}
                 >
-                    {collapsed ? "L" : "Learner View"}
+                    {collapsed ? "M" : "Modality View"}
                 </Link>
             </div>
 

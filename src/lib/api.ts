@@ -728,17 +728,35 @@ export function fetchAdminEvents() {
 }
 
 export function createAdminEvent(data: Record<string, unknown>) {
-    return apiFetch<{ event: unknown }>("/api/admin/events", {
+    return adminEventMutationFetch("/api/admin/events", {
         method: "POST",
         body: JSON.stringify(data),
     });
 }
 
 export function updateAdminEvent(id: string, data: Record<string, unknown>) {
-    return apiFetch<{ event: unknown }>(`/api/admin/events/${id}`, {
+    return adminEventMutationFetch(`/api/admin/events/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),
     });
+}
+
+async function adminEventMutationFetch(url: string, init: RequestInit) {
+    const res = await fetch(`${BASE}${url}`, {
+        ...init,
+        headers: { "Content-Type": "application/json", ...init.headers },
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const details = Array.isArray(body.details)
+            ? body.details.filter((detail: unknown) => typeof detail === "string" && detail.trim()).join(" • ")
+            : "";
+        const message = body.error || `API error ${res.status}`;
+        throw new Error(details && details !== message ? `${message} • ${details}` : message);
+    }
+
+    return res.json() as Promise<{ event: unknown }>;
 }
 
 export interface ApiAdminEventDetail {

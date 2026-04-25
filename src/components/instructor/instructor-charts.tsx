@@ -22,6 +22,12 @@ interface InstructorTrendChartProps {
 }
 
 export function InstructorTrendChart({ courses }: InstructorTrendChartProps) {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     if (!courses || courses.length === 0) return null;
 
     // Transform course data into chart format
@@ -43,54 +49,54 @@ export function InstructorTrendChart({ courses }: InstructorTrendChartProps) {
                 </div>
             </div>
 
-            <div className="h-80 w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                        data={chartData}
-                        margin={{
-                            top: 10,
-                            right: 10,
-                            left: 0,
-                            bottom: 20,
-                        }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border, #e5e7eb)" />
-                        <XAxis
-                            dataKey="name"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: 'var(--color-muted-foreground, #6b7280)', fontSize: 12 }}
-                            dy={10}
-                        />
-                        <YAxis
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{ fill: 'var(--color-muted-foreground, #6b7280)', fontSize: 12 }}
-                            dx={-10}
-                        />
-                        <Tooltip
-                            cursor={{ fill: 'var(--color-muted, #f3f4f6)', opacity: 0.4 }}
-                            contentStyle={{
-                                borderRadius: '12px',
-                                border: '1px solid var(--color-border, #e5e7eb)',
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                backgroundColor: 'var(--color-background, #ffffff)'
+            <div className="mt-4 h-80 w-full min-w-0">
+                {mounted ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                            data={chartData}
+                            margin={{
+                                top: 10,
+                                right: 10,
+                                left: 0,
+                                bottom: 20,
                             }}
-                            labelStyle={{ fontWeight: 'bold', color: 'var(--color-foreground, #111827)' }}
-                        />
-                        <Bar
-                            dataKey="Peserta"
-                            radius={[6, 6, 0, 0]}
-                            barSize={40}
                         >
-                            {
-                                chartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill="#3b82f6" /> // blue-500 equivalent representing Instructor theme
-                                ))
-                            }
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border, #e5e7eb)" />
+                            <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: 'var(--color-muted-foreground, #6b7280)', fontSize: 12 }}
+                                dy={10}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: 'var(--color-muted-foreground, #6b7280)', fontSize: 12 }}
+                                dx={-10}
+                            />
+                            <Tooltip
+                                cursor={{ fill: 'var(--color-muted, #f3f4f6)', opacity: 0.4 }}
+                                contentStyle={{
+                                    borderRadius: '12px',
+                                    border: '1px solid var(--color-border, #e5e7eb)',
+                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                    backgroundColor: 'var(--color-background, #ffffff)'
+                                }}
+                                labelStyle={{ fontWeight: 'bold', color: 'var(--color-foreground, #111827)' }}
+                            />
+                            <Bar
+                                dataKey="Peserta"
+                                radius={[6, 6, 0, 0]}
+                                barSize={40}
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill="#3b82f6" />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                ) : null}
             </div>
         </div>
     );

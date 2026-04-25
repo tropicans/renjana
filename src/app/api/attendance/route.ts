@@ -75,13 +75,20 @@ export async function GET(req: Request) {
     const lessonId = searchParams.get("lessonId");
     const role = user!.role;
 
-    // Instructors/Admins can see all attendance for a lesson
-    if ((role === "INSTRUCTOR" || role === "ADMIN") && lessonId) {
+    // Instructors/Admins can see attendance records across the organization
+    if (role === "INSTRUCTOR" || role === "ADMIN") {
         const records = await prisma.attendance.findMany({
-            where: { lessonId },
+            where: lessonId ? { lessonId } : {},
             include: {
                 user: { select: { id: true, fullName: true, email: true } },
-                lesson: { select: { id: true, title: true, type: true } },
+                lesson: {
+                    select: {
+                        id: true,
+                        title: true,
+                        type: true,
+                        module: { select: { title: true, course: { select: { title: true } } } },
+                    },
+                },
             },
             orderBy: { checkedAt: "desc" },
         });

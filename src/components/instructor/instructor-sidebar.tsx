@@ -91,10 +91,10 @@ export function InstructorSidebar({ collapsed = false, onToggle }: InstructorSid
                 })}
             </nav>
 
-            {/* Footer - Switch to Learner */}
+            {/* Footer */}
             <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-3">
-                <a
-                    href="/dashboard"
+                <Link
+                    href="/instructor/learners"
                     className={cn(
                         "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium border border-gray-200 dark:border-gray-700 hover:border-emerald-500/50 hover:text-emerald-600 transition-all",
                         collapsed && "px-2"
@@ -103,9 +103,9 @@ export function InstructorSidebar({ collapsed = false, onToggle }: InstructorSid
                     {collapsed ? (
                         <Users className="h-4 w-4" />
                     ) : (
-                        "Switch to Learner View"
+                        "Learners Overview"
                     )}
-                </a>
+                </Link>
             </div>
 
             {/* Footer */}

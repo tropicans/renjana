@@ -3,9 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Menu, Bell, User, LogOut, Settings, Search } from "lucide-react";
+import { Menu, Bell, User, LogOut, Settings, Search, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/context/user-context";
+import { getDashboardUrl } from "@/lib/context/user-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {
@@ -34,6 +35,12 @@ export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboa
             default: return role ?? 'Learner';
         }
     };
+
+    const dropdownPrimaryAction = user?.role === "LEARNER"
+        ? { href: "/dashboard/settings", label: "Settings", icon: Settings }
+        : { href: user?.role ? getDashboardUrl(user.role) : "/", label: "Portal Home", icon: Home };
+
+    const DropdownPrimaryIcon = dropdownPrimaryAction.icon;
 
     return (
         <header
@@ -106,12 +113,12 @@ export function Header({ onMenuClick, sidebarCollapsed = false, title = "Dashboa
                                     <p className="text-xs text-gray-400">{user?.email || 'Not logged in'}</p>
                                 </div>
                                 <Link
-                                    href="/dashboard/settings"
+                                    href={dropdownPrimaryAction.href}
                                     className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all"
                                     onClick={() => setDropdownOpen(false)}
                                 >
-                                    <Settings className="h-4 w-4 text-gray-400" />
-                                    Settings
+                                    <DropdownPrimaryIcon className="h-4 w-4 text-gray-400" />
+                                    {dropdownPrimaryAction.label}
                                 </Link>
                                 <button
                                     onClick={handleLogout}
