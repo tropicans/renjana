@@ -17,10 +17,51 @@ type EventValidationInput = {
     courseId?: string | null;
 };
 
+type EventRegistrationLifecycleInput = {
+    status?: string | null;
+    registrationStart?: string | Date | null;
+    registrationEnd?: string | Date | null;
+    now?: Date;
+};
+
 function asDate(value: string | Date | null | undefined) {
     if (!value) return null;
     const date = value instanceof Date ? value : new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
+}
+
+const OPEN_REGISTRATION_STATUSES = ["PUBLISHED", "REGISTRATION_OPEN"] as const;
+
+export function validateEventRegistrationLifecycle(input: EventRegistrationLifecycleInput) {
+    const now = input.now ?? new Date();
+    const registrationStart = asDate(input.registrationStart);
+    const registrationEnd = asDate(input.registrationEnd);
+
+    if (!input.status || !OPEN_REGISTRATION_STATUSES.includes(input.status as (typeof OPEN_REGISTRATION_STATUSES)[number])) {
+        return {
+            ok: false as const,
+            error: "Registration is not open for this event",
+        };
+    }
+
+    if (registrationStart && now < registrationStart) {
+        return {
+            ok: false as const,
+            error: "Registration has not opened yet for this event",
+        };
+    }
+
+    if (registrationEnd && now > registrationEnd) {
+        return {
+            ok: false as const,
+            error: "Registration has already closed for this event",
+        };
+    }
+
+    return {
+        ok: true as const,
+        error: null,
+    };
 }
 
 export function validateEventPayload(input: EventValidationInput) {

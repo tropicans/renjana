@@ -46,6 +46,16 @@ export interface ApiCourseDetail extends Omit<ApiCourse, "_count"> {
         }[];
     }[];
     enrollments: { id: string; userId: string }[];
+    linkedEvent?: {
+        id: string;
+        slug: string;
+        title: string;
+        status: string;
+        registrationStart: string | null;
+        registrationEnd: string | null;
+        eventStart: string | null;
+    } | null;
+    requiresRegistration?: boolean;
 }
 
 export function fetchCourses(params?: { search?: string }) {
@@ -197,12 +207,14 @@ export interface ApiRegistration {
 export interface ApiClassGroup {
     id: string;
     eventId: string;
+    instructorUserId: string | null;
     name: string;
     modality: string;
     capacity: number | null;
     status: string;
     description: string | null;
     instructorName: string | null;
+    instructorUser?: { id: string; fullName: string; email: string } | null;
     location: string | null;
     zoomLink: string | null;
     zoomPasscode: string | null;
@@ -374,7 +386,7 @@ export function fetchMyEnrollments() {
 }
 
 export function enrollInCourse(courseId: string) {
-    return apiFetch<{ enrollment: ApiEnrollment }>("/api/enrollments", {
+    return apiFetch<{ enrollment: ApiEnrollment; linkedEvent?: { id: string; slug: string; title: string; status: string } }>("/api/enrollments", {
         method: "POST",
         body: JSON.stringify({ courseId }),
     });
@@ -395,10 +407,57 @@ export interface ApiDashboardStats {
     completedEnrollments?: number;
     totalLearners?: number;
     totalInstructors?: number;
+    avgCompletion?: number;
+    totalRegistrations?: number;
+    pendingPayments?: number;
+    verifiedPayments?: number;
+    rejectedPayments?: number;
+    totalBilled?: number;
+    totalCollected?: number;
+    onlinePrograms?: number;
+    offlinePrograms?: number;
+    hybridPrograms?: number;
+    onlineParticipants?: number;
+    offlineParticipants?: number;
+    hybridParticipants?: number;
+    recentRegistrations?: Array<{
+        id: string;
+        createdAt: string;
+        user: { fullName: string };
+        event: { title: string };
+    }>;
+    recentTransactions?: Array<{
+        id: string;
+        totalFee: number;
+        paymentStatus: string;
+        latestPayment: {
+            id: string;
+            amount: number;
+            status: string;
+            createdAt: string;
+            paidAt: string | null;
+        } | null;
+    }>;
 }
 
 export function fetchDashboardStats() {
     return apiFetch<ApiDashboardStats>("/api/dashboard/stats");
+}
+
+export function fetchFinanceRegistrations() {
+    return apiFetch<{
+        registrations: Array<{
+            id: string;
+            participantMode: string;
+            status: string;
+            paymentStatus: string;
+            totalFee: number | null;
+            createdAt: string;
+            user: { fullName: string; email: string };
+            event: { id: string; slug: string; title: string; category: string };
+            documents: Array<{ id: string; type: string }>;
+        }>;
+    }>("/api/finance/registrations");
 }
 
 // ── Admin Users ────────────────────────────────────────────────
@@ -846,6 +905,10 @@ export function fetchInstructorStats() {
 
 export function fetchInstructorLearners() {
     return apiFetch<{ enrollments: Array<{ id: string; userId: string; courseId: string; status: string; completionPercentage: number; enrolledAt: string; user: { id: string; fullName: string; email: string }; course: { id: string; title: string }; certificate: { id: string; issuedAt: string } | null }>; stats: { totalLearners: number; activeEnrollments: number; completedEnrollments: number; avgCompletion: number } }>("/api/instructor/learners");
+}
+
+export function fetchManagerLearners() {
+    return apiFetch<{ enrollments: Array<{ id: string; userId: string; courseId: string; status: string; completionPercentage: number; enrolledAt: string; user: { id: string; fullName: string; email: string }; course: { id: string; title: string }; certificate: { id: string; issuedAt: string } | null }>; stats: { totalLearners: number; activeEnrollments: number; completedEnrollments: number; avgCompletion: number } }>("/api/manager/learners");
 }
 
 // ── Quizzes ────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
+import { getEvaluationRegistrationId } from "@/lib/evaluation-link";
 
 async function evaluateCertificateEligibility(enrollmentId: string, userId: string, requireOwnership: boolean) {
     const enrollment = await prisma.enrollment.findUnique({
@@ -64,7 +65,7 @@ async function evaluateCertificateEligibility(enrollmentId: string, userId: stri
             orderBy: { createdAt: "desc" },
         });
 
-        const evaluationRegistrationId = (evaluation?.answers as { registrationId?: string } | null)?.registrationId;
+        const evaluationRegistrationId = evaluation ? getEvaluationRegistrationId(evaluation) : null;
         if (!evaluation || evaluationRegistrationId !== registration.id) {
             return { ok: false as const, status: 400, error: "Evaluation must be submitted before a certificate can be issued", enrollment };
         }

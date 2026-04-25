@@ -17,6 +17,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                 },
             },
             enrollments: { select: { id: true, userId: true } },
+            events: {
+                select: {
+                    id: true,
+                    slug: true,
+                    title: true,
+                    status: true,
+                    registrationStart: true,
+                    registrationEnd: true,
+                    eventStart: true,
+                },
+                orderBy: [
+                    { eventStart: "asc" },
+                    { createdAt: "asc" },
+                ],
+            },
         },
     });
 
@@ -24,5 +39,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ course });
+    const linkedEvent = course.events[0] ?? null;
+
+    return NextResponse.json({
+        course: {
+            ...course,
+            linkedEvent,
+            requiresRegistration: Boolean(linkedEvent),
+        },
+    });
 }

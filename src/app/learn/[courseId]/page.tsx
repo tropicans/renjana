@@ -68,7 +68,8 @@ export default function LearnPage() {
     const enrollment = enrollmentData?.enrollments?.find((e) => e.courseId === courseId);
     const linkedRegistrations = registrationData?.registrations?.filter((registration) => registration.event.courseId === courseId) ?? [];
     const approvedRegistration = linkedRegistrations.find((registration) => ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status));
-    const requiresApprovedRegistration = linkedRegistrations.length > 0;
+    const requiresApprovedRegistration = Boolean(course?.requiresRegistration);
+    const linkedEvent = course?.linkedEvent ?? null;
 
     // Fetch progress for this enrollment
     const { data: progressData } = useQuery({
@@ -154,12 +155,17 @@ export default function LearnPage() {
 
     // Redirect if not enrolled
     if (!courseLoading && !authLoading && user && course && !enrollment) {
+        if (linkedEvent) {
+            router.push(`/events/${linkedEvent.slug}/register`);
+            return null;
+        }
+
         router.push(`/course/${courseId}`);
         return null;
     }
 
     if (!courseLoading && !authLoading && user && course && requiresApprovedRegistration && !approvedRegistration) {
-        router.push("/my-registrations");
+        router.push(linkedEvent ? `/events/${linkedEvent.slug}/register` : "/my-registrations");
         return null;
     }
 

@@ -10,8 +10,8 @@ const ROLE_ROUTES: Record<string, string[]> = {
     "/instructor": ["INSTRUCTOR", "ADMIN"],
     "/manager": ["MANAGER", "ADMIN"],
     "/finance": ["FINANCE", "ADMIN"],
-    "/dashboard": ["LEARNER", "INSTRUCTOR", "MANAGER", "FINANCE", "ADMIN"],
-    "/my-registrations": ["LEARNER", "ADMIN"],
+    "/dashboard": ["LEARNER"],
+    "/my-registrations": ["LEARNER"],
 };
 
 export const proxy = auth((req) => {

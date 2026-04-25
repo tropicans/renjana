@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     const registrationBefore = await prisma.registration.findUnique({
         where: { id: payment.registrationId },
-        select: { paymentStatus: true },
+        select: { id: true, userId: true, paymentStatus: true },
     });
 
     if (!registrationBefore) {
@@ -58,6 +58,33 @@ export async function POST(req: Request) {
         where: { id: payment.registrationId },
         data: { paymentStatus: paymentStatus as never },
     });
+
+    if (paymentStatus !== registrationBefore.paymentStatus) {
+        await prisma.auditLog.create({
+            data: {
+                userId: registrationBefore.userId,
+                action: paymentStatus === "VERIFIED"
+                    ? "VERIFY_REGISTRATION_PAYMENT_WEBHOOK"
+                    : paymentStatus === "REJECTED"
+                        ? "REJECT_REGISTRATION_PAYMENT_WEBHOOK"
+                        : "UPDATE_REGISTRATION_PAYMENT_WEBHOOK",
+                entity: "PAYMENT",
+                entityId: payment.registrationId,
+                metadata: {
+                    source: "DOKU_WEBHOOK",
+                    paymentId: payment.id,
+                    invoiceId,
+                    providerStatus: normalizedStatus,
+                    previous: {
+                        paymentStatus: registrationBefore.paymentStatus,
+                    },
+                    next: {
+                        paymentStatus,
+                    },
+                },
+            },
+        });
+    }
 
     if (paymentStatus !== "PENDING" && paymentStatus !== registrationBefore.paymentStatus) {
         const registration = await prisma.registration.findUnique({

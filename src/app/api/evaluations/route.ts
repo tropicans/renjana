@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
 import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
+import { getEvaluationRegistrationId } from "@/lib/evaluation-link";
 
 // POST /api/evaluations — submit course evaluation
 export async function POST(req: Request) {
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
         data: {
             courseId,
             userId: user!.id,
+            registrationId: registration.id,
             rating,
             comment: comment ?? null,
             answers: { registrationId: registration.id, payload: answers ?? null },
@@ -78,7 +80,7 @@ export async function GET(req: Request) {
         return NextResponse.json({
             evaluations: evaluations.map((evaluation) => ({
                 ...evaluation,
-                registrationId: (evaluation.answers as { registrationId?: string } | null)?.registrationId ?? null,
+                registrationId: getEvaluationRegistrationId(evaluation),
             })),
             avgRating,
             total: evaluations.length,
@@ -99,15 +101,14 @@ export async function GET(req: Request) {
 
     if (registrationId) {
         evaluations = evaluations.filter((evaluation) => {
-            const value = evaluation.answers as { registrationId?: string } | null;
-            return value?.registrationId === registrationId;
+            return getEvaluationRegistrationId(evaluation) === registrationId;
         });
     }
 
     return NextResponse.json({
         evaluations: evaluations.map((evaluation) => ({
             ...evaluation,
-            registrationId: (evaluation.answers as { registrationId?: string } | null)?.registrationId ?? null,
+            registrationId: getEvaluationRegistrationId(evaluation),
         })),
     });
 }

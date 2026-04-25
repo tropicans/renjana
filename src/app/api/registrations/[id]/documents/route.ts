@@ -6,6 +6,7 @@ import { requireAuth } from "@/lib/auth-utils";
 import { isRegistrationDocumentType } from "@/lib/events";
 
 const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const EDITABLE_REGISTRATION_STATUSES = ["DRAFT", "REVISION_REQUIRED"] as const;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireAuth();
@@ -42,6 +43,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (registration.userId !== user!.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (!EDITABLE_REGISTRATION_STATUSES.includes(registration.status as (typeof EDITABLE_REGISTRATION_STATUSES)[number])) {
+        return NextResponse.json({ error: "Registration documents can only be updated while the registration is in draft or revision state" }, { status: 403 });
     }
 
     const formData = await req.formData();

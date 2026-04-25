@@ -5,7 +5,7 @@ import React from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Pencil, Plus, Save, Trash2, X } from "lucide-react";
-import { createAdminClassGroup, deleteAdminClassGroup, fetchAdminClassGroups, fetchAdminEvent, updateAdminClassGroup } from "@/lib/api";
+import { createAdminClassGroup, deleteAdminClassGroup, fetchAdminClassGroups, fetchAdminEvent, fetchAdminUsers, updateAdminClassGroup } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 
 type ClassGroupFormState = {
@@ -17,6 +17,7 @@ type ClassGroupFormState = {
     location: string;
     zoomLink: string;
     zoomPasscode: string;
+    instructorUserId: string;
     instructorName: string;
     description: string;
 };
@@ -31,6 +32,7 @@ function emptyForm(): ClassGroupFormState {
         location: "",
         zoomLink: "",
         zoomPasscode: "",
+        instructorUserId: "",
         instructorName: "",
         description: "",
     };
@@ -45,7 +47,9 @@ function toEditableForm(group: {
     location: string | null;
     zoomLink: string | null;
     zoomPasscode: string | null;
+    instructorUserId: string | null;
     instructorName: string | null;
+    instructorUser?: { id: string; fullName: string; email: string } | null;
     description: string | null;
 }): ClassGroupFormState {
     return {
@@ -57,6 +61,7 @@ function toEditableForm(group: {
         location: group.location || "",
         zoomLink: group.zoomLink || "",
         zoomPasscode: group.zoomPasscode || "",
+        instructorUserId: group.instructorUser?.id || group.instructorUserId || "",
         instructorName: group.instructorName || "",
         description: group.description || "",
     };
@@ -72,8 +77,10 @@ export default function AdminEventClassGroupsPage() {
 
     const { data: eventData, isLoading: eventLoading } = useQuery({ queryKey: ["admin-event", id], queryFn: () => fetchAdminEvent(id), enabled: !!id });
     const { data: groupsData, isLoading: groupsLoading } = useQuery({ queryKey: ["admin-class-groups", id], queryFn: () => fetchAdminClassGroups(id), enabled: !!id });
+    const { data: usersData, isLoading: usersLoading } = useQuery({ queryKey: ["admin-users"], queryFn: fetchAdminUsers });
 
     const groups = groupsData?.classGroups ?? [];
+    const instructors = (usersData?.users ?? []).filter((user) => user.role === "INSTRUCTOR" && user.isActive);
 
     const createMutation = useMutation({
         mutationFn: () => createAdminClassGroup(id, { ...form, capacity: form.capacity.trim() ? Number(form.capacity) : null }),
@@ -108,7 +115,7 @@ export default function AdminEventClassGroupsPage() {
         onError: (error: Error) => toast.error(error.message),
     });
 
-    if (eventLoading || groupsLoading) {
+    if (eventLoading || groupsLoading || usersLoading) {
         return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
@@ -131,7 +138,23 @@ export default function AdminEventClassGroupsPage() {
                         <option value="OFFLINE">OFFLINE</option>
                     </select>
                     <input value={form.capacity} onChange={(e) => setForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
-                    <input value={form.instructorName} onChange={(e) => setForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                    <select
+                        value={form.instructorUserId}
+                        onChange={(e) => {
+                            const selected = instructors.find((instructor) => instructor.id === e.target.value) ?? null;
+                            setForm((prev) => ({
+                                ...prev,
+                                instructorUserId: e.target.value,
+                                instructorName: selected?.fullName ?? "",
+                            }));
+                        }}
+                        className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700"
+                    >
+                        <option value="">Pilih instruktur / PIC</option>
+                        {instructors.map((instructor) => (
+                            <option key={instructor.id} value={instructor.id}>{instructor.fullName}</option>
+                        ))}
+                    </select>
                     <input type="datetime-local" value={form.startAt} onChange={(e) => setForm((prev) => ({ ...prev, startAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input type="datetime-local" value={form.endAt} onChange={(e) => setForm((prev) => ({ ...prev, endAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                     <input value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
@@ -156,7 +179,7 @@ export default function AdminEventClassGroupsPage() {
                                 <div className="mt-3 space-y-1 text-sm text-gray-500">
                                     <p>Kapasitas: {group.capacity ?? "Tidak dibatasi"}</p>
                                     <p>Peserta terpasang: {group._count?.registrations ?? 0}</p>
-                                    <p>PIC: {group.instructorName || "Belum diisi"}</p>
+                                    <p>PIC: {group.instructorUser?.fullName || group.instructorName || "Belum diisi"}</p>
                                     <p>Mulai: {group.startAt ? new Date(group.startAt).toLocaleString("id-ID") : "Belum diatur"}</p>
                                     <p>Selesai: {group.endAt ? new Date(group.endAt).toLocaleString("id-ID") : "Belum diatur"}</p>
                                     <p>Lokasi: {group.location || "-"}</p>
@@ -185,7 +208,23 @@ export default function AdminEventClassGroupsPage() {
                                     <option value="OFFLINE">OFFLINE</option>
                                 </select>
                                 <input value={editingForm.capacity} onChange={(e) => setEditingForm((prev) => ({ ...prev, capacity: e.target.value }))} placeholder="Kapasitas (opsional)" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
-                                <input value={editingForm.instructorName} onChange={(e) => setEditingForm((prev) => ({ ...prev, instructorName: e.target.value }))} placeholder="PIC / instruktur" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                                <select
+                                    value={editingForm.instructorUserId}
+                                    onChange={(e) => {
+                                        const selected = instructors.find((instructor) => instructor.id === e.target.value) ?? null;
+                                        setEditingForm((prev) => ({
+                                            ...prev,
+                                            instructorUserId: e.target.value,
+                                            instructorName: selected?.fullName ?? "",
+                                        }));
+                                    }}
+                                    className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700"
+                                >
+                                    <option value="">Pilih instruktur / PIC</option>
+                                    {instructors.map((instructor) => (
+                                        <option key={instructor.id} value={instructor.id}>{instructor.fullName}</option>
+                                    ))}
+                                </select>
                                 <input type="datetime-local" value={editingForm.startAt} onChange={(e) => setEditingForm((prev) => ({ ...prev, startAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input type="datetime-local" value={editingForm.endAt} onChange={(e) => setEditingForm((prev) => ({ ...prev, endAt: e.target.value }))} className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
                                 <input value={editingForm.location} onChange={(e) => setEditingForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="Lokasi offline" className="rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />

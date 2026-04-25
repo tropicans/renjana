@@ -13,9 +13,13 @@ interface EnrollButtonProps {
     variant?: "default" | "large";
     className?: string;
     isOfflineEvent?: boolean;
+    linkedEvent?: {
+        slug: string;
+        title: string;
+    } | null;
 }
 
-export function EnrollButton({ courseId, variant = "default", className, isOfflineEvent = false }: EnrollButtonProps) {
+export function EnrollButton({ courseId, variant = "default", className, isOfflineEvent = false, linkedEvent = null }: EnrollButtonProps) {
     const router = useRouter();
     const { user, isAuthenticated } = useUser();
     const toast = useToast();
@@ -26,6 +30,9 @@ export function EnrollButton({ courseId, variant = "default", className, isOffli
         queryFn: fetchMyEnrollments,
         enabled: !!user,
     });
+
+    const registrationHref = linkedEvent ? `/events/${linkedEvent.slug}/register` : null;
+    const detailHref = linkedEvent ? `/events/${linkedEvent.slug}` : null;
 
     const isEnrolled = enrollmentData?.enrollments?.some((e) => e.courseId === courseId) ?? false;
 
@@ -46,11 +53,28 @@ export function EnrollButton({ courseId, variant = "default", className, isOffli
             router.push(`/login?redirect=/course/${courseId}`);
             return;
         }
+
+        if (registrationHref) {
+            router.push(registrationHref);
+            return;
+        }
+
         enrollMutation.mutate();
     };
 
     const goToLearn = () => {
         router.push(`/learn/${courseId}`);
+    };
+
+    const goToRegistrationFlow = () => {
+        if (registrationHref) {
+            router.push(registrationHref);
+            return;
+        }
+
+        if (detailHref) {
+            router.push(detailHref);
+        }
     };
 
     if (isEnrolled) {
@@ -69,13 +93,26 @@ export function EnrollButton({ courseId, variant = "default", className, isOffli
     if (!isAuthenticated) {
         return (
             <Link
-                href={`/login?redirect=/course/${courseId}`}
+                href={`/login?redirect=${encodeURIComponent(registrationHref ?? `/course/${courseId}`)}`}
                 className={`flex items-center justify-center gap-2 bg-primary text-white font-bold rounded-full hover:opacity-90 transition-all ${variant === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
                     } ${className}`}
             >
                 <LogIn className="h-5 w-5" />
-                {isOfflineEvent ? "Login untuk Daftar" : "Login untuk Enroll"}
+                {registrationHref ? "Login untuk Registrasi" : isOfflineEvent ? "Login untuk Daftar" : "Login untuk Enroll"}
             </Link>
+        );
+    }
+
+    if (registrationHref) {
+        return (
+            <button
+                onClick={goToRegistrationFlow}
+                className={`flex items-center justify-center gap-2 bg-primary text-white font-bold rounded-full hover:opacity-90 transition-all ${variant === "large" ? "px-8 py-4 text-base shadow-lg shadow-primary/20" : "px-6 py-3 text-sm"
+                    } ${className}`}
+            >
+                <Calendar className="h-5 w-5" />
+                {isOfflineEvent ? "Lanjutkan Registrasi Event" : "Daftar via Event"}
+            </button>
         );
     }
 

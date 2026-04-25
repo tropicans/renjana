@@ -52,6 +52,7 @@ export default function CourseDetailPage() {
     );
 
     const isOfflineEvent = course.type === "OFFLINE_EVENT";
+    const linkedEvent = course.linkedEvent ?? null;
 
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased">
@@ -172,10 +173,20 @@ export default function CourseDetailPage() {
                                         )}
                                     </div>
 
-                                    <EnrollButton courseId={course.id} variant="large" className="w-full" isOfflineEvent={isOfflineEvent} />
+                                    <EnrollButton
+                                        courseId={course.id}
+                                        variant="large"
+                                        className="w-full"
+                                        isOfflineEvent={isOfflineEvent}
+                                        linkedEvent={linkedEvent ? { slug: linkedEvent.slug, title: linkedEvent.title } : null}
+                                    />
 
                                     <p className="text-center text-gray-400 text-xs mt-4">
-                                        {isOfflineEvent ? "Pendaftaran gratis untuk peserta undangan" : "Akses pelatihan gratis untuk semua anggota"}
+                                        {linkedEvent
+                                            ? `Course ini diakses melalui alur registrasi event ${linkedEvent.title}.`
+                                            : isOfflineEvent
+                                                ? "Pendaftaran gratis untuk peserta undangan"
+                                                : "Akses pelatihan gratis untuk semua anggota"}
                                     </p>
                                 </div>
                             </div>

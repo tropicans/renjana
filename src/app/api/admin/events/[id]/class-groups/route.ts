@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { resolveInstructorAssignment } from "@/lib/class-group-instructor";
 
 function toDate(value: unknown) {
     if (typeof value !== "string" || !value.trim()) return null;
@@ -15,7 +16,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const classGroups = await prisma.classGroup.findMany({
         where: { eventId: id },
-        include: { _count: { select: { registrations: true } } },
+        include: {
+            _count: { select: { registrations: true } },
+            instructorUser: { select: { id: true, fullName: true, email: true } },
+        },
         orderBy: [{ modality: "asc" }, { createdAt: "asc" }],
     });
 
@@ -49,6 +53,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
+    const hasInstructorAssignment = body && Object.prototype.hasOwnProperty.call(body, "instructorUserId");
+    const instructorAssignment = hasInstructorAssignment
+        ? await resolveInstructorAssignment(body?.instructorUserId)
+        : undefined;
+
+    if (hasInstructorAssignment && body?.instructorUserId && !instructorAssignment) {
+        return NextResponse.json({ error: "Instructor assignment must reference an active instructor user" }, { status: 400 });
+    }
+
     const classGroup = await prisma.classGroup.create({
         data: {
             eventId: id,
@@ -57,14 +70,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             capacity,
             status: typeof body?.status === "string" && body.status.trim() ? body.status.trim() : "ACTIVE",
             description: typeof body?.description === "string" ? body.description.trim() || null : null,
-            instructorName: typeof body?.instructorName === "string" ? body.instructorName.trim() || null : null,
+            instructorUserId: instructorAssignment?.instructorUserId ?? null,
+            instructorName: instructorAssignment?.instructorName ?? (typeof body?.instructorName === "string" ? body.instructorName.trim() || null : null),
             location: typeof body?.location === "string" ? body.location.trim() || null : null,
             zoomLink: typeof body?.zoomLink === "string" ? body.zoomLink.trim() || null : null,
             zoomPasscode: typeof body?.zoomPasscode === "string" ? body.zoomPasscode.trim() || null : null,
             startAt: toDate(body?.startAt),
             endAt: toDate(body?.endAt),
         },
-        include: { _count: { select: { registrations: true } } },
+        include: {
+            _count: { select: { registrations: true } },
+            instructorUser: { select: { id: true, fullName: true, email: true } },
+        },
     });
 
     await prisma.auditLog.create({

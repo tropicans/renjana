@@ -116,6 +116,7 @@ model User {
   evaluations  Evaluation[]
   registrations Registration[]
   notifications Notification[]
+  instructedClassGroups ClassGroup[] @relation("ClassGroupInstructor")
 
   @@map("users")
 }
@@ -303,19 +304,22 @@ model QuizAttempt {
 }
 
 model Evaluation {
-  id        String   @id @default(uuid())
-  courseId  String   @map("course_id")
-  userId    String   @map("user_id")
-  rating    Int      // 1-5
-  comment   String?
-  answers   Json?    // structured survey answers if needed
-  createdAt DateTime @default(now()) @map("created_at")
+  id             String       @id @default(uuid())
+  courseId       String       @map("course_id")
+  userId         String       @map("user_id")
+  registrationId String?      @map("registration_id")
+  rating         Int          // 1-5
+  comment        String?
+  answers        Json?        // structured survey answers if needed
+  createdAt      DateTime     @default(now()) @map("created_at")
 
   // Relations
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id])
+  course         Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+  registration   Registration? @relation(fields: [registrationId], references: [id], onDelete: SetNull)
 
   @@unique([courseId, userId])
+  @@index([registrationId])
   @@map("evaluations")
 }
 
@@ -382,6 +386,7 @@ model Event {
 model ClassGroup {
   id             String          @id @default(uuid())
   eventId         String         @map("event_id")
+  instructorUserId String?       @map("instructor_user_id")
   name            String
   modality        ParticipantMode
   capacity        Int?
@@ -397,9 +402,11 @@ model ClassGroup {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   event           Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  instructorUser  User?          @relation("ClassGroupInstructor", fields: [instructorUserId], references: [id], onDelete: SetNull)
   registrations   Registration[]
 
   @@index([eventId])
+  @@index([instructorUserId])
   @@map("class_groups")
 }
 
@@ -436,6 +443,7 @@ model Registration {
   event                 Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
   classGroup            ClassGroup?          @relation(fields: [classGroupId], references: [id], onDelete: SetNull)
   documents             RegistrationDocument[]
+  evaluations           Evaluation[]
   payments              RegistrationPayment[]
 
   @@unique([userId, eventId])

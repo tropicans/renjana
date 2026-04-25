@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { getEvaluationRegistrationId } from "@/lib/evaluation-link";
 
 export async function GET() {
     const { error } = await requireRole("ADMIN");
@@ -102,7 +103,7 @@ export async function GET() {
 
     const evaluationMap = new Map(
         evaluations.map((evaluation) => [
-            `${evaluation.userId}:${evaluation.courseId}:${((evaluation.answers as { registrationId?: string } | null)?.registrationId ?? "")}`,
+            `${evaluation.userId}:${evaluation.courseId}:${getEvaluationRegistrationId(evaluation) ?? ""}`,
             evaluation,
         ])
     );

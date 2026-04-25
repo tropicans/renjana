@@ -76,26 +76,135 @@ export async function GET() {
     }
 
     if (role === "MANAGER") {
-        const totalLearners = await prisma.user.count({ where: { role: "LEARNER" } });
-        const totalEnrollments = await prisma.enrollment.count();
-        const completedEnrollments = await prisma.enrollment.count({ where: { status: "COMPLETED" } });
+        const [
+            totalLearners,
+            totalEnrollments,
+            completedEnrollments,
+            totalCourses,
+            totalEvents,
+            enrollments,
+            modalityEvents,
+            participantModes,
+            recentRegistrations,
+        ] = await Promise.all([
+            prisma.user.count({ where: { role: "LEARNER" } }),
+            prisma.enrollment.count(),
+            prisma.enrollment.count({ where: { status: "COMPLETED" } }),
+            prisma.course.count(),
+            prisma.event.count(),
+            prisma.enrollment.findMany({
+                select: { completionPercentage: true },
+            }),
+            prisma.event.findMany({
+                select: { modality: true },
+            }),
+            prisma.registration.findMany({
+                select: { participantMode: true },
+            }),
+            prisma.registration.findMany({
+                take: 5,
+                orderBy: { createdAt: "desc" },
+                include: {
+                    user: { select: { fullName: true } },
+                    event: { select: { title: true } },
+                },
+            }),
+        ]);
+
+        const avgCompletion = enrollments.length > 0
+            ? Math.round(enrollments.reduce((sum, enrollment) => sum + enrollment.completionPercentage, 0) / enrollments.length)
+            : 0;
+
+        const onlinePrograms = modalityEvents.filter((event) => event.modality === "ONLINE").length;
+        const offlinePrograms = modalityEvents.filter((event) => event.modality === "OFFLINE").length;
+        const hybridPrograms = modalityEvents.filter((event) => event.modality === "HYBRID").length;
+
+        const onlineParticipants = participantModes.filter((registration) => registration.participantMode === "ONLINE").length;
+        const offlineParticipants = participantModes.filter((registration) => registration.participantMode === "OFFLINE").length;
 
         return NextResponse.json({
             role,
             totalLearners,
+            totalCourses,
+            totalEvents,
             totalEnrollments,
             completedEnrollments,
+            avgCompletion,
             completionRate: totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0,
+            onlinePrograms,
+            offlinePrograms,
+            hybridPrograms,
+            onlineParticipants,
+            offlineParticipants,
+            hybridParticipants: completedEnrollments,
+            recentRegistrations: recentRegistrations.map((registration) => ({
+                id: registration.id,
+                createdAt: registration.createdAt,
+                user: { fullName: registration.user.fullName },
+                event: { title: registration.event.title },
+            })),
         });
     }
 
     if (role === "FINANCE") {
-        const totalEnrollments = await prisma.enrollment.count();
+        const [registrations, latestPayments] = await Promise.all([
+            prisma.registration.findMany({
+                select: {
+                    id: true,
+                    totalFee: true,
+                    paymentStatus: true,
+                },
+            }),
+            prisma.registrationPayment.findMany({
+                orderBy: { createdAt: "desc" },
+                select: {
+                    id: true,
+                    registrationId: true,
+                    amount: true,
+                    status: true,
+                    createdAt: true,
+                    paidAt: true,
+                },
+            }),
+        ]);
+
+        const latestPaymentMap = new Map<string, { amount: number; status: string; createdAt: Date; paidAt: Date | null }>();
+        for (const payment of latestPayments) {
+            if (!latestPaymentMap.has(payment.registrationId)) {
+                latestPaymentMap.set(payment.registrationId, payment);
+            }
+        }
+
+        const totalRegistrations = registrations.length;
+        const pendingPayments = registrations.filter((registration) => ["PENDING", "UPLOADED"].includes(registration.paymentStatus)).length;
+        const verifiedPayments = registrations.filter((registration) => registration.paymentStatus === "VERIFIED").length;
+        const rejectedPayments = registrations.filter((registration) => registration.paymentStatus === "REJECTED").length;
+        const totalBilled = registrations.reduce((sum, registration) => sum + (registration.totalFee ?? 0), 0);
+        const totalCollected = registrations.reduce((sum, registration) => (
+            registration.paymentStatus === "VERIFIED" ? sum + (registration.totalFee ?? 0) : sum
+        ), 0);
 
         return NextResponse.json({
             role,
-            totalTransactions: totalEnrollments,
-            totalRevenue: totalEnrollments * 2500000, // placeholder pricing
+            totalRegistrations,
+            pendingPayments,
+            verifiedPayments,
+            rejectedPayments,
+            totalBilled,
+            totalCollected,
+            recentTransactions: registrations
+                .map((registration) => ({
+                    id: registration.id,
+                    totalFee: registration.totalFee ?? 0,
+                    paymentStatus: registration.paymentStatus,
+                    latestPayment: latestPaymentMap.get(registration.id) ?? null,
+                }))
+                .sort((a, b) => {
+                    const aDate = a.latestPayment?.createdAt?.getTime() ?? 0;
+                    const bDate = b.latestPayment?.createdAt?.getTime() ?? 0;
+                    return bDate - aDate;
+                })
+                .slice(0, 5),
         });
     }
 

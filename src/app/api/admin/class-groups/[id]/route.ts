@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { resolveInstructorAssignment } from "@/lib/class-group-instructor";
 
 function toDate(value: unknown) {
     if (typeof value !== "string" || !value.trim()) return null;
@@ -37,6 +38,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: "Capacity cannot be lower than current assigned participants" }, { status: 400 });
     }
 
+    const shouldUpdateInstructorAssignment = body && Object.prototype.hasOwnProperty.call(body, "instructorUserId");
+    const instructorAssignment = shouldUpdateInstructorAssignment
+        ? await resolveInstructorAssignment(body?.instructorUserId)
+        : undefined;
+
+    if (shouldUpdateInstructorAssignment && body?.instructorUserId && !instructorAssignment) {
+        return NextResponse.json({ error: "Instructor assignment must reference an active instructor user" }, { status: 400 });
+    }
+
     const updated = await prisma.classGroup.update({
         where: { id },
         data: {
@@ -45,14 +55,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             capacity,
             ...(typeof body?.status === "string" ? { status: body.status.trim() || classGroup.status } : {}),
             ...(typeof body?.description === "string" ? { description: body.description.trim() || null } : {}),
-            ...(typeof body?.instructorName === "string" ? { instructorName: body.instructorName.trim() || null } : {}),
+            ...(typeof body?.instructorName === "string" && !shouldUpdateInstructorAssignment ? { instructorName: body.instructorName.trim() || null } : {}),
+            ...(shouldUpdateInstructorAssignment ? {
+                instructorUserId: instructorAssignment?.instructorUserId ?? null,
+                instructorName: instructorAssignment?.instructorName ?? null,
+            } : {}),
             ...(typeof body?.location === "string" ? { location: body.location.trim() || null } : {}),
             ...(typeof body?.zoomLink === "string" ? { zoomLink: body.zoomLink.trim() || null } : {}),
             ...(typeof body?.zoomPasscode === "string" ? { zoomPasscode: body.zoomPasscode.trim() || null } : {}),
             ...(body && Object.prototype.hasOwnProperty.call(body, "startAt") ? { startAt: toDate(body.startAt) } : {}),
             ...(body && Object.prototype.hasOwnProperty.call(body, "endAt") ? { endAt: toDate(body.endAt) } : {}),
         },
-        include: { _count: { select: { registrations: true } } },
+        include: {
+            _count: { select: { registrations: true } },
+            instructorUser: { select: { id: true, fullName: true, email: true } },
+        },
     });
 
     await prisma.auditLog.create({

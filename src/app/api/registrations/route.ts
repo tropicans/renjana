@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth-utils";
 import { calculateEventTotalFee, getRequiredRegistrationDocumentTypes, isParticipantMode, isSourceChannel } from "@/lib/events";
 import { getDokuPublicConfig } from "@/lib/doku";
 import { createRegistrationNotification } from "@/lib/notifications";
+import { validateEventRegistrationLifecycle } from "@/lib/event-validation";
 
 export async function GET() {
     const { user, error } = await requireAuth();
@@ -80,6 +81,18 @@ export async function POST(req: Request) {
 
     const fees = calculateEventTotalFee(event, participantMode);
     const submit = Boolean(body?.submit);
+
+    if (submit) {
+        const lifecycle = validateEventRegistrationLifecycle({
+            status: event.status,
+            registrationStart: event.registrationStart,
+            registrationEnd: event.registrationEnd,
+        });
+
+        if (!lifecycle.ok) {
+            return NextResponse.json({ error: lifecycle.error }, { status: 403 });
+        }
+    }
 
     const registration = await prisma.registration.upsert({
         where: { userId_eventId: { userId: user!.id, eventId } },

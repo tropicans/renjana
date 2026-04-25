@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
 import { createRegistrationNotification } from "@/lib/notifications";
+import { ensureEnrollmentForCourse } from "@/lib/enrollment-sync";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
@@ -56,9 +57,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json().catch(() => null);
 
     const status = typeof body?.status === "string" ? body.status : undefined;
-    const paymentStatus = typeof body?.paymentStatus === "string" ? body.paymentStatus : undefined;
     const adminNote = typeof body?.adminNote === "string" ? body.adminNote.trim() : undefined;
     const documentUpdates = Array.isArray(body?.documentUpdates) ? body.documentUpdates : [];
+
+    if (body?.paymentStatus !== undefined) {
+        return NextResponse.json({ error: "Admin cannot change payment status. Finance must verify payment." }, { status: 403 });
+    }
 
     const registration = await prisma.registration.findUnique({ where: { id } });
     if (!registration) {
@@ -70,15 +74,24 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     if (documentUpdates.length > 0) {
-        await Promise.all(documentUpdates.map((document: { id: string; reviewStatus?: string; adminNote?: string | null }) =>
-            prisma.registrationDocument.update({
+        for (const document of documentUpdates as Array<{ id: string; reviewStatus?: string; adminNote?: string | null }>) {
+            const registrationDocument = await prisma.registrationDocument.findUnique({ where: { id: document.id } });
+            if (!registrationDocument || registrationDocument.registrationId !== id) {
+                return NextResponse.json({ error: "Document not found" }, { status: 404 });
+            }
+
+            if (registrationDocument.type === "PAYMENT_PROOF") {
+                return NextResponse.json({ error: "Admin cannot review payment proof documents" }, { status: 403 });
+            }
+
+            await prisma.registrationDocument.update({
                 where: { id: document.id },
                 data: {
                     ...(document.reviewStatus ? { reviewStatus: document.reviewStatus as never } : {}),
                     ...(document.adminNote !== undefined ? { adminNote: document.adminNote?.trim() || null } : {}),
                 },
-            })
-        ));
+            });
+        }
 
         await prisma.auditLog.create({
             data: {
@@ -93,27 +106,42 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         });
     }
 
-    const updated = await prisma.registration.update({
-        where: { id },
-        data: {
-            ...(status ? { status: status as never } : {}),
-            ...(paymentStatus ? { paymentStatus: paymentStatus as never } : {}),
-            ...(adminNote !== undefined ? { adminNote: adminNote || null } : {}),
-            ...(status === "APPROVED" ? { approvedAt: new Date() } : {}),
-        },
-        include: {
-            user: { select: { id: true, fullName: true, email: true, phone: true } },
-            event: {
-                include: {
-                    course: { select: { id: true, title: true } },
-                },
+    const updated = await prisma.$transaction(async (tx) => {
+        const nextRegistration = await tx.registration.update({
+            where: { id },
+            data: {
+                ...(status ? { status: status as never } : {}),
+                ...(adminNote !== undefined ? { adminNote: adminNote || null } : {}),
+                ...(status === "APPROVED" ? { approvedAt: new Date() } : {}),
             },
-            classGroup: true,
-            documents: { orderBy: { createdAt: "asc" } },
-        },
+            include: {
+                user: { select: { id: true, fullName: true, email: true, phone: true } },
+                event: {
+                    include: {
+                        course: { select: { id: true, title: true } },
+                    },
+                },
+                classGroup: true,
+                documents: { orderBy: { createdAt: "asc" } },
+            },
+        });
+
+        const shouldEnsureEnrollment = status === "APPROVED"
+            && registration.status !== "APPROVED"
+            && Boolean(nextRegistration.event.courseId)
+            && nextRegistration.event.learningEnabled;
+
+        if (shouldEnsureEnrollment && nextRegistration.event.courseId) {
+            await ensureEnrollmentForCourse(tx, {
+                userId: nextRegistration.user.id,
+                courseId: nextRegistration.event.courseId,
+            });
+        }
+
+        return nextRegistration;
     });
 
-    if (status || paymentStatus || adminNote !== undefined) {
+    if (status || adminNote !== undefined) {
         await prisma.auditLog.create({
             data: {
                 userId: user!.id,
@@ -129,12 +157,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                 metadata: {
                     previous: {
                         status: registration.status,
-                        paymentStatus: registration.paymentStatus,
                         adminNote: registration.adminNote,
                     },
                     next: {
                         status: updated.status,
-                        paymentStatus: updated.paymentStatus,
                         adminNote: updated.adminNote,
                     },
                 },

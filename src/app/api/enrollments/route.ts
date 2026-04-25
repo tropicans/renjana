@@ -35,10 +35,35 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "courseId is required" }, { status: 400 });
     }
 
-    // Check course exists
-    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    // Check course exists and whether it is governed by event registration
+    const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        include: {
+            events: {
+                select: {
+                    id: true,
+                    slug: true,
+                    title: true,
+                    status: true,
+                },
+                orderBy: [
+                    { eventStart: "asc" },
+                    { createdAt: "asc" },
+                ],
+                take: 1,
+            },
+        },
+    });
     if (!course) {
         return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    const linkedEvent = course.events[0] ?? null;
+    if (linkedEvent) {
+        return NextResponse.json({
+            error: "This course requires event registration before enrollment",
+            linkedEvent,
+        }, { status: 403 });
     }
 
     // Check not already enrolled

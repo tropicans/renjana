@@ -15,7 +15,7 @@ export default function DashboardLayout({
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
     return (
-        <RouteGuard allowedRoles={["LEARNER", "INSTRUCTOR", "MANAGER", "FINANCE", "ADMIN"]}>
+        <RouteGuard allowedRoles={["LEARNER"]}>
             <div className="min-h-screen bg-background-light dark:bg-background-dark">
                 {/* Mobile overlay */}
                 {mobileMenuOpen && (

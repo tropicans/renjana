@@ -2,13 +2,13 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchInstructorLearners } from "@/lib/api";
+import { fetchManagerLearners } from "@/lib/api";
 import { Loader2, TrendingUp, Award, BarChart3 } from "lucide-react";
 
 export default function ManagerSkillsPage() {
     const { data, isLoading } = useQuery({
-        queryKey: ["instructor-learners"],
-        queryFn: fetchInstructorLearners,
+        queryKey: ["manager-learners"],
+        queryFn: fetchManagerLearners,
     });
 
     if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
