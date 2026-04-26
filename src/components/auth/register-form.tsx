@@ -3,11 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { User, Mail, Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
+import { getDashboardUrl, type UserRole } from "@/lib/context/user-context";
+
+const ROLE_DASHBOARD: Record<string, string> = {
+    ADMIN: "/admin",
+    INSTRUCTOR: "/instructor",
+    MANAGER: "/manager",
+    FINANCE: "/finance",
+    LEARNER: "/dashboard",
+};
+
+function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function RegisterForm() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -53,8 +65,19 @@ export function RegisterForm() {
             return;
         }
 
-        router.push(searchParams.get("redirect") || searchParams.get("callbackUrl") || "/dashboard");
-        router.refresh();
+        let dashboardUrl: string | null = null;
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+            const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+            const session = await sessionRes.json().catch(() => null);
+            const role = (session?.user?.role as string | undefined) ?? null;
+            if (role) {
+                dashboardUrl = ROLE_DASHBOARD[role] ?? getDashboardUrl("LEARNER" as UserRole);
+                break;
+            }
+            await wait(250);
+        }
+
+        window.location.assign(searchParams.get("redirect") || searchParams.get("callbackUrl") || dashboardUrl || "/auth/redirect");
     }
 
     return (

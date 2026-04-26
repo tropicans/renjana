@@ -3,6 +3,16 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
 import bcrypt from "bcryptjs";
 
+const ALLOWED_CREATE_ROLES = ["LEARNER", "INSTRUCTOR", "MANAGER", "FINANCE", "ADMIN"] as const;
+
+function normalizeRole(value: unknown) {
+    if (typeof value !== "string") return "LEARNER" as const;
+    const normalized = value.trim().toUpperCase();
+    return ALLOWED_CREATE_ROLES.includes(normalized as (typeof ALLOWED_CREATE_ROLES)[number])
+        ? normalized as (typeof ALLOWED_CREATE_ROLES)[number]
+        : "LEARNER";
+}
+
 // GET /api/admin/users — list all users (admin only)
 export async function GET() {
     const { error } = await requireRole("ADMIN");
@@ -42,12 +52,13 @@ export async function POST(req: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const normalizedRole = normalizeRole(role);
     const user = await prisma.user.create({
         data: {
             email,
             passwordHash,
             fullName,
-            role: role || "LEARNER",
+            role: normalizedRole,
         },
         select: {
             id: true,
