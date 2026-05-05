@@ -321,7 +321,7 @@ export async function uploadRegistrationDocument(registrationId: string, type: s
 }
 
 export async function createRegistrationPaymentCheckout(registrationId: string) {
-    const res = await fetch("/api/payments/doku/checkout", {
+    const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ registrationId }),

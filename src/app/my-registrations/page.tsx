@@ -59,7 +59,7 @@ function MyRegistrationsContent() {
     const submittedRegistration = submittedEventSlug
         ? registrations.find((registration) => registration.event.slug === submittedEventSlug)
         : null;
-    const paymentGatewayEnabled = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "DOKU";
+    const paymentGatewayEnabled = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "MIDTRANS";
 
     const handlePayNow = async (registrationId: string) => {
         try {

@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
     requireRole: vi.fn(),
-    verifyDokuWebhookToken: vi.fn(),
+    verifyMidtransWebhookSignature: vi.fn(),
+    fetchMidtransTransactionStatus: vi.fn(),
     createRegistrationNotification: vi.fn(),
     prisma: {
         registration: {
@@ -32,9 +33,14 @@ vi.mock("@/lib/db", () => ({
     prisma: mocks.prisma,
 }));
 
-vi.mock("@/lib/doku", () => ({
-    verifyDokuWebhookToken: mocks.verifyDokuWebhookToken,
-}));
+vi.mock("@/lib/payment", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/lib/payment")>();
+    return {
+        ...actual,
+        verifyMidtransWebhookSignature: mocks.verifyMidtransWebhookSignature,
+        fetchMidtransTransactionStatus: mocks.fetchMidtransTransactionStatus,
+    };
+});
 
 vi.mock("@/lib/notifications", () => ({
     createRegistrationNotification: mocks.createRegistrationNotification,
@@ -42,7 +48,7 @@ vi.mock("@/lib/notifications", () => ({
 
 import { PUT as adminPut } from "@/app/api/admin/registrations/[id]/route";
 import { PUT as financePut } from "@/app/api/finance/registrations/[id]/route";
-import { POST as webhookPost } from "@/app/api/payments/doku/webhook/route";
+import { POST as webhookPost } from "@/app/api/payments/webhook/route";
 
 describe("registration authority boundaries", () => {
     beforeEach(() => {
@@ -86,7 +92,13 @@ describe("registration authority boundaries", () => {
     });
 
     it("writes an audit log when webhook changes payment status", async () => {
-        mocks.verifyDokuWebhookToken.mockReturnValue(true);
+        mocks.verifyMidtransWebhookSignature.mockReturnValue(true);
+        mocks.fetchMidtransTransactionStatus.mockResolvedValue({
+            transaction_status: "settlement",
+            fraud_status: "accept",
+            settlement_time: "2025-01-10 10:00:00",
+            expiry_time: null,
+        });
         mocks.prisma.registrationPayment.findFirst.mockResolvedValue({
             id: "payment-1",
             registrationId: "reg-1",
@@ -108,16 +120,15 @@ describe("registration authority boundaries", () => {
                 },
             });
 
-        const response = await webhookPost(new Request("http://localhost/api/payments/doku/webhook", {
+        const response = await webhookPost(new Request("http://localhost/api/payments/webhook", {
             method: "POST",
             body: JSON.stringify({
-                order: { invoice_number: "INV-1" },
-                transaction: { status: "SUCCESS" },
+                order_id: "INV-1",
+                transaction_status: "settlement",
+                status_code: "200",
+                gross_amount: "100000.00",
+                signature_key: "sig",
             }),
-            headers: {
-                "Content-Type": "application/json",
-                "x-callback-token": "token",
-            },
         }));
 
         expect(response.status).toBe(200);

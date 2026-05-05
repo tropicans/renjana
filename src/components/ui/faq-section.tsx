@@ -88,7 +88,7 @@ export function FAQSection() {
                 <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 dark:border-gray-800">
                     {faqs.map((faq, index) => (
                         <FAQAccordionItem
-                            key={index}
+                            key={faq.question}
                             item={faq}
                             isOpen={openIndex === index}
                             onToggle={() => setOpenIndex(openIndex === index ? null : index)}

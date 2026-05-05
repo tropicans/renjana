@@ -28,8 +28,8 @@ vi.mock("@/lib/notifications", () => ({
     createRegistrationNotification: mocks.createRegistrationNotification,
 }));
 
-vi.mock("@/lib/doku", () => ({
-    getDokuPublicConfig: () => ({ enabled: false, provider: null }),
+vi.mock("@/lib/payment", () => ({
+    getPaymentGatewayPublicConfig: () => ({ enabled: false, provider: null }),
 }));
 
 import { POST } from "@/app/api/registrations/route";

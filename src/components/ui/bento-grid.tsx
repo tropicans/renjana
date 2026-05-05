@@ -41,7 +41,6 @@ const BentoCard = ({
     cta: string;
 }) => (
     <div
-        key={name}
         className={cn(
             "group relative col-span-3 flex flex-col justify-between overflow-hidden rounded-xl",
             // light styles

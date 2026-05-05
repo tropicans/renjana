@@ -156,8 +156,8 @@ function AnimatedGroup({
             variants={containerVariants}
             className={cn(className)}
         >
-            {React.Children.map(children, (child, index) => (
-                <motion.div key={index} variants={itemVariants}>
+            {React.Children.toArray(children).map((child, index) => (
+                <motion.div key={React.isValidElement(child) && child.key != null ? child.key : `animated-group-${index}`} variants={itemVariants}>
                     {child}
                 </motion.div>
             ))}

@@ -119,6 +119,22 @@ export default function AdminRegistrationDetailPage() {
         });
     };
 
+    const submitDecision = (status: "REVISION_REQUIRED" | "APPROVED" | "REJECTED") => {
+        const trimmedAdminNote = adminNote.trim();
+
+        if (status === "REVISION_REQUIRED" && !trimmedAdminNote) {
+            toast.error("Isi catatan admin untuk menjelaskan revisi yang diminta.");
+            return;
+        }
+
+        if (status === "REJECTED" && !trimmedAdminNote) {
+            toast.error("Isi catatan admin untuk menjelaskan alasan penolakan.");
+            return;
+        }
+
+        mutation.mutate({ status, adminNote: trimmedAdminNote || adminNote });
+    };
+
     const paymentVerified = registration.paymentStatus === "VERIFIED";
     const assignableClassGroups = (classGroupsData?.classGroups ?? []).filter((group) => group.modality === registration.participantMode);
 
@@ -135,9 +151,9 @@ export default function AdminRegistrationDetailPage() {
                     <p className="mt-1 text-gray-500">{registration.event.title}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    <button onClick={() => mutation.mutate({ status: "REVISION_REQUIRED", adminNote })} className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-700">Minta revisi</button>
-                    <button onClick={() => mutation.mutate({ status: "APPROVED", adminNote })} disabled={!paymentVerified} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Setujui</button>
-                    <button onClick={() => mutation.mutate({ status: "REJECTED", adminNote })} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Tolak</button>
+                    <button onClick={() => submitDecision("REVISION_REQUIRED")} className="rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-700">Minta revisi</button>
+                    <button onClick={() => submitDecision("APPROVED")} disabled={!paymentVerified} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Setujui</button>
+                    <button onClick={() => submitDecision("REJECTED")} className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white">Tolak</button>
                 </div>
             </div>
 
@@ -150,20 +166,39 @@ export default function AdminRegistrationDetailPage() {
             <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
                 <div className="space-y-6">
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Profil Pendaftar</h2>
-                        <div className="mt-5 grid gap-4 md:grid-cols-2 text-sm">
-                            <div><p className="text-gray-400">Email</p><p className="font-medium">{registration.user.email}</p></div>
-                            <div><p className="text-gray-400">WhatsApp</p><p className="font-medium">{registration.whatsapp || registration.user.phone || "-"}</p></div>
-                            <div><p className="text-gray-400">Tempat / tanggal lahir</p><p className="font-medium">{registration.birthPlace || "-"}{registration.birthDate ? ` / ${new Date(registration.birthDate).toLocaleDateString("id-ID")}` : ""}</p></div>
-                            <div><p className="text-gray-400">Jenis kelamin</p><p className="font-medium">{registration.gender || "-"}</p></div>
-                            <div><p className="text-gray-400">Instansi / Universitas</p><p className="font-medium">{registration.institution || "-"}</p></div>
-                            <div><p className="text-gray-400">Mode peserta</p><p className="font-medium">{registration.participantMode}</p></div>
-                            <div className="md:col-span-2"><p className="text-gray-400">Alamat</p><p className="font-medium">{registration.domicileAddress || "-"}</p></div>
+                        <h2 className="text-xl font-bold">Status Operasional</h2>
+                        <div className="mt-5 grid gap-4 text-sm">
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-primary" /> Registrasi</span><strong>{getRegistrationStatusLabel(registration.status)}</strong></div>
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{getPaymentStatusLabel(registration.paymentStatus)}</strong></div>
+                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Total fee</span><strong>{formatRupiah(registration.totalFee)}</strong></div>
                         </div>
                     </section>
 
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Dokumen Registrasi</h2>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold">Catatan Admin</h2>
+                                <p className="mt-2 text-sm text-gray-500">Simpan konteks verifikasi, alasan revisi, atau detail follow-up sebelum keputusan akhir diambil.</p>
+                                <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">Wajib diisi untuk aksi Minta revisi dan Tolak.</p>
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                Internal
+                            </span>
+                        </div>
+                        <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Tambahkan catatan verifikasi atau revisi" rows={5} className="mt-4 w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
+                        <button onClick={() => mutation.mutate({ adminNote })} disabled={mutation.isPending} className="mt-4 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">Simpan catatan</button>
+                    </section>
+
+                    <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
+                        <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold">Dokumen Registrasi</h2>
+                                <p className="mt-2 text-sm text-gray-500">Tinjau dokumen utama peserta setelah membaca status dan konteks operasional terbaru.</p>
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                {registration.documents.length} dokumen
+                            </span>
+                        </div>
                         <div className="mt-5 space-y-4">
                             {registration.documents.map((document) => (
                                 <div key={document.id} className="rounded-2xl border border-gray-100 p-4 dark:border-gray-800">
@@ -184,15 +219,24 @@ export default function AdminRegistrationDetailPage() {
                             ))}
                         </div>
                     </section>
+
+                    <OpsAuditTimeline
+                        logs={registration.auditLogs}
+                        emptyLabel="Belum ada aksi Finance/Admin yang tercatat untuk registrasi ini."
+                    />
                 </div>
 
                 <div className="space-y-6">
                     <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Status Operasional</h2>
-                        <div className="mt-5 grid gap-4 text-sm">
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-primary" /> Registrasi</span><strong>{getRegistrationStatusLabel(registration.status)}</strong></div>
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Payment</span><strong>{getPaymentStatusLabel(registration.paymentStatus)}</strong></div>
-                            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-900"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Total fee</span><strong>{formatRupiah(registration.totalFee)}</strong></div>
+                        <h2 className="text-xl font-bold">Profil Pendaftar</h2>
+                        <div className="mt-5 grid gap-4 md:grid-cols-2 text-sm">
+                            <div><p className="text-gray-400">Email</p><p className="font-medium">{registration.user.email}</p></div>
+                            <div><p className="text-gray-400">WhatsApp</p><p className="font-medium">{registration.whatsapp || registration.user.phone || "-"}</p></div>
+                            <div><p className="text-gray-400">Tempat / tanggal lahir</p><p className="font-medium">{registration.birthPlace || "-"}{registration.birthDate ? ` / ${new Date(registration.birthDate).toLocaleDateString("id-ID")}` : ""}</p></div>
+                            <div><p className="text-gray-400">Jenis kelamin</p><p className="font-medium">{registration.gender || "-"}</p></div>
+                            <div><p className="text-gray-400">Instansi / Universitas</p><p className="font-medium">{registration.institution || "-"}</p></div>
+                            <div><p className="text-gray-400">Mode peserta</p><p className="font-medium">{registration.participantMode}</p></div>
+                            <div className="md:col-span-2"><p className="text-gray-400">Alamat</p><p className="font-medium">{registration.domicileAddress || "-"}</p></div>
                         </div>
                     </section>
 
@@ -229,17 +273,6 @@ export default function AdminRegistrationDetailPage() {
                             <div><p className="text-gray-400">Pelatihan tertaut</p><p className="font-medium">{registration.event.course?.title || "Belum terhubung"}</p></div>
                         </div>
                     </section>
-
-                    <section className="rounded-2xl border border-gray-100 bg-white p-6 dark:border-gray-800 dark:bg-[#1a242f]">
-                        <h2 className="text-xl font-bold">Catatan Admin</h2>
-                        <textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Tambahkan catatan verifikasi atau revisi" rows={6} className="mt-4 w-full rounded-xl border border-gray-200 bg-transparent px-4 py-3 text-sm dark:border-gray-700" />
-                        <button onClick={() => mutation.mutate({ adminNote })} disabled={mutation.isPending} className="mt-4 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">Simpan catatan</button>
-                    </section>
-
-                    <OpsAuditTimeline
-                        logs={registration.auditLogs}
-                        emptyLabel="Belum ada aksi Finance/Admin yang tercatat untuk registrasi ini."
-                    />
                 </div>
             </div>
         </div>

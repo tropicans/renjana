@@ -99,8 +99,8 @@ export default function Home() {
                 desc: "Leveraging automation and data to streamline legal workflows.",
                 img: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop"
               }
-            ].map((course, i) => (
-              <Link key={i} href="/courses" className="group apple-shadow bg-white dark:bg-gray-900 rounded-xl overflow-hidden block">
+            ].map((course) => (
+              <Link key={course.title} href="/courses" className="group apple-shadow bg-white dark:bg-gray-900 rounded-xl overflow-hidden block">
                 <div className="aspect-[4/3] relative overflow-hidden">
                   <Image
                     src={course.img}

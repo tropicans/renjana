@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, Briefcase, Clock, BookOpen, Users, TrendingUp } fro
 
 const openPositions = [
   {
+    id: "legal-trainer",
     title: "Legal Trainer",
     department: "Training",
     location: "Jakarta",
@@ -11,6 +12,7 @@ const openPositions = [
     description: "Deliver high-quality legal training programs and develop course materials for law professionals."
   },
   {
+    id: "course-coordinator",
     title: "Course Coordinator",
     department: "Operations",
     location: "Remote",
@@ -18,6 +20,7 @@ const openPositions = [
     description: "Coordinate training programs, manage schedules, and ensure smooth delivery of courses."
   },
   {
+    id: "business-development",
     title: "Business Development",
     department: "Sales",
     location: "Jakarta",
@@ -25,6 +28,7 @@ const openPositions = [
     description: "Drive partnerships and expand our client base through strategic business development initiatives."
   },
   {
+    id: "content-writer",
     title: "Content Writer",
     department: "Marketing",
     location: "Remote",
@@ -102,9 +106,9 @@ export default function CareerPage() {
             </p>
 
             <div className="space-y-6">
-              {openPositions.map((position, index) => (
+              {openPositions.map((position) => (
                 <div
-                  key={index}
+                  key={position.id}
                   className="bg-white dark:bg-[#1a242f] rounded-2xl border border-gray-100 dark:border-gray-800 p-8 hover:border-primary/50 transition-all group"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">

@@ -15,9 +15,9 @@ export default function ManagerSkillsPage() {
 
     const enrollments = data?.enrollments ?? [];
     // Group by course for skill analysis
-    const courseMap = new Map<string, { title: string; total: number; completed: number; avgProgress: number }>();
+    const courseMap = new Map<string, { id: string; title: string; total: number; completed: number; avgProgress: number }>();
     enrollments.forEach(e => {
-        const existing = courseMap.get(e.courseId) || { title: e.course.title, total: 0, completed: 0, avgProgress: 0 };
+        const existing = courseMap.get(e.courseId) || { id: e.courseId, title: e.course.title, total: 0, completed: 0, avgProgress: 0 };
         existing.total++;
         if (e.status === "COMPLETED") existing.completed++;
         existing.avgProgress = Math.round(((existing.avgProgress * (existing.total - 1)) + e.completionPercentage) / existing.total);
@@ -25,7 +25,6 @@ export default function ManagerSkillsPage() {
     });
 
     const courses = Array.from(courseMap.values());
-
     return (
         <div className="space-y-8">
             <div>
@@ -34,8 +33,8 @@ export default function ManagerSkillsPage() {
             </div>
 
             <div className="grid gap-4">
-                {courses.map((c, i) => (
-                    <div key={i} className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
+                {courses.map((c) => (
+                    <div key={c.id} className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center"><BarChart3 className="h-5 w-5 text-primary" /></div>

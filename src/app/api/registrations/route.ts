@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
 import { calculateEventTotalFee, getRequiredRegistrationDocumentTypes, isParticipantMode, isSourceChannel } from "@/lib/events";
-import { getDokuPublicConfig } from "@/lib/doku";
+import { getPaymentGatewayPublicConfig } from "@/lib/payment";
 import { createRegistrationNotification } from "@/lib/notifications";
 import { validateEventRegistrationLifecycle } from "@/lib/event-validation";
 
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
         ].filter(([, value]) => !value).map(([key]) => key);
 
         const uploadedTypes = new Set(registration.documents.map((document: { type: string }) => document.type));
-        const missingDocuments = getRequiredRegistrationDocumentTypes(getDokuPublicConfig().enabled).filter((type) => !uploadedTypes.has(type));
+        const missingDocuments = getRequiredRegistrationDocumentTypes(getPaymentGatewayPublicConfig().enabled).filter((type) => !uploadedTypes.has(type));
 
         if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
             await prisma.registration.update({

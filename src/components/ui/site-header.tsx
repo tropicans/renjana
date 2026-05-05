@@ -53,9 +53,9 @@ export function SiteHeader({ className }: { className?: string }) {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:flex items-center gap-8">
-                    {menuItems.map((item, index) => (
+                    {menuItems.map((item) => (
                         <Link
-                            key={index}
+                            key={item.href}
                             href={item.href}
                             className="text-xs font-medium text-black/70 dark:text-white/70 hover:text-primary transition-colors"
                         >
@@ -121,9 +121,9 @@ export function SiteHeader({ className }: { className?: string }) {
             {menuState && (
                 <div className="lg:hidden fixed inset-0 top-14 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md">
                     <nav className="flex flex-col items-center gap-8 pt-12">
-                        {menuItems.map((item, index) => (
+                        {menuItems.map((item) => (
                             <Link
-                                key={index}
+                                key={item.href}
                                 href={item.href}
                                 onClick={() => setMenuState(false)}
                                 className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"

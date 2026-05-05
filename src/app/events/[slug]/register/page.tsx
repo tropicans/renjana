@@ -160,7 +160,7 @@ export default function EventRegistrationPage() {
 
     const event = eventData?.event;
     const existingRegistration = registrationsData?.registrations.find((registration) => registration.event.slug === slug);
-    const paymentGatewayEnabled = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "DOKU";
+    const paymentGatewayEnabled = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "MIDTRANS";
     const activeDocumentDefinitions = paymentGatewayEnabled
         ? documentDefinitions.filter((definition) => definition.type !== "PAYMENT_PROOF")
         : documentDefinitions;
@@ -517,7 +517,7 @@ export default function EventRegistrationPage() {
 
                                         <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                                             {termsPreview.map((item, index) => (
-                                                <li key={item} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
+                                                <li key={`terms-preview-${index}-${item}`} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
                                                     <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{index + 1}</span>
                                                     <span>{item}</span>
                                                 </li>
@@ -527,7 +527,7 @@ export default function EventRegistrationPage() {
                                         {expandedPolicies.terms ? (
                                             <ul className="mt-3 space-y-3 border-t border-dashed border-slate-200 pt-4 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
                                                 {termsItems.slice(termsPreview.length).map((item, index) => (
-                                                    <li key={item} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
+                                                    <li key={`terms-full-${termsPreview.length + index}-${item}`} className="flex gap-3 rounded-2xl bg-white px-4 py-3 dark:bg-slate-950/70">
                                                         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{termsPreview.length + index + 1}</span>
                                                         <span>{item}</span>
                                                     </li>
@@ -571,8 +571,8 @@ export default function EventRegistrationPage() {
                                             <div className="rounded-2xl bg-white p-4 dark:bg-slate-950/70">
                                                 <p className="text-sm font-bold text-slate-900 dark:text-white">Rincian biaya pendidikan</p>
                                                 <div className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                                                    {feeLines.map((line) => (
-                                                        <div key={line.label} className={`flex items-center justify-between gap-4 ${line.emphasis ? "border-t border-dashed border-slate-200 pt-2 font-bold text-slate-900 dark:border-slate-800 dark:text-white" : ""}`}>
+                                                    {feeLines.map((line, index) => (
+                                                        <div key={`fee-line-${index}-${line.label}-${line.value}`} className={`flex items-center justify-between gap-4 ${line.emphasis ? "border-t border-dashed border-slate-200 pt-2 font-bold text-slate-900 dark:border-slate-800 dark:text-white" : ""}`}>
                                                             <span>{line.label}</span>
                                                             <span>{formatRupiah(line.value)}</span>
                                                         </div>
@@ -589,7 +589,7 @@ export default function EventRegistrationPage() {
                                                 <p className="text-sm font-bold text-slate-900 dark:text-white">Pernyataan yang perlu dipahami</p>
                                                 <ul className="mt-3 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                                                     {refundPreview.map((item, index) => (
-                                                        <li key={item} className="flex gap-3">
+                                                        <li key={`refund-preview-${index}-${item}`} className="flex gap-3">
                                                             <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{index + 1}</span>
                                                             <span>{item}</span>
                                                         </li>
@@ -598,7 +598,7 @@ export default function EventRegistrationPage() {
                                                 {expandedPolicies.refund ? (
                                                     <ul className="mt-3 space-y-3 border-t border-dashed border-slate-200 pt-3 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
                                                         {refundItems.slice(refundPreview.length).map((item, index) => (
-                                                            <li key={item} className="flex gap-3">
+                                                            <li key={`refund-full-${refundPreview.length + index}-${item}`} className="flex gap-3">
                                                                 <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{refundPreview.length + index + 1}</span>
                                                                 <span>{item}</span>
                                                             </li>
@@ -667,7 +667,7 @@ export default function EventRegistrationPage() {
                                     <div>
                                         <h2 className="text-2xl font-bold">Dokumen dan sumber informasi</h2>
                                         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Upload dokumen wajib dan bantu kami mengetahui kanal promosi yang efektif.</p>
-                                        {paymentGatewayEnabled ? <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">Pembayaran menggunakan checkout DOKU. Bukti pembayaran manual tidak wajib diunggah.</p> : null}
+                                        {paymentGatewayEnabled ? <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-300">Pembayaran menggunakan checkout Midtrans. Bukti pembayaran manual tidak wajib diunggah.</p> : null}
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">

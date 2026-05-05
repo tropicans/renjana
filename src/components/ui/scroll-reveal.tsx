@@ -97,8 +97,12 @@ export function StaggerContainer({
 }: StaggerContainerProps) {
     return (
         <div className={className}>
-            {React.Children.map(children, (child, index) => (
-                <ScrollReveal delay={index * staggerDelay} direction={direction}>
+            {React.Children.toArray(children).map((child, index) => (
+                <ScrollReveal
+                    key={React.isValidElement(child) && child.key != null ? child.key : `stagger-container-${index}`}
+                    delay={index * staggerDelay}
+                    direction={direction}
+                >
                     {child}
                 </ScrollReveal>
             ))}
