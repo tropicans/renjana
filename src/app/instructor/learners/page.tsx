@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorLearners } from "@/lib/api";
 import Link from "next/link";
@@ -8,18 +8,30 @@ import { Users, Search, Loader2, CheckCircle, Clock, Award, TrendingUp } from "l
 
 export default function InstructorLearnersPage() {
     const [search, setSearch] = useState("");
+    const deferredSearch = useDeferredValue(search);
 
     const { data, isLoading } = useQuery({
         queryKey: ["instructor-learners"],
         queryFn: fetchInstructorLearners,
     });
 
-    const enrollments = data?.enrollments ?? [];
+    const rawEnrollments = data?.enrollments;
     const stats = data?.stats;
+    const normalizedSearch = deferredSearch.trim().toLowerCase();
 
-    const filtered = search
-        ? enrollments.filter(e => e.user.fullName.toLowerCase().includes(search.toLowerCase()) || e.course.title.toLowerCase().includes(search.toLowerCase()))
-        : enrollments;
+    const filtered = useMemo(() => {
+        const enrollments = rawEnrollments ?? [];
+
+        if (!normalizedSearch) {
+            return enrollments;
+        }
+
+        return enrollments.filter((enrollment) => {
+            const learnerName = enrollment.user.fullName.toLowerCase();
+            const courseTitle = enrollment.course.title.toLowerCase();
+            return learnerName.includes(normalizedSearch) || courseTitle.includes(normalizedSearch);
+        });
+    }, [normalizedSearch, rawEnrollments]);
 
     if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 

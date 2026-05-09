@@ -2,29 +2,20 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { Bell, Menu, X } from 'lucide-react'
+import { Bell, Menu, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher, useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useUser, getDashboardUrl } from '@/lib/context/user-context'
-import { fetchMyNotifications } from '@/lib/api'
-import { Loader2 } from 'lucide-react'
-
+import { useNotifications } from '@/lib/context/notifications-context'
 export function SiteHeader({ className }: { className?: string }) {
     const { t } = useLanguage()
     const { user, isAuthenticated, logout, isLoading } = useUser()
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
-    const { data: notificationsData } = useQuery({
-        queryKey: ["my-notifications"],
-        queryFn: fetchMyNotifications,
-        enabled: isAuthenticated,
-    })
-
-    const unreadNotificationCount = notificationsData?.unreadCount ?? 0
+    const { unreadCount: unreadNotificationCount } = useNotifications()
 
     const menuItems = [
         { name: 'Batch & Event', href: '/events' },

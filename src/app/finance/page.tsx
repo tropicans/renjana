@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardStats, fetchFinanceRegistrations } from "@/lib/api";
+import { fetchDashboardStats } from "@/features/client/api/learner";
+import { fetchFinanceRegistrations, financeRegistrationsKey } from "@/features/client/api/finance";
 import { Loader2, DollarSign, TrendingUp, Users, CreditCard } from "lucide-react";
 import { formatRupiah } from "@/lib/events";
 
@@ -13,8 +14,8 @@ export default function FinanceDashboardPage() {
     });
 
     const { data: registrationsData, isLoading: registrationsLoading } = useQuery({
-        queryKey: ["finance-registrations"],
-        queryFn: fetchFinanceRegistrations,
+        queryKey: financeRegistrationsKey(1),
+        queryFn: () => fetchFinanceRegistrations(1),
     });
 
     if (statsLoading || registrationsLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

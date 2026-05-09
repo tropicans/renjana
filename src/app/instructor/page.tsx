@@ -1,11 +1,14 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInstructorStats } from "@/lib/api";
-import { InstructorTrendChart } from "@/components/instructor/instructor-charts";
 import { BookOpen, Users, CheckCircle, MapPin, FileText, TrendingUp, Loader2, Clock } from "lucide-react";
 
+const InstructorTrendChart = dynamic(() => import("@/components/instructor/instructor-charts").then((mod) => mod.InstructorTrendChart), {
+    ssr: false,
+});
 function StatCard({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ElementType; color: string }) {
     return (
         <div className="p-5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f]">

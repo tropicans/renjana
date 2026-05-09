@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
             update: vi.fn(),
         },
         registrationDocument: {
-            findUnique: vi.fn(),
+            findMany: vi.fn(),
             update: vi.fn(),
         },
         registrationPayment: {
@@ -22,9 +22,14 @@ const mocks = vi.hoisted(() => ({
             create: vi.fn(),
             findMany: vi.fn(),
         },
+        $transaction: vi.fn(),
     },
 }));
-
+function withOrigin(init?: RequestInit) {
+    const headers = new Headers(init?.headers);
+    headers.set("Origin", "http://localhost");
+    return { ...init, headers };
+}
 vi.mock("@/lib/auth-utils", () => ({
     requireRole: mocks.requireRole,
 }));
@@ -53,8 +58,8 @@ import { POST as webhookPost } from "@/app/api/payments/webhook/route";
 describe("registration authority boundaries", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mocks.prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(mocks.prisma as unknown as Parameters<typeof callback>[0]));
     });
-
     it("rejects admin payment status changes", async () => {
         mocks.requireRole.mockResolvedValue({
             user: { id: "admin-1", role: "ADMIN" },
@@ -64,7 +69,7 @@ describe("registration authority boundaries", () => {
         const response = await adminPut(new Request("http://localhost/api/admin/registrations/reg-1", {
             method: "PUT",
             body: JSON.stringify({ paymentStatus: "VERIFIED" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "reg-1" }) });
 
         expect(response.status).toBe(403);
@@ -82,7 +87,7 @@ describe("registration authority boundaries", () => {
         const response = await financePut(new Request("http://localhost/api/finance/registrations/reg-1", {
             method: "PUT",
             body: JSON.stringify({ status: "APPROVED" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "reg-1" }) });
 
         expect(response.status).toBe(403);

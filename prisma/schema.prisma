@@ -447,6 +447,11 @@ model Registration {
   payments              RegistrationPayment[]
 
   @@unique([userId, eventId])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([paymentStatus, createdAt])
+  @@index([eventId])
+  @@index([classGroupId])
   @@map("registrations")
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAttendances } from "@/lib/api";
 import {
@@ -16,6 +16,7 @@ import {
 
 export default function InstructorAttendancePage() {
     const [searchQuery, setSearchQuery] = useState("");
+    const deferredSearchQuery = useDeferredValue(searchQuery);
 
     // Note: For instructor view, we fetch attendances without lessonId filter
     // to show all records (instructor/admin role allows this)
@@ -24,20 +25,42 @@ export default function InstructorAttendancePage() {
         queryFn: () => fetchAttendances(),
     });
 
-    const allAttendances = attendanceData?.attendances ?? [];
+    const rawAttendances = attendanceData?.attendances;
+    const normalizedSearchQuery = deferredSearchQuery.trim().toLowerCase();
 
-    // Group attendances by date
-    const groupedByDate = allAttendances.reduce<Record<string, typeof allAttendances>>((acc, att) => {
-        const date = new Date(att.checkedAt).toLocaleDateString("id-ID", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-        if (!acc[date]) acc[date] = [];
-        acc[date].push(att);
-        return acc;
-    }, {});
+    const groupedByDate = useMemo(() => {
+        const allAttendances = rawAttendances ?? [];
+
+        return allAttendances.reduce<Record<string, typeof allAttendances>>((acc, attendance) => {
+            const date = new Date(attendance.checkedAt).toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+            if (!acc[date]) acc[date] = [];
+            acc[date].push(attendance);
+            return acc;
+        }, {});
+    }, [rawAttendances]);
+
+    const filteredGroups = useMemo(() => Object.entries(groupedByDate)
+        .map(([date, records]) => {
+            if (!normalizedSearchQuery) {
+                return [date, records] as const;
+            }
+
+            const filteredRecords = records.filter((record) => {
+                const learnerName = record.user?.fullName?.toLowerCase() ?? "";
+                const lessonTitle = record.lesson?.title?.toLowerCase() ?? "";
+                return learnerName.includes(normalizedSearchQuery) || lessonTitle.includes(normalizedSearchQuery);
+            });
+
+            return [date, filteredRecords] as const;
+        })
+        .filter(([, records]) => records.length > 0), [groupedByDate, normalizedSearchQuery]);
+
+    const allAttendances = rawAttendances ?? [];
 
     const isLoading = attendanceLoading;
 
@@ -113,23 +136,13 @@ export default function InstructorAttendancePage() {
             </div>
 
             {/* Attendance Records by Date */}
-            {Object.keys(groupedByDate).length === 0 ? (
+            {filteredGroups.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
                     <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                     <p>Belum ada data kehadiran.</p>
                 </div>
             ) : (
-                Object.entries(groupedByDate).map(([date, records]) => {
-                    const filtered = searchQuery
-                        ? records.filter(
-                            (r) =>
-                                r.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                r.lesson?.title?.toLowerCase().includes(searchQuery.toLowerCase())
-                        )
-                        : records;
-
-                    if (filtered.length === 0) return null;
-
+                filteredGroups.map(([date, records]) => {
                     return (
                         <div key={date} className="space-y-3">
                             <h3 className="font-bold text-sm text-gray-500 flex items-center gap-2">
@@ -147,7 +160,7 @@ export default function InstructorAttendancePage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filtered.map((r) => (
+                                        {records.map((r) => (
                                             <tr key={r.id} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-2">

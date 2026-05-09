@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { AdminTrendChart } from "@/components/admin/admin-charts";
 import { fetchDashboardStats, fetchAdminUsers, fetchCourses } from "@/lib/api";
 import {
     BookOpen,
@@ -16,6 +16,9 @@ import {
     Loader2,
 } from "lucide-react";
 
+const AdminTrendChart = dynamic(() => import("@/components/admin/admin-charts").then((mod) => mod.AdminTrendChart), {
+    ssr: false,
+});
 export default function AdminDashboardPage() {
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ["dashboard-stats"],

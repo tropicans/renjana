@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchFinanceRegistrations } from "@/lib/api";
+import { fetchFinanceRegistrations, financeRegistrationsKey } from "@/features/client/api/finance";
 import { formatRupiah } from "@/lib/events";
 import { Loader2, FileText } from "lucide-react";
 
 export default function InvoicesPage() {
-    const { data, isLoading } = useQuery({ queryKey: ["finance-registrations"], queryFn: fetchFinanceRegistrations });
+    const { data, isLoading } = useQuery({ queryKey: financeRegistrationsKey(1), queryFn: () => fetchFinanceRegistrations(1) });
     if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     const registrations = data?.registrations ?? [];
 

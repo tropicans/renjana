@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
             findUnique: vi.fn(),
         },
         registrationDocument: {
-            findUnique: vi.fn(),
+            findMany: vi.fn(),
             update: vi.fn(),
         },
         auditLog: {
@@ -20,6 +20,12 @@ const mocks = vi.hoisted(() => ({
     },
 }));
 
+
+function withOrigin(init?: RequestInit) {
+    const headers = new Headers(init?.headers);
+    headers.set("Origin", "http://localhost");
+    return { ...init, headers };
+}
 vi.mock("@/lib/auth-utils", () => ({
     requireRole: mocks.requireRole,
 }));
@@ -85,7 +91,7 @@ describe("admin approval enrollment sync", () => {
         const response = await adminPut(new Request("http://localhost/api/admin/registrations/reg-1", {
             method: "PUT",
             body: JSON.stringify({ status: "APPROVED" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "reg-1" }) });
 
         expect(response.status).toBe(200);
@@ -106,7 +112,7 @@ describe("admin approval enrollment sync", () => {
         const response = await adminPut(new Request("http://localhost/api/admin/registrations/reg-1", {
             method: "PUT",
             body: JSON.stringify({ status: "APPROVED" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "reg-1" }) });
 
         expect(response.status).toBe(200);
@@ -151,7 +157,7 @@ describe("admin approval enrollment sync", () => {
         const response = await adminPut(new Request("http://localhost/api/admin/registrations/reg-1", {
             method: "PUT",
             body: JSON.stringify({ status: "APPROVED" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "reg-1" }) });
 
         expect(response.status).toBe(200);

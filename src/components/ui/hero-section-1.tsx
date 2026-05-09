@@ -1,15 +1,18 @@
 "use client";
 
 import React from 'react'
+import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, ChevronRight, Menu, X } from 'lucide-react'
 import type { Variants } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { AnimatedGroup } from '@/components/ui/animated-group'
-import { SparklesCore } from '@/components/ui/sparkles'
 import { cn } from '@/lib/utils'
 
+const SparklesCore = dynamic(() => import('@/components/ui/sparkles').then((mod) => mod.SparklesCore), {
+    ssr: false,
+})
 const transitionVariants: { item: Variants } = {
     item: {
         hidden: {

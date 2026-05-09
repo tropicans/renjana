@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { InsightsCard, ProgressChart } from "@/components/learner/dashboard-visuals";
+import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations } from "@/features/client/api/learner";
+import { isActiveRegistrationWorkflow, isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useUser } from "@/lib/context/user-context";
-import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations } from "@/lib/api";
 import {
     BookOpen,
     CheckCircle,
@@ -17,6 +18,12 @@ import {
     Loader2,
 } from "lucide-react";
 
+const InsightsCard = dynamic(() => import("@/components/learner/dashboard-visuals").then((mod) => mod.InsightsCard), {
+    ssr: false,
+});
+const ProgressChart = dynamic(() => import("@/components/learner/dashboard-visuals").then((mod) => mod.ProgressChart), {
+    ssr: false,
+});
 export default function DashboardPage() {
     const { user, isLoading: userLoading } = useUser();
 
@@ -41,7 +48,7 @@ export default function DashboardPage() {
     const enrollments = enrollmentData?.enrollments ?? [];
     const registrations = registrationData?.registrations ?? [];
     const activeEnrollment = enrollments.find((e) => e.status === "ACTIVE");
-    const activeRegistration = registrations.find((registration) => ["SUBMITTED", "UNDER_REVIEW", "REVISION_REQUIRED", "APPROVED", "ACTIVE"].includes(registration.status));
+    const activeRegistration = registrations.find((registration) => isActiveRegistrationWorkflow(registration.status));
     const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading;
 
     if (isLoading) {
@@ -84,7 +91,7 @@ export default function DashboardPage() {
                 />
                 <StatCard
                     title="Approved Events"
-                    value={registrations.filter((registration) => ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)).length}
+                    value={registrations.filter((registration) => isLearningAccessibleRegistration(registration.status)).length}
                     icon={Sparkles}
                     description="Ready for learning access"
                 />

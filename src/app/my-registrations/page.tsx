@@ -3,16 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, CalendarDays, CheckCircle2, ChevronRight, FileWarning, Loader2 } from "lucide-react";
 import { RouteGuard } from "@/components/auth/route-guard";
 import { SiteHeader } from "@/components/ui/site-header";
-import { createRegistrationPaymentCheckout, fetchMyNotifications, fetchMyRegistrations, markAllNotificationsRead, markNotificationRead } from "@/lib/api";
+import { createRegistrationPaymentCheckout, fetchMyRegistrations } from "@/features/client/api/learner";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/lib/context/user-context";
+import { useNotifications } from "@/lib/context/notifications-context";
+import { canOpenClassAccess, canPayRegistrationNow } from "@/lib/domain/registration-rules";
 import { formatRupiah } from "@/lib/events";
 import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
-
 function getParticipantModeLabel(mode: string) {
     return mode === "OFFLINE" ? "Seminar" : "Webinar";
 }
@@ -39,21 +40,21 @@ function MyRegistrationsContent() {
     const searchParams = useSearchParams();
     const toast = useToast();
     const { isAuthenticated, isLoading: authLoading } = useUser();
-    const queryClient = useQueryClient();
     const { data, isLoading } = useQuery({
         queryKey: ["my-registrations"],
         queryFn: fetchMyRegistrations,
         enabled: isAuthenticated,
     });
-    const { data: notificationsData, isLoading: notificationsLoading } = useQuery({
-        queryKey: ["my-notifications"],
-        queryFn: fetchMyNotifications,
-        enabled: isAuthenticated,
-    });
-
+    const {
+        notifications,
+        unreadCount: unreadNotificationCount,
+        isLoading: notificationsLoading,
+        markAllRead,
+        markRead,
+        markAllReadPending,
+        markReadPending,
+    } = useNotifications();
     const registrations = data?.registrations ?? [];
-    const notifications = notificationsData?.notifications ?? [];
-    const unreadNotificationCount = notificationsData?.unreadCount ?? 0;
     const submitted = searchParams.get("submitted") === "1";
     const submittedEventSlug = searchParams.get("event");
     const submittedRegistration = submittedEventSlug
@@ -72,21 +73,6 @@ function MyRegistrationsContent() {
         }
     };
 
-    const markAllReadMutation = useMutation({
-        mutationFn: markAllNotificationsRead,
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
-        },
-        onError: (error: Error) => toast.error(error.message),
-    });
-
-    const markReadMutation = useMutation({
-        mutationFn: (id: string) => markNotificationRead(id),
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ["my-notifications"] });
-        },
-        onError: (error: Error) => toast.error(error.message),
-    });
 
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark">
@@ -137,8 +123,8 @@ function MyRegistrationsContent() {
                                 </div>
                                 {unreadNotificationCount > 0 ? (
                                     <button
-                                        onClick={() => markAllReadMutation.mutate()}
-                                        disabled={markAllReadMutation.isPending}
+                                        onClick={() => markAllRead()}
+                                        disabled={markAllReadPending}
                                         className="inline-flex items-center justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200"
                                     >
                                         Tandai semua dibaca ({unreadNotificationCount})
@@ -168,7 +154,7 @@ function MyRegistrationsContent() {
                                                             href={notification.link}
                                                             onClick={() => {
                                                                 if (!notification.isRead) {
-                                                                    markReadMutation.mutate(notification.id);
+                                                                    markRead(notification.id);
                                                                 }
                                                             }}
                                                             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
@@ -178,8 +164,8 @@ function MyRegistrationsContent() {
                                                     ) : null}
                                                     {!notification.isRead ? (
                                                         <button
-                                                            onClick={() => markReadMutation.mutate(notification.id)}
-                                                            disabled={markReadMutation.isPending}
+                                                            onClick={() => markRead(notification.id)}
+                                                            disabled={markReadPending}
                                                             className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900"
                                                         >
                                                             Tandai dibaca
@@ -201,8 +187,12 @@ function MyRegistrationsContent() {
                     <div className="grid gap-5">
                         {registrations.map((registration) => {
                             const latestPayment = registration.payments?.[0];
-                            const canPayNow = paymentGatewayEnabled && ["PENDING", "REJECTED"].includes(registration.paymentStatus);
-                            const classAccessReady = registration.paymentStatus === "VERIFIED" && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status) && !!registration.classGroup;
+                            const canPayNow = paymentGatewayEnabled && canPayRegistrationNow(registration.paymentStatus);
+                            const classAccessReady = canOpenClassAccess({
+                                status: registration.status,
+                                paymentStatus: registration.paymentStatus,
+                                classGroupId: registration.classGroup?.id,
+                            });
                             const canOpenZoom = classAccessReady && registration.classGroup?.modality === "ONLINE" && !!registration.classGroup.zoomLink;
                             const participantModeLabel = getParticipantModeLabel(registration.participantMode);
                             const sessionStartLabel = formatSessionDateTime(registration.classGroup?.startAt || registration.event.eventStart);

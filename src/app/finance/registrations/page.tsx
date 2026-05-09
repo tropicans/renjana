@@ -3,29 +3,10 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { fetchFinanceRegistrations, financeRegistrationsKey } from "@/features/client/api/finance";
 import { formatRupiah } from "@/lib/events";
 import { getPaymentStatusLabel, getRegistrationStatusLabel } from "@/lib/registration-status";
 
-type FinanceRegistration = {
-    id: string;
-    participantMode: string;
-    status: string;
-    paymentStatus: string;
-    totalFee: number | null;
-    createdAt: string;
-    user: { fullName: string; email: string };
-    event: { id: string; slug: string; title: string; category: string };
-    documents: Array<{ id: string; type: string }>;
-};
-
-async function fetchFinanceRegistrations() {
-    const res = await fetch("/api/finance/registrations");
-    if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || `API error ${res.status}`);
-    }
-    return res.json() as Promise<{ registrations: FinanceRegistration[] }>;
-}
 
 function paymentBadge(paymentStatus: string) {
     if (paymentStatus === "VERIFIED") return "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300";
@@ -35,8 +16,9 @@ function paymentBadge(paymentStatus: string) {
 }
 
 export default function FinanceRegistrationsPage() {
-    const { data, isLoading } = useQuery({ queryKey: ["finance-registrations"], queryFn: fetchFinanceRegistrations });
+    const { data, isLoading } = useQuery({ queryKey: financeRegistrationsKey(1), queryFn: () => fetchFinanceRegistrations(1) });
     const registrations = data?.registrations ?? [];
+    const pagination = data?.pagination;
 
     if (isLoading) {
         return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -77,6 +59,9 @@ export default function FinanceRegistrationsPage() {
                     </tbody>
                 </table>
             </div>
+            {pagination ? (
+                <p className="text-sm text-gray-500">Halaman {pagination.page} dari {pagination.totalPages}. Total registrasi: {pagination.total}</p>
+            ) : null}
         </div>
     );
 }

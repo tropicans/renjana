@@ -29,13 +29,7 @@ export async function GET(req: Request) {
         where,
         include: {
             _count: { select: { registrations: true } },
-            course: {
-                include: {
-                    modules: {
-                        include: { lessons: { select: { durationMin: true } } },
-                    },
-                },
-            },
+            course: true,
         },
         orderBy: [
             { isFeatured: "desc" },
@@ -44,17 +38,41 @@ export async function GET(req: Request) {
         ],
     });
 
+    const courseIds = Array.from(new Set(events.map((event) => event.courseId).filter((courseId): courseId is string => Boolean(courseId))));
+    const lessons = courseIds.length
+        ? await prisma.lesson.findMany({
+            where: {
+                module: {
+                    courseId: { in: courseIds },
+                },
+            },
+            select: {
+                durationMin: true,
+                module: {
+                    select: {
+                        courseId: true,
+                    },
+                },
+            },
+        })
+        : [];
+
+    const courseStats = lessons.reduce<Map<string, { totalLessons: number; totalDurationMin: number }>>((acc, lesson) => {
+        const courseId = lesson.module.courseId;
+        const stats = acc.get(courseId) ?? { totalLessons: 0, totalDurationMin: 0 };
+        stats.totalLessons += 1;
+        stats.totalDurationMin += lesson.durationMin ?? 0;
+        acc.set(courseId, stats);
+        return acc;
+    }, new Map());
+
     const result = events.map((event) => {
-        const totalLessons = event.course?.modules.reduce((sum, module) => sum + module.lessons.length, 0) ?? 0;
-        const totalDurationMin = event.course?.modules.reduce(
-            (sum, module) => sum + module.lessons.reduce((lessonSum, lesson) => lessonSum + (lesson.durationMin ?? 0), 0),
-            0,
-        ) ?? 0;
+        const stats = event.courseId ? courseStats.get(event.courseId) : null;
 
         return {
             ...event,
-            totalLessons,
-            totalDurationMin,
+            totalLessons: stats?.totalLessons ?? 0,
+            totalDurationMin: stats?.totalDurationMin ?? 0,
         };
     });
 
