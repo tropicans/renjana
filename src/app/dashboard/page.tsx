@@ -27,22 +27,28 @@ const ProgressChart = dynamic(() => import("@/components/learner/dashboard-visua
 export default function DashboardPage() {
     const { user, isLoading: userLoading } = useUser();
 
+    const learnerQueryOptions = {
+        enabled: !!user,
+        staleTime: 60_000,
+        refetchOnWindowFocus: false as const,
+    };
+
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ["dashboard-stats"],
         queryFn: fetchDashboardStats,
-        enabled: !!user,
+        ...learnerQueryOptions,
     });
 
     const { data: enrollmentData, isLoading: enrollmentsLoading } = useQuery({
         queryKey: ["my-enrollments"],
         queryFn: fetchMyEnrollments,
-        enabled: !!user,
+        ...learnerQueryOptions,
     });
 
     const { data: registrationData, isLoading: registrationsLoading } = useQuery({
         queryKey: ["my-registrations"],
         queryFn: fetchMyRegistrations,
-        enabled: !!user,
+        ...learnerQueryOptions,
     });
 
     const enrollments = enrollmentData?.enrollments ?? [];

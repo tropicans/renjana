@@ -15,7 +15,7 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 // ── Courses ────────────────────────────────────────────────────
-export interface ApiCourse {
+export interface ApiCourseListItem {
     id: string;
     title: string;
     description: string | null;
@@ -28,7 +28,7 @@ export interface ApiCourse {
     totalDurationMin: number;
 }
 
-export interface ApiCourseDetail extends Omit<ApiCourse, "_count"> {
+export interface ApiCourseDetail extends ApiCourseListItem {
     modules: {
         id: string;
         title: string;
@@ -60,7 +60,7 @@ export interface ApiCourseDetail extends Omit<ApiCourse, "_count"> {
 
 export function fetchCourses(params?: { search?: string }) {
     const qs = params?.search ? `?search=${encodeURIComponent(params.search)}` : "";
-    return apiFetch<{ courses: ApiCourse[] }>(`/api/courses${qs}`);
+    return apiFetch<{ courses: ApiCourseListItem[] }>(`/api/courses${qs}`);
 }
 
 export function fetchCourseById(id: string) {
@@ -68,7 +68,7 @@ export function fetchCourseById(id: string) {
 }
 
 // ── Events ─────────────────────────────────────────────────────
-export interface ApiEvent {
+export interface ApiEventListItem {
     id: string;
     courseId: string | null;
     slug: string;
@@ -102,6 +102,9 @@ export interface ApiEvent {
     _count: { registrations: number };
     totalLessons: number;
     totalDurationMin: number;
+}
+
+export interface ApiEventDetail extends ApiEventListItem {
     course?: ApiCourseDetail | null;
 }
 
@@ -110,11 +113,11 @@ export function fetchEvents(params?: { search?: string; featured?: boolean }) {
     if (params?.search) qs.set("search", params.search);
     if (params?.featured) qs.set("featured", "true");
     const suffix = qs.toString() ? `?${qs.toString()}` : "";
-    return apiFetch<{ events: ApiEvent[] }>(`/api/events${suffix}`);
+    return apiFetch<{ events: ApiEventListItem[] }>(`/api/events${suffix}`);
 }
 
 export function fetchEventBySlug(slug: string) {
-    return apiFetch<{ event: ApiEvent }>(`/api/events/${slug}`);
+    return apiFetch<{ event: ApiEventDetail }>(`/api/events/${slug}`);
 }
 
 // ── Registrations ──────────────────────────────────────────────
@@ -189,7 +192,7 @@ export interface ApiRegistration {
     approvedAt: string | null;
     createdAt: string;
     updatedAt: string;
-    event: Pick<ApiEvent, "id" | "slug" | "title" | "category" | "modality" | "status" | "eventStart" | "registrationEnd" | "courseId">;
+    event: Pick<ApiEventListItem, "id" | "slug" | "title" | "category" | "modality" | "status" | "eventStart" | "registrationEnd" | "courseId">;
     classGroup?: {
         id: string;
         name: string;
@@ -444,7 +447,8 @@ export function fetchDashboardStats() {
     return apiFetch<ApiDashboardStats>("/api/dashboard/stats");
 }
 
-export function fetchFinanceRegistrations() {
+export function fetchFinanceRegistrations(page = 1) {
+    const qs = page > 1 ? `?page=${page}` : "";
     return apiFetch<{
         registrations: Array<{
             id: string;
@@ -457,7 +461,8 @@ export function fetchFinanceRegistrations() {
             event: { id: string; slug: string; title: string; category: string };
             documents: Array<{ id: string; type: string }>;
         }>;
-    }>("/api/finance/registrations");
+        pagination?: { page: number; pageSize: number; total: number; totalPages: number };
+    }>(`/api/finance/registrations${qs}`);
 }
 
 // ── Admin Users ────────────────────────────────────────────────
@@ -641,165 +646,17 @@ export function fetchAdminCourse(id: string) {
     return apiFetch<{ course: ApiAdminCourseDetail }>(`/api/admin/courses/${id}`);
 }
 
-export function fetchAdminQuizzes(courseId?: string) {
-    const qs = courseId ? `?courseId=${courseId}` : "";
-    return apiFetch<{
-        quizzes: Array<{
-            id: string;
-            type: string;
-            title: string;
-            timeLimit: number | null;
-            passingScore: number;
-            course: { id: string; title: string };
-            questions: Array<{
-                id: string;
-                question: string;
-                options: string[];
-                correctIdx: number;
-                order: number;
-            }>;
-            _count: { questions: number; attempts: number };
-        }>;
-    }>(`/api/admin/quizzes${qs}`);
-}
-
-export function createAdminQuiz(data: {
-    courseId: string;
-    type: "PRE_TEST" | "POST_TEST";
-    title: string;
-    timeLimit: number | null;
-    passingScore: number;
-    questions: Array<{
-        question: string;
-        options: string[];
-        correctIdx: number;
-    }>;
-}) {
-    return apiFetch<{ quiz: unknown }>("/api/admin/quizzes", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-export function updateAdminQuiz(quizId: string, data: {
-    title?: string;
-    timeLimit?: number | null;
-    passingScore?: number;
-    questions?: Array<{
-        question: string;
-        options: string[];
-        correctIdx: number;
-    }>;
-}) {
-    return apiFetch<{ quiz: unknown }>(`/api/admin/quizzes/${quizId}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-    });
-}
-
-export function deleteAdminQuiz(quizId: string) {
-    return apiFetch<{ success: boolean }>(`/api/admin/quizzes/${quizId}`, {
-        method: "DELETE",
-    });
-}
-
-export function fetchAdminEvents() {
-    return apiFetch<{
-        events: Array<{
-            id: string;
-            slug: string;
-            title: string;
-            category: string;
-            status: string;
-            modality: string;
-            isFeatured: boolean;
-            learningEnabled: boolean;
-            preTestEnabled: boolean;
-            postTestEnabled: boolean;
-            evaluationEnabled: boolean;
-            certificateEnabled: boolean;
-            registrationStart: string | null;
-            registrationEnd: string | null;
-            eventStart: string | null;
-            course: { id: string; title: string } | null;
-            _count: { registrations: number };
-        }>;
-    }>("/api/admin/events");
-}
-
-export function createAdminEvent(data: Record<string, unknown>) {
-    return adminEventMutationFetch("/api/admin/events", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-export function updateAdminEvent(id: string, data: Record<string, unknown>) {
-    return adminEventMutationFetch(`/api/admin/events/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-    });
-}
-
-async function adminEventMutationFetch(url: string, init: RequestInit) {
-    const res = await fetch(`${BASE}${url}`, {
-        ...init,
-        headers: { "Content-Type": "application/json", ...init.headers },
-    });
-
-    if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        const details = Array.isArray(body.details)
-            ? body.details.filter((detail: unknown) => typeof detail === "string" && detail.trim()).join(" • ")
-            : "";
-        const message = body.error || `API error ${res.status}`;
-        throw new Error(details && details !== message ? `${message} • ${details}` : message);
-    }
-
-    return res.json() as Promise<{ event: unknown }>;
-}
-
-export interface ApiAdminEventDetail {
-    id: string;
-    courseId: string | null;
-    slug: string;
-    title: string;
-    category: string;
-    summary: string | null;
-    description: string | null;
-    bannerUrl: string | null;
-    modality: string;
-    status: string;
-    location: string | null;
-    platform: string | null;
-    registrationStart: string | null;
-    registrationEnd: string | null;
-    eventStart: string | null;
-    eventEnd: string | null;
-    scheduleSummary: string | null;
-    contactName: string | null;
-    contactPhone: string | null;
-    termsSummary: string | null;
-    refundPolicySummary: string | null;
-    registrationFee: number | null;
-    onlineTuitionFee: number | null;
-    offlineTuitionFee: number | null;
-    alumniRegistrationFee: number | null;
-    learningEnabled: boolean;
-    preTestEnabled: boolean;
-    postTestEnabled: boolean;
-    evaluationEnabled: boolean;
-    certificateEnabled: boolean;
-    isFeatured: boolean;
-    createdAt: string;
-    updatedAt: string;
-    course: { id: string; title: string } | null;
-    _count: { registrations: number };
-}
-
-export function fetchAdminEvent(id: string) {
-    return apiFetch<{ event: ApiAdminEventDetail }>(`/api/admin/events/${id}`);
-}
+export {
+    createAdminEvent,
+    createAdminQuiz,
+    deleteAdminQuiz,
+    fetchAdminEvent,
+    fetchAdminEvents,
+    fetchAdminQuizzes,
+    type ApiAdminEventDetail,
+    updateAdminEvent,
+    updateAdminQuiz,
+} from "@/features/client/api/admin-events";
 
 export function fetchAdminRegistrations() {
     return apiFetch<{

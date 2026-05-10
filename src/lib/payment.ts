@@ -1,7 +1,39 @@
 import crypto from "node:crypto";
 
-const MIDTRANS_API_BASE = process.env.MIDTRANS_API_BASE_URL || "https://app.sandbox.midtrans.com";
-const MIDTRANS_CORE_API_BASE = process.env.MIDTRANS_CORE_API_BASE_URL || "https://api.sandbox.midtrans.com";
+
+function getTrustedMidtransBaseUrl(value: string, expectedHosts: Set<string>) {
+    let parsed: URL;
+
+    try {
+        parsed = new URL(value);
+    } catch {
+        throw new Error(`Invalid Midtrans base URL: ${value}`);
+    }
+
+    if (parsed.protocol !== "https:") {
+        throw new Error(`Midtrans base URL must use HTTPS: ${value}`);
+    }
+
+    if (!expectedHosts.has(parsed.hostname)) {
+        throw new Error(`Midtrans base URL host is not allowed: ${parsed.hostname}`);
+    }
+
+    return parsed.origin;
+}
+
+function getMidtransApiBase() {
+    return getTrustedMidtransBaseUrl(
+        process.env.MIDTRANS_API_BASE_URL || "https://app.sandbox.midtrans.com",
+        new Set(["app.midtrans.com", "app.sandbox.midtrans.com"])
+    );
+}
+
+function getMidtransCoreApiBase() {
+    return getTrustedMidtransBaseUrl(
+        process.env.MIDTRANS_CORE_API_BASE_URL || "https://api.sandbox.midtrans.com",
+        new Set(["api.midtrans.com", "api.sandbox.midtrans.com"])
+    );
+}
 
 export type PaymentGatewayProvider = "MIDTRANS";
 
@@ -71,7 +103,7 @@ export async function createMidtransCheckout(input: {
             : undefined,
     };
 
-    const response = await fetch(`${MIDTRANS_API_BASE}/snap/v1/transactions`, {
+    const response = await fetch(`${getMidtransApiBase()}/snap/v1/transactions`, {
         method: "POST",
         headers: {
             Accept: "application/json",
@@ -116,7 +148,7 @@ export function verifyMidtransWebhookSignature(payload: {
 
 export async function fetchMidtransTransactionStatus(orderId: string) {
     const serverKey = getMidtransServerKey();
-    const response = await fetch(`${MIDTRANS_CORE_API_BASE}/v2/${encodeURIComponent(orderId)}/status`, {
+    const response = await fetch(`${getMidtransCoreApiBase()}/v2/${encodeURIComponent(orderId)}/status`, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -171,4 +203,11 @@ export function mapMidtransTransactionToPaymentState(input: {
     }
 
     return "PENDING";
+}
+
+export function getMidtransBaseUrlsForTest() {
+    return {
+        apiBase: getMidtransApiBase(),
+        coreApiBase: getMidtransCoreApiBase(),
+    };
 }

@@ -1,86 +1,74 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { requireAuth } from "@/lib/auth-utils";
-import { createMidtransCheckout, getPaymentGatewayPublicConfig } from "@/lib/payment";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
+import { createRegistrationCheckout } from "@/lib/domain/payment-workflow";
+import { withRequestObservability } from "@/lib/observability/route";
+import { getPaymentGatewayPublicConfig } from "@/lib/payment";
 
 export async function POST(req: Request) {
-    const { user, error } = await requireAuth();
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, {
+        sameOrigin: true,
+        rateLimit: {
+            keyParts: ["payments-checkout"],
+            limit: 10,
+            windowMs: 10 * 60 * 1000,
+            message: "Too many payment checkout attempts. Please try again later.",
+        },
+    });
+    if (!policy.ok) return policy.response;
 
-    const paymentConfig = getPaymentGatewayPublicConfig();
-    if (!paymentConfig.enabled || paymentConfig.provider !== "MIDTRANS") {
-        return NextResponse.json({ error: "Midtrans payment gateway is not configured" }, { status: 503 });
-    }
+    const { user } = policy;
 
-    const body = await req.json().catch(() => null);
-    const registrationId = typeof body?.registrationId === "string" ? body.registrationId : undefined;
+    return withRequestObservability(req, async () => {
+        const paymentConfig = getPaymentGatewayPublicConfig();
+        if (!paymentConfig.enabled || paymentConfig.provider !== "MIDTRANS") {
+            return NextResponse.json({ error: "Midtrans payment gateway is not configured" }, { status: 503 });
+        }
 
-    if (!registrationId) {
-        return NextResponse.json({ error: "Registration id is required" }, { status: 400 });
-    }
+        const body = await req.json().catch(() => null);
+        const registrationId = typeof body?.registrationId === "string" ? body.registrationId : undefined;
 
-    const registration = await prisma.registration.findUnique({
-        where: { id: registrationId },
-        include: {
-            event: { select: { title: true, slug: true } },
-            payments: {
-                where: { provider: "MIDTRANS", status: { in: ["PENDING", "CAPTURE", "SETTLEMENT"] } },
-                orderBy: { createdAt: "desc" },
-                take: 1,
+        if (!registrationId) {
+            return NextResponse.json({ error: "Registration id is required" }, { status: 400 });
+        }
+
+        const registration = await prisma.registration.findUnique({
+            where: { id: registrationId },
+            include: {
+                event: { select: { title: true, slug: true } },
+                payments: {
+                    where: { provider: "MIDTRANS", status: { in: ["PENDING", "CAPTURE", "SETTLEMENT"] } },
+                    orderBy: { createdAt: "desc" },
+                    take: 1,
+                },
             },
-        },
+        });
+
+        if (!registration || registration.userId !== user!.id) {
+            return NextResponse.json({ error: "Registration not found" }, { status: 404 });
+        }
+
+        if (!registration.totalFee || registration.totalFee <= 0) {
+            return NextResponse.json({ error: "Registration has invalid total fee" }, { status: 400 });
+        }
+
+        const checkoutResult = await createRegistrationCheckout({
+            prisma,
+            registration,
+            user: {
+                email: user!.email,
+                name: user!.name,
+            },
+            returnBaseUrl: process.env.NEXTAUTH_URL,
+        });
+
+        if (checkoutResult.reused) {
+            return NextResponse.json({ payment: checkoutResult.payment, reused: true }, { status: checkoutResult.status });
+        }
+
+        return NextResponse.json({ payment: checkoutResult.payment }, { status: checkoutResult.status });
+    }, {
+        event: "payments.checkout.post",
+        user,
     });
-
-    if (!registration || registration.userId !== user!.id) {
-        return NextResponse.json({ error: "Registration not found" }, { status: 404 });
-    }
-
-    if (!registration.totalFee || registration.totalFee <= 0) {
-        return NextResponse.json({ error: "Registration has invalid total fee" }, { status: 400 });
-    }
-
-    const existingPayment = registration.payments[0];
-    if (existingPayment?.invoiceUrl && registration.paymentStatus === "PENDING") {
-        return NextResponse.json({ payment: existingPayment, reused: true });
-    }
-
-    const orderId = `registration-${registration.id}-${Date.now()}`;
-    const checkout = await createMidtransCheckout({
-        orderId,
-        amount: registration.totalFee,
-        email: user!.email,
-        name: user!.name,
-        description: `Pembayaran ${registration.event.title}`,
-        returnUrl: `${process.env.NEXTAUTH_URL}/my-registrations?event=${registration.event.slug}`,
-    });
-
-    const paymentUrl = checkout.redirect_url || null;
-
-    const payment = await prisma.registrationPayment.create({
-        data: {
-            registrationId: registration.id,
-            provider: "MIDTRANS",
-            externalId: orderId,
-            invoiceId: orderId,
-            invoiceUrl: paymentUrl,
-            amount: registration.totalFee,
-            currency: "IDR",
-            status: "PENDING",
-            payerEmail: user!.email,
-            description: `Pembayaran ${registration.event.title}`,
-            metadata: JSON.parse(JSON.stringify(checkout)) as Prisma.InputJsonValue,
-        },
-    });
-
-    await prisma.registration.update({
-        where: { id: registration.id },
-        data: {
-            paymentStatus: "PENDING",
-            status: registration.status === "DRAFT" ? "SUBMITTED" : registration.status,
-            submittedAt: registration.submittedAt ?? new Date(),
-        },
-    });
-
-    return NextResponse.json({ payment }, { status: 201 });
 }

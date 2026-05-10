@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mapMidtransTransactionToPaymentState, verifyMidtransWebhookSignature } from "@/lib/payment";
+import { getMidtransBaseUrlsForTest, mapMidtransTransactionToPaymentState, verifyMidtransWebhookSignature } from "@/lib/payment";
 import crypto from "node:crypto";
 
 describe("payment helper", () => {
     afterEach(() => {
         delete process.env.MIDTRANS_SERVER_KEY;
+        delete process.env.MIDTRANS_API_BASE_URL;
+        delete process.env.MIDTRANS_CORE_API_BASE_URL;
     });
 
     it("maps verified statuses", () => {
@@ -45,5 +47,25 @@ describe("payment helper", () => {
             gross_amount: grossAmount,
             signature_key: "bad-signature",
         })).toBe(false);
+    });
+
+    it("accepts only trusted https midtrans hosts", () => {
+        process.env.MIDTRANS_API_BASE_URL = "https://app.midtrans.com";
+        process.env.MIDTRANS_CORE_API_BASE_URL = "https://api.sandbox.midtrans.com";
+
+        expect(getMidtransBaseUrlsForTest()).toEqual({
+            apiBase: "https://app.midtrans.com",
+            coreApiBase: "https://api.sandbox.midtrans.com",
+        });
+    });
+
+    it("rejects insecure or untrusted midtrans hosts", () => {
+        process.env.MIDTRANS_API_BASE_URL = "http://app.sandbox.midtrans.com";
+        process.env.MIDTRANS_CORE_API_BASE_URL = "https://evil.example";
+
+        expect(() => getMidtransBaseUrlsForTest()).toThrow(/Midtrans base URL must use HTTPS/);
+
+        process.env.MIDTRANS_API_BASE_URL = "https://app.sandbox.midtrans.com";
+        expect(() => getMidtransBaseUrlsForTest()).toThrow(/host is not allowed/);
     });
 });

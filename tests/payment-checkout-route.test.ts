@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-    requireAuth: vi.fn(),
+    requireApiAuthPolicy: vi.fn(),
     getPaymentGatewayPublicConfig: vi.fn(),
     createMidtransCheckout: vi.fn(),
     prisma: {
@@ -15,8 +15,13 @@ const mocks = vi.hoisted(() => ({
     },
 }));
 
-vi.mock("@/lib/auth-utils", () => ({
-    requireAuth: mocks.requireAuth,
+function withOrigin(init?: RequestInit) {
+    const headers = new Headers(init?.headers);
+    headers.set("Origin", "http://localhost");
+    return { ...init, headers };
+}
+vi.mock("@/lib/route-policy", () => ({
+    requireApiAuthPolicy: mocks.requireApiAuthPolicy,
 }));
 
 vi.mock("@/lib/payment", () => ({
@@ -33,9 +38,9 @@ import { POST } from "@/app/api/payments/checkout/route";
 describe("POST /api/payments/checkout", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mocks.requireAuth.mockResolvedValue({
+        mocks.requireApiAuthPolicy.mockResolvedValue({
+            ok: true,
             user: { id: "learner-1", email: "learner@example.com", name: "Learner One" },
-            error: null,
         });
         mocks.getPaymentGatewayPublicConfig.mockReturnValue({ enabled: true, provider: "MIDTRANS" });
     });
@@ -45,7 +50,7 @@ describe("POST /api/payments/checkout", () => {
 
         const response = await POST(new Request("http://localhost/api/payments/checkout", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
             body: JSON.stringify({ registrationId: "reg-1" }),
         }));
 
@@ -69,7 +74,7 @@ describe("POST /api/payments/checkout", () => {
 
         const response = await POST(new Request("http://localhost/api/payments/checkout", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
             body: JSON.stringify({ registrationId: "reg-1" }),
         }));
 
@@ -104,7 +109,7 @@ describe("POST /api/payments/checkout", () => {
 
         const response = await POST(new Request("http://localhost/api/payments/checkout", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
             body: JSON.stringify({ registrationId: "reg-1" }),
         }));
 
@@ -123,10 +128,56 @@ describe("POST /api/payments/checkout", () => {
         });
         expect(mocks.prisma.registration.update).toHaveBeenCalledWith({
             where: { id: "reg-1" },
-            data: expect.objectContaining({
-                paymentStatus: "PENDING",
-                status: "SUBMITTED",
+            data: { paymentStatus: "PENDING" },
+        });
+    });
+
+    it("rejects missing same-origin header", async () => {
+        mocks.requireApiAuthPolicy.mockResolvedValue({
+            ok: false,
+            response: new Response(JSON.stringify({ error: "Missing origin header" }), {
+                status: 403,
+                headers: { "Content-Type": "application/json" },
             }),
+        });
+
+        const response = await POST(new Request("http://localhost/api/payments/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ registrationId: "reg-1" }),
+        }));
+
+        expect(response.status).toBe(403);
+        await expect(response.json()).resolves.toEqual({ error: "Missing origin header" });
+    });
+
+    it("uses resolved policy user for checkout flow", async () => {
+        mocks.prisma.registration.findUnique.mockResolvedValue({
+            id: "reg-1",
+            userId: "learner-1",
+            status: "SUBMITTED",
+            submittedAt: new Date("2025-01-10T00:00:00.000Z"),
+            totalFee: 150000,
+            event: { title: "Event One", slug: "event-one" },
+            payments: [{ id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING" }],
+            paymentStatus: "PENDING",
+        });
+
+        const response = await POST(new Request("http://localhost/api/payments/checkout", {
+            method: "POST",
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
+            body: JSON.stringify({ registrationId: "reg-1" }),
+        }));
+
+        expect(response.status).toBe(200);
+        expect(mocks.requireApiAuthPolicy).toHaveBeenCalledWith(expect.any(Request), {
+            sameOrigin: true,
+            rateLimit: {
+                keyParts: ["payments-checkout"],
+                limit: 10,
+                windowMs: 10 * 60 * 1000,
+                message: "Too many payment checkout attempts. Please try again later.",
+            },
         });
     });
 });
