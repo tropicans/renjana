@@ -1,9 +1,25 @@
+import { buildRateLimitKey, enforceRateLimit, getRateLimitIp } from "@/lib/rate-limit";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
+    const rateLimitResponse = enforceRateLimit({
+        key: buildRateLimitKey(["auth-register", getRateLimitIp(req)]),
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many registration attempts. Please try again later.",
+    });
+    if (rateLimitResponse) return rateLimitResponse;
     const body = await req.json().catch(() => null);
+    const emailKey = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const accountRateLimitResponse = enforceRateLimit({
+        key: buildRateLimitKey(["auth-register-email", getRateLimitIp(req), emailKey]),
+        limit: 3,
+        windowMs: 15 * 60 * 1000,
+        message: "Too many registration attempts. Please try again later.",
+    });
+    if (accountRateLimitResponse) return accountRateLimitResponse;
 
     const fullName = body?.fullName?.trim();
     const email = body?.email?.trim().toLowerCase();

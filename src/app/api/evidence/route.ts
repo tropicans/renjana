@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
+import { saveManagedUpload } from "@/lib/server/upload-storage";
+import { buildSafeUploadFileName, validateUploadedFile } from "@/lib/upload-security";
 
 // POST /api/evidence — upload evidence (saves to local storage)
 export async function POST(req: Request) {
-    const { user, error } = await requireAuth();
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, {
+        sameOrigin: true,
+        rateLimit: {
+            keyParts: ["evidence-upload"],
+            limit: 10,
+            windowMs: 10 * 60 * 1000,
+            message: "Too many upload attempts. Please try again later.",
+        },
+    });
+    if (!policy.ok) return policy.response;
+
+    const { user } = policy;
 
     const formData = await req.formData();
     const title = formData.get("title") as string;
@@ -17,11 +28,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "title and file are required" }, { status: 400 });
     }
 
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(file.type)) {
+    const validation = await validateUploadedFile(file, ["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+    if (!validation.ok) {
         return NextResponse.json(
-            { error: "File type not allowed. Allowed: JPEG, PNG, WebP, PDF" },
+            { error: validation.error === "File type not allowed" ? "File type not allowed. Allowed: JPEG, PNG, WebP, PDF" : validation.error },
             { status: 400 }
         );
     }
@@ -31,18 +41,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "File too large. Max 10MB" }, { status: 400 });
     }
 
-    // Save file to local storage
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "evidence");
-    await mkdir(uploadDir, { recursive: true });
+    const managedUpload = await saveManagedUpload({
+        bucket: "evidence",
+        fileName: buildSafeUploadFileName(user!.id, validation.ext),
+        buffer: validation.buffer,
+    });
 
-    const ext = file.name.split(".").pop() || "bin";
-    const fileName = `${user!.id}-${Date.now()}.${ext}`;
-    const filePath = path.join(uploadDir, fileName);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
-
-    const fileUrl = `/uploads/evidence/${fileName}`;
-    const fileType = file.type.startsWith("image/") ? "image" : "pdf";
+    const fileUrl = managedUpload.fileUrl;
+    const fileType = validation.category;
 
     const evidence = await prisma.evidence.create({
         data: {
