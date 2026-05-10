@@ -14,6 +14,11 @@ const mocks = vi.hoisted(() => ({
     },
 }));
 
+function withOrigin(init?: RequestInit) {
+    const headers = new Headers(init?.headers);
+    headers.set("Origin", "http://localhost");
+    return { ...init, headers };
+}
 vi.mock("@/lib/auth-utils", () => ({ requireRole: mocks.requireRole }));
 vi.mock("@/lib/class-group-instructor", () => ({ resolveInstructorAssignment: mocks.resolveInstructorAssignment }));
 vi.mock("@/lib/db", () => ({ prisma: mocks.prisma }));
@@ -48,7 +53,7 @@ describe("class-group instructor assignment", () => {
         const response = await createClassGroup(new Request("http://localhost/api/admin/events/event-1/class-groups", {
             method: "POST",
             body: JSON.stringify({ name: "Group 1", modality: "ONLINE", instructorUserId: "inst-1" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "event-1" }) });
 
         expect(response.status).toBe(201);
@@ -74,7 +79,7 @@ describe("class-group instructor assignment", () => {
         const response = await updateClassGroup(new Request("http://localhost/api/admin/class-groups/group-1", {
             method: "PUT",
             body: JSON.stringify({ instructorUserId: "user-404" }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }), { params: Promise.resolve({ id: "group-1" }) });
 
         expect(response.status).toBe(400);

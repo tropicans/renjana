@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useUser } from "@/lib/context/user-context";
 import { useToast } from "@/components/ui/toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchCourseById, fetchMyEnrollments, fetchMyRegistrations, fetchProgress, markLessonComplete, fetchQuizzes } from "@/lib/api";
+import { fetchCourseById, fetchMyEnrollments, fetchMyRegistrations, fetchProgress, markLessonComplete, fetchQuizzes } from "@/features/client/api/learner";
+import { isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useState, useMemo } from "react";
 import {
     ArrowLeft,
@@ -67,7 +68,7 @@ export default function LearnPage() {
     const course = courseData?.course;
     const enrollment = enrollmentData?.enrollments?.find((e) => e.courseId === courseId);
     const linkedRegistrations = registrationData?.registrations?.filter((registration) => registration.event.courseId === courseId) ?? [];
-    const approvedRegistration = linkedRegistrations.find((registration) => ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status));
+    const approvedRegistration = linkedRegistrations.find((registration) => isLearningAccessibleRegistration(registration.status));
     const requiresApprovedRegistration = Boolean(course?.requiresRegistration);
     const linkedEvent = course?.linkedEvent ?? null;
 

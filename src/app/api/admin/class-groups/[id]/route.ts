@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 import { resolveInstructorAssignment } from "@/lib/class-group-instructor";
 
 function toDate(value: unknown) {
@@ -12,6 +13,8 @@ function toDate(value: unknown) {
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const body = await req.json().catch(() => null);
@@ -85,9 +88,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ classGroup: updated });
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const classGroup = await prisma.classGroup.findUnique({ where: { id }, include: { _count: { select: { registrations: true } } } });

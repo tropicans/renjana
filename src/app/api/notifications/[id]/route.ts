@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 
 export async function PATCH(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireAuth();
     if (error) return error;
+    const sameOriginError = assertSameOrigin(_req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const notification = await prisma.notification.findUnique({

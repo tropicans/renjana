@@ -8,13 +8,47 @@ import { Logo } from '@/components/ui/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageSwitcher, useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { useUser, getDashboardUrl } from '@/lib/context/user-context'
+import { useUser } from '@/lib/context/user-context'
+import { getDashboardUrl } from '@/lib/dashboard-routing'
 import { useNotifications } from '@/lib/context/notifications-context'
+function useScrollThreshold(threshold: number) {
+    const [isScrolled, setIsScrolled] = React.useState(false)
+    const lastValueRef = React.useRef(false)
+    const frameRef = React.useRef<number | null>(null)
+
+    React.useEffect(() => {
+        const update = () => {
+            frameRef.current = null
+            const nextValue = window.scrollY > threshold
+            if (lastValueRef.current !== nextValue) {
+                lastValueRef.current = nextValue
+                setIsScrolled(nextValue)
+            }
+        }
+
+        update()
+
+        const handleScroll = () => {
+            if (frameRef.current !== null) return
+            frameRef.current = window.requestAnimationFrame(update)
+        }
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+            if (frameRef.current !== null) {
+                window.cancelAnimationFrame(frameRef.current)
+            }
+        }
+    }, [threshold])
+
+    return isScrolled
+}
 export function SiteHeader({ className }: { className?: string }) {
     const { t } = useLanguage()
     const { user, isAuthenticated, logout, isLoading } = useUser()
     const [menuState, setMenuState] = React.useState(false)
-    const [isScrolled, setIsScrolled] = React.useState(false)
+    const isScrolled = useScrollThreshold(10)
     const { unreadCount: unreadNotificationCount } = useNotifications()
 
     const menuItems = [
@@ -24,13 +58,6 @@ export function SiteHeader({ className }: { className?: string }) {
         { name: t.nav.about, href: '/about-us' },
     ]
 
-    React.useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
 
     return (
         <header className={cn(

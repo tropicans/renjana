@@ -11,7 +11,7 @@ import {
     fetchAdminEvent,
     fetchAdminQuizzes,
     updateAdminQuiz,
-} from "@/lib/api";
+} from "@/features/client/api/admin-events";
 import { useToast } from "@/components/ui/toast";
 
 type QuizType = "PRE_TEST" | "POST_TEST";

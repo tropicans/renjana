@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 
 // PUT /api/admin/users/:id — update user (admin only)
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const data = await req.json();
@@ -33,9 +36,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 // DELETE /api/admin/users/:id — deactivate user (admin only)
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
 

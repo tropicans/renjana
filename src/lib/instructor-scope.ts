@@ -19,38 +19,43 @@ export async function getInstructorScope(userId: string | null | undefined, user
         };
     }
 
-    const registrations = await prisma.registration.findMany({
-        where: {
-            classGroup: normalizedUserId
-                ? {
-                    OR: [
-                        { instructorUserId: normalizedUserId },
-                        ...(instructorName ? [{
-                            instructorUserId: null,
-                            instructorName: {
-                                equals: instructorName,
-                                mode: "insensitive" as const,
-                            },
-                        }] : []),
-                    ],
-                }
-                : {
-                    instructorName: {
-                        equals: instructorName,
-                        mode: "insensitive",
-                    },
+    const classGroups = await prisma.classGroup.findMany({
+        where: normalizedUserId
+            ? {
+                OR: [
+                    { instructorUserId: normalizedUserId },
+                    ...(instructorName ? [{
+                        instructorUserId: null,
+                        instructorName: {
+                            equals: instructorName,
+                            mode: "insensitive" as const,
+                        },
+                    }] : []),
+                ],
+                event: {
+                    courseId: { not: null },
                 },
-            event: {
-                courseId: { not: null },
+            }
+            : {
+                instructorName: {
+                    equals: instructorName,
+                    mode: "insensitive",
+                },
+                event: {
+                    courseId: { not: null },
+                },
             },
-        },
         select: {
-            userId: true,
+            id: true,
             eventId: true,
-            classGroupId: true,
             event: {
                 select: {
                     courseId: true,
+                },
+            },
+            registrations: {
+                select: {
+                    userId: true,
                 },
             },
         },
@@ -61,22 +66,22 @@ export async function getInstructorScope(userId: string | null | undefined, user
     const classGroupIds = new Set<string>();
     const enrollmentPairsMap = new Map<string, { userId: string; courseId: string }>();
 
-    for (const registration of registrations) {
-        const courseId = registration.event.courseId;
+    for (const classGroup of classGroups) {
+        const courseId = classGroup.event.courseId;
         if (!courseId) continue;
 
         courseIds.add(courseId);
-        eventIds.add(registration.eventId);
-        if (registration.classGroupId) {
-            classGroupIds.add(registration.classGroupId);
-        }
+        eventIds.add(classGroup.eventId);
+        classGroupIds.add(classGroup.id);
 
-        const key = `${registration.userId}:${courseId}`;
-        if (!enrollmentPairsMap.has(key)) {
-            enrollmentPairsMap.set(key, {
-                userId: registration.userId,
-                courseId,
-            });
+        for (const registration of classGroup.registrations) {
+            const key = `${registration.userId}:${courseId}`;
+            if (!enrollmentPairsMap.has(key)) {
+                enrollmentPairsMap.set(key, {
+                    userId: registration.userId,
+                    courseId,
+                });
+            }
         }
     }
 

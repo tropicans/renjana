@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 
 // PUT /api/admin/quizzes/[quizId] — update quiz
 export async function PUT(
@@ -9,6 +10,8 @@ export async function PUT(
 ) {
     const { user, error } = await requireRole("ADMIN", "INSTRUCTOR");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { quizId } = await params;
     const { title, timeLimit, passingScore, questions } = await req.json();
@@ -63,11 +66,13 @@ export async function PUT(
 
 // DELETE /api/admin/quizzes/[quizId] — delete quiz
 export async function DELETE(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ quizId: string }> }
 ) {
     const { user, error } = await requireRole("ADMIN", "INSTRUCTOR");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { quizId } = await params;
 

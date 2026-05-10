@@ -1,6 +1,7 @@
 type RegistrationNotificationType = "REGISTRATION_APPROVED" | "REGISTRATION_REVISION_REQUIRED" | "REGISTRATION_REJECTED";
 
 import type { Prisma } from "@prisma/client";
+import { writeAuditLog } from "@/lib/audit";
 import { ensureEnrollmentForCourse } from "@/lib/enrollment-sync";
 import { createRegistrationNotification } from "@/lib/notifications";
 import { canApproveRegistration } from "@/lib/domain/registration-rules";
@@ -48,16 +49,27 @@ type SubmitRegistrationInput = {
     prisma: Pick<Prisma.TransactionClient, "registration">;
     registration: {
         id: string;
+        userId: string;
+        eventId: string;
+        event: {
+            id: string;
+            title: string;
+            slug: string;
+            status: string;
+            registrationStart: Date | null;
+            registrationEnd: Date | null;
+            courseId: string | null;
+            learningEnabled: boolean;
+            modality: string;
+            category: string;
+        };
+        status: string;
+        participantMode: string;
         agreedTerms: boolean;
         agreedRefundPolicy: boolean;
-        fullName: string | null;
-        birthPlace: string | null;
-        birthDate: Date | null;
-        gender: string | null;
-        domicileAddress: string | null;
-        whatsapp: string | null;
-        institution: string | null;
-        documents: Array<{ type: string }>;
+        totalFee: number | null;
+        payments?: Array<{ id: string }>;
+        documents: Array<{ type: string; reviewStatus: string }>;
     };
 };
 
@@ -68,45 +80,56 @@ type AssignClassGroupInput = {
     classGroupId: string | null;
 };
 
+type FinalizeDecisionInput = {
+    actorUserId: string;
+    registration: {
+        status: string;
+        adminNote: string | null;
+    };
+    updated: {
+        id: string;
+        status: string;
+        adminNote: string | null;
+        user: { id: string };
+        event: { id: string; slug: string; title: string };
+    };
+    status?: string;
+    adminNote?: string | undefined;
+};
+
 export async function reviewRegistrationDocuments(input: ReviewDocumentsInput) {
-    if (input.documentUpdates.length === 0) {
+    if (!input.documentUpdates.length) {
         return { ok: true as const };
     }
 
-    const uniqueDocumentIds = Array.from(new Set(input.documentUpdates.map((document) => document.id)));
-    const registrationDocuments = await input.prisma.registrationDocument.findMany({
+    const documents = await input.prisma.registrationDocument.findMany({
         where: {
-            id: { in: uniqueDocumentIds },
             registrationId: input.registrationId,
+            id: { in: input.documentUpdates.map((item) => item.id) },
         },
-        select: {
-            id: true,
-            registrationId: true,
-            type: true,
-        },
-    });
+        select: { id: true, registrationId: true, type: true },
+    }) as RegistrationDocumentRecord[];
 
-    if (registrationDocuments.length !== uniqueDocumentIds.length) {
-        return { ok: false as const, response: { error: "Document not found", status: 404 } };
+    if (documents.length !== input.documentUpdates.length) {
+        return { ok: false as const, response: { error: "Some documents were not found", status: 404 } };
     }
 
-    const documentMap = new Map<string, RegistrationDocumentRecord>(
-        registrationDocuments.map((document) => [document.id, document])
+    const invalidType = documents.some((document) =>
+        input.allowedType === "PAYMENT_PROOF"
+            ? document.type !== "PAYMENT_PROOF"
+            : document.type === "PAYMENT_PROOF",
     );
 
-    for (const document of input.documentUpdates) {
-        const registrationDocument = documentMap.get(document.id);
-        if (!registrationDocument || registrationDocument.registrationId !== input.registrationId) {
-            return { ok: false as const, response: { error: "Document not found", status: 404 } };
-        }
-
-        if (input.allowedType === "PAYMENT_PROOF" && registrationDocument.type !== "PAYMENT_PROOF") {
-            return { ok: false as const, response: { error: "Finance can only review payment proof documents", status: 403 } };
-        }
-
-        if (input.allowedType === "NON_PAYMENT_PROOF" && registrationDocument.type === "PAYMENT_PROOF") {
-            return { ok: false as const, response: { error: "Admin cannot review payment proof documents", status: 403 } };
-        }
+    if (invalidType) {
+        return {
+            ok: false as const,
+            response: {
+                error: input.allowedType === "PAYMENT_PROOF"
+                    ? "This action only applies to payment proof documents"
+                    : "Payment proof documents must be reviewed by Finance",
+                status: 403,
+            },
+        };
     }
 
     await Promise.all(input.documentUpdates.map((document) => input.prisma.registrationDocument.update({
@@ -117,14 +140,12 @@ export async function reviewRegistrationDocuments(input: ReviewDocumentsInput) {
         },
     })));
 
-    await input.prisma.auditLog.create({
-        data: {
-            userId: input.actorUserId,
-            action: input.auditAction,
-            entity: input.auditEntity,
-            entityId: input.registrationId,
-            metadata: { documentUpdates: input.documentUpdates },
-        },
+    await writeAuditLog(input.prisma as Prisma.TransactionClient, {
+        userId: input.actorUserId,
+        action: input.auditAction,
+        entity: input.auditEntity,
+        entityId: input.registrationId,
+        metadata: { documentUpdates: input.documentUpdates },
     });
 
     return { ok: true as const };
@@ -168,94 +189,70 @@ export async function decideRegistration(
         && Boolean(updated.event.courseId)
         && updated.event.learningEnabled;
 
-    if (shouldEnsureEnrollment && updated.event.courseId) {
+    if (shouldEnsureEnrollment) {
         await ensureEnrollmentForCourse(tx, {
             userId: updated.user.id,
-            courseId: updated.event.courseId,
+            courseId: updated.event.courseId!,
         });
     }
 
     return { ok: true as const, updated };
 }
 
-export async function finalizeRegistrationDecision(params: {
-    actorUserId: string;
-    registration: { id: string; status: string; adminNote: string | null };
-    updated: {
-        id: string;
-        status: string;
-        adminNote: string | null;
-        user: { id: string };
-        event: { id: string; slug: string; title: string };
-    };
-    status?: string;
-    adminNote?: string | undefined;
-}): Promise<{
-    audit: {
-        userId: string;
-        action: string;
-        entity: "REGISTRATION";
-        entityId: string;
-        metadata: {
-            previous: { status: string; adminNote: string | null };
-            next: { status: string; adminNote: string | null };
-        };
-    } | null;
-    notification: {
-        userId: string;
-        registrationId: string;
-        eventId: string;
-        eventSlug: string;
-        eventTitle: string;
-        type: RegistrationNotificationType | null;
-        adminNote: string | null;
-    } | null;
-}> {
-    if (params.status || params.adminNote !== undefined) {
-        return {
-            audit: {
-                userId: params.actorUserId,
-                action: params.status === "APPROVED"
-                    ? "APPROVE_REGISTRATION"
-                    : params.status === "REJECTED"
-                        ? "REJECT_REGISTRATION"
-                        : params.status === "REVISION_REQUIRED"
+export function finalizeRegistrationDecision(input: FinalizeDecisionInput) {
+    const registrationChanged = input.status !== undefined && input.status !== input.registration.status;
+    const noteChanged = input.adminNote !== undefined && input.adminNote !== input.registration.adminNote;
+
+    const shouldAudit = registrationChanged || noteChanged;
+    const notificationType: RegistrationNotificationType | null = registrationChanged
+        ? input.updated.status === "APPROVED"
+            ? "REGISTRATION_APPROVED"
+            : input.updated.status === "REVISION_REQUIRED"
+                ? "REGISTRATION_REVISION_REQUIRED"
+                : input.updated.status === "REJECTED"
+                    ? "REGISTRATION_REJECTED"
+                    : null
+        : null;
+
+    return {
+        audit: shouldAudit
+            ? {
+                userId: input.actorUserId,
+                action: registrationChanged
+                    ? input.updated.status === "APPROVED"
+                        ? "APPROVE_REGISTRATION"
+                        : input.updated.status === "REVISION_REQUIRED"
                             ? "REQUEST_REGISTRATION_REVISION"
-                            : "UPDATE_REGISTRATION",
+                            : input.updated.status === "REJECTED"
+                                ? "REJECT_REGISTRATION"
+                                : "UPDATE_REGISTRATION"
+                    : "UPDATE_REGISTRATION_NOTE",
                 entity: "REGISTRATION",
-                entityId: params.registration.id,
+                entityId: input.updated.id,
                 metadata: {
                     previous: {
-                        status: params.registration.status,
-                        adminNote: params.registration.adminNote,
+                        status: input.registration.status,
+                        adminNote: input.registration.adminNote,
                     },
                     next: {
-                        status: params.updated.status,
-                        adminNote: params.updated.adminNote,
+                        status: input.updated.status,
+                        adminNote: input.updated.adminNote,
                     },
                 },
-            },
-            notification: params.status && params.status !== params.registration.status
-                ? {
-                    userId: params.updated.user.id,
-                    registrationId: params.updated.id,
-                    eventId: params.updated.event.id,
-                    eventSlug: params.updated.event.slug,
-                    eventTitle: params.updated.event.title,
-                    type: params.status === "APPROVED"
-                        ? "REGISTRATION_APPROVED"
-                        : params.status === "REVISION_REQUIRED"
-                            ? "REGISTRATION_REVISION_REQUIRED"
-                            : params.status === "REJECTED"
-                                ? "REGISTRATION_REJECTED"
-                                : null,
-                    adminNote: params.updated.adminNote,
-                }
-                : null,
-        };
-    }
-
-    return { audit: null, notification: null };
+            }
+            : null,
+        notification: notificationType
+            ? {
+                userId: input.updated.user.id,
+                registrationId: input.updated.id,
+                eventId: input.updated.event.id,
+                eventSlug: input.updated.event.slug,
+                eventTitle: input.updated.event.title,
+                type: notificationType,
+                adminNote: input.updated.adminNote,
+            }
+            : null,
+    };
 }
 
 export async function reviewPaymentProof(
@@ -277,25 +274,23 @@ export async function reviewPaymentProof(
     });
 
     if (input.paymentStatus || input.adminNote !== undefined) {
-        await prisma.auditLog.create({
-            data: {
-                userId: input.actorUserId,
-                action: input.paymentStatus === "VERIFIED"
-                    ? "VERIFY_REGISTRATION_PAYMENT"
-                    : input.paymentStatus === "REJECTED"
-                        ? "REJECT_REGISTRATION_PAYMENT"
-                        : "UPDATE_REGISTRATION_PAYMENT_NOTE",
-                entity: "PAYMENT",
-                entityId: input.registrationId,
-                metadata: {
-                    previous: {
-                        paymentStatus: registration.paymentStatus,
-                        adminNote: registration.adminNote,
-                    },
-                    next: {
-                        paymentStatus: updated.paymentStatus,
-                        adminNote: updated.adminNote,
-                    },
+        await writeAuditLog(prisma as Prisma.TransactionClient, {
+            userId: input.actorUserId,
+            action: input.paymentStatus === "VERIFIED"
+                ? "VERIFY_REGISTRATION_PAYMENT"
+                : input.paymentStatus === "REJECTED"
+                    ? "REJECT_REGISTRATION_PAYMENT"
+                    : "UPDATE_REGISTRATION_PAYMENT_NOTE",
+            entity: "PAYMENT",
+            entityId: input.registrationId,
+            metadata: {
+                previous: {
+                    paymentStatus: registration.paymentStatus,
+                    adminNote: registration.adminNote,
+                },
+                next: {
+                    paymentStatus: updated.paymentStatus,
+                    adminNote: updated.adminNote,
                 },
             },
         });
@@ -318,45 +313,36 @@ export async function reviewPaymentProof(
 
 export async function submitRegistrationDraft(input: SubmitRegistrationInput) {
     const { registration, prisma } = input;
-    const missingFields = [
-        ["fullName", registration.fullName],
-        ["birthPlace", registration.birthPlace],
-        ["birthDate", registration.birthDate],
-        ["gender", registration.gender],
-        ["domicileAddress", registration.domicileAddress],
-        ["whatsapp", registration.whatsapp],
-        ["institution", registration.institution],
-    ].filter(([, value]) => !value).map(([key]) => key);
 
-    const uploadedTypes = new Set(registration.documents.map((document) => document.type));
-    const missingDocuments = getRequiredRegistrationDocumentTypes(getPaymentGatewayPublicConfig().enabled).filter((type) => !uploadedTypes.has(type));
+    if (!["DRAFT", "REVISION_REQUIRED"].includes(registration.status)) {
+        return { ok: false as const, response: { status: 409, body: { error: "Registration can no longer be edited" } } };
+    }
 
-    if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
-        await prisma.registration.update({
-            where: { id: registration.id },
-            data: { status: "DRAFT", submittedAt: null },
-        });
-
+    if (!registration.agreedTerms || !registration.agreedRefundPolicy) {
         return {
             ok: false as const,
-            response: {
-                status: 400,
-                body: {
-                    error: "Complete the required form fields and uploads before submitting",
-                    details: {
-                        missingFields,
-                        missingDocuments,
-                        agreedTerms: registration.agreedTerms,
-                        agreedRefundPolicy: registration.agreedRefundPolicy,
-                    },
-                },
-            },
+            response: { status: 400, body: { error: "Terms and refund policy must be agreed before submission" } },
+        };
+    }
+
+    const requiredDocumentTypes = getRequiredRegistrationDocumentTypes(
+        getPaymentGatewayPublicConfig().enabled && (registration.totalFee ?? 0) > 0,
+    );
+
+    const uploadedTypes = new Set(registration.documents.map((document) => document.type));
+    const missingDocument = requiredDocumentTypes.find((type) => !uploadedTypes.has(type));
+    if (missingDocument) {
+        return {
+            ok: false as const,
+            response: { status: 400, body: { error: `Document ${missingDocument} is required before submission` } },
         };
     }
 
     await prisma.registration.update({
         where: { id: registration.id },
         data: {
+            status: "SUBMITTED",
+            submittedAt: new Date(),
             paymentStatus: uploadedTypes.has("PAYMENT_PROOF") ? "UPLOADED" : "PENDING",
         },
     });
@@ -377,14 +363,12 @@ export async function assignRegistrationClassGroup(input: AssignClassGroupInput)
         },
     });
 
-    await input.prisma.auditLog.create({
-        data: {
-            userId: input.actorUserId,
-            action: input.classGroupId ? "ASSIGN_CLASS_GROUP" : "UNASSIGN_CLASS_GROUP",
-            entity: "REGISTRATION",
-            entityId: input.registrationId,
-            metadata: { classGroupId: input.classGroupId },
-        },
+    await writeAuditLog(input.prisma as Prisma.TransactionClient, {
+        userId: input.actorUserId,
+        action: input.classGroupId ? "ASSIGN_CLASS_GROUP" : "UNASSIGN_CLASS_GROUP",
+        entity: "REGISTRATION",
+        entityId: input.registrationId,
+        metadata: { classGroupId: input.classGroupId },
     });
 
     return updated;

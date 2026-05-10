@@ -1,222 +1,207 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
-import { calculateEventTotalFee, getRequiredRegistrationDocumentTypes, isParticipantMode, isSourceChannel } from "@/lib/events";
-import { getPaymentGatewayPublicConfig } from "@/lib/payment";
+import { calculateEventTotalFee, isParticipantMode, isSourceChannel } from "@/lib/events";
 import { createRegistrationNotification } from "@/lib/notifications";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
+import { submitRegistrationDraft } from "@/lib/domain/registration-workflow";
 import { validateEventRegistrationLifecycle } from "@/lib/event-validation";
+import { withRequestObservability } from "@/lib/observability/route";
 
-export async function GET() {
+export async function GET(req: Request) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const registrations = await prisma.registration.findMany({
-        where: { userId: user!.id },
-        include: {
-            event: {
-                select: {
-                    id: true,
-                    courseId: true,
-                    slug: true,
-                    title: true,
-                    category: true,
-                    modality: true,
-                    status: true,
-                    eventStart: true,
-                    registrationEnd: true,
+    return withRequestObservability(req, async () => {
+        const registrations = await prisma.registration.findMany({
+            where: { userId: user!.id },
+            include: {
+                event: {
+                    select: {
+                        id: true,
+                        courseId: true,
+                        slug: true,
+                        title: true,
+                        category: true,
+                        modality: true,
+                        status: true,
+                        eventStart: true,
+                        registrationEnd: true,
+                    },
+                },
+                documents: {
+                    select: {
+                        id: true,
+                        type: true,
+                        reviewStatus: true,
+                        fileUrl: true,
+                    },
+                },
+                classGroup: {
+                    select: {
+                        id: true,
+                        name: true,
+                        modality: true,
+                        location: true,
+                        zoomLink: true,
+                        zoomPasscode: true,
+                        startAt: true,
+                        endAt: true,
+                    },
+                },
+                payments: {
+                    orderBy: { createdAt: "desc" },
+                    take: 1,
                 },
             },
-            documents: {
-                select: {
-                    id: true,
-                    type: true,
-                    reviewStatus: true,
-                    fileUrl: true,
-                },
-            },
-            classGroup: {
-                select: {
-                    id: true,
-                    name: true,
-                    modality: true,
-                    location: true,
-                    zoomLink: true,
-                    zoomPasscode: true,
-                    startAt: true,
-                    endAt: true,
-                },
-            },
-            payments: {
-                orderBy: { createdAt: "desc" },
-                take: 1,
-            },
-        },
-        orderBy: { createdAt: "desc" },
-    });
+            orderBy: { createdAt: "desc" },
+        });
 
-    return NextResponse.json({ registrations });
+        return NextResponse.json({ registrations });
+    }, {
+        event: "registrations.get",
+        user,
+    });
 }
 
 export async function POST(req: Request) {
-    const { user, error } = await requireAuth();
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, { sameOrigin: true });
+    if (!policy.ok) return policy.response;
 
-    const body = await req.json().catch(() => null);
-    const eventId = body?.eventId as string | undefined;
-    const participantMode = body?.participantMode as string | undefined;
+    const { user } = policy;
 
-    if (!eventId || !participantMode || !isParticipantMode(participantMode)) {
-        return NextResponse.json({ error: "Valid eventId and participantMode are required" }, { status: 400 });
-    }
+    return withRequestObservability(req, async () => {
 
-    const event = await prisma.event.findUnique({ where: { id: eventId } });
-    if (!event) {
-        return NextResponse.json({ error: "Event not found" }, { status: 404 });
-    }
+        const body = await req.json().catch(() => null);
+        const eventId = body?.eventId as string | undefined;
+        const participantMode = body?.participantMode as string | undefined;
 
-    const sourceChannel = body?.sourceChannel as string | undefined;
-    if (sourceChannel && !isSourceChannel(sourceChannel)) {
-        return NextResponse.json({ error: "Invalid source channel" }, { status: 400 });
-    }
+        if (!eventId || !participantMode || !isParticipantMode(participantMode)) {
+            return NextResponse.json({ error: "Valid eventId and participantMode are required" }, { status: 400 });
+        }
 
-    const fees = calculateEventTotalFee(event, participantMode);
-    const submit = Boolean(body?.submit);
+        const event = await prisma.event.findUnique({ where: { id: eventId } });
+        if (!event) {
+            return NextResponse.json({ error: "Event not found" }, { status: 404 });
+        }
 
-    if (submit) {
-        const lifecycle = validateEventRegistrationLifecycle({
-            status: event.status,
-            registrationStart: event.registrationStart,
-            registrationEnd: event.registrationEnd,
+        const sourceChannel = body?.sourceChannel as string | undefined;
+        if (sourceChannel && !isSourceChannel(sourceChannel)) {
+            return NextResponse.json({ error: "Invalid source channel" }, { status: 400 });
+        }
+
+        const fees = calculateEventTotalFee(event, participantMode);
+        const submit = Boolean(body?.submit);
+
+        if (submit) {
+            const lifecycle = validateEventRegistrationLifecycle({
+                status: event.status,
+                registrationStart: event.registrationStart,
+                registrationEnd: event.registrationEnd,
+            });
+
+            if (!lifecycle.ok) {
+                return NextResponse.json({ error: lifecycle.error }, { status: 403 });
+            }
+        }
+
+        const registration = await prisma.registration.upsert({
+            where: { userId_eventId: { userId: user!.id, eventId } },
+            update: {
+                participantMode,
+                fullName: body?.fullName?.trim() || null,
+                birthPlace: body?.birthPlace?.trim() || null,
+                birthDate: body?.birthDate ? new Date(body.birthDate) : null,
+                gender: body?.gender?.trim() || null,
+                domicileAddress: body?.domicileAddress?.trim() || null,
+                whatsapp: body?.whatsapp?.trim() || null,
+                institution: body?.institution?.trim() || null,
+                titlePrefix: body?.titlePrefix?.trim() || null,
+                titleSuffix: body?.titleSuffix?.trim() || null,
+                agreedTerms: Boolean(body?.agreedTerms),
+                agreedRefundPolicy: Boolean(body?.agreedRefundPolicy),
+                sourceChannel: sourceChannel ? (sourceChannel as never) : null,
+                sourceOtherText: body?.sourceOtherText?.trim() || null,
+                referralName: body?.referralName?.trim() || null,
+                totalFee: fees.totalFee,
+                status: submit ? "SUBMITTED" : undefined,
+                submittedAt: submit ? new Date() : undefined,
+            },
+            create: {
+                userId: user!.id,
+                eventId,
+                participantMode,
+                fullName: body?.fullName?.trim() || null,
+                birthPlace: body?.birthPlace?.trim() || null,
+                birthDate: body?.birthDate ? new Date(body.birthDate) : null,
+                gender: body?.gender?.trim() || null,
+                domicileAddress: body?.domicileAddress?.trim() || null,
+                whatsapp: body?.whatsapp?.trim() || null,
+                institution: body?.institution?.trim() || null,
+                titlePrefix: body?.titlePrefix?.trim() || null,
+                titleSuffix: body?.titleSuffix?.trim() || null,
+                agreedTerms: Boolean(body?.agreedTerms),
+                agreedRefundPolicy: Boolean(body?.agreedRefundPolicy),
+                sourceChannel: sourceChannel ? (sourceChannel as never) : null,
+                sourceOtherText: body?.sourceOtherText?.trim() || null,
+                referralName: body?.referralName?.trim() || null,
+                totalFee: fees.totalFee,
+                status: submit ? "SUBMITTED" : "DRAFT",
+                submittedAt: submit ? new Date() : null,
+            },
+            include: {
+                event: true,
+                documents: true,
+            },
         });
 
-        if (!lifecycle.ok) {
-            return NextResponse.json({ error: lifecycle.error }, { status: 403 });
-        }
-    }
-
-    const registration = await prisma.registration.upsert({
-        where: { userId_eventId: { userId: user!.id, eventId } },
-        update: {
-            participantMode,
-            fullName: body?.fullName?.trim() || null,
-            birthPlace: body?.birthPlace?.trim() || null,
-            birthDate: body?.birthDate ? new Date(body.birthDate) : null,
-            gender: body?.gender?.trim() || null,
-            domicileAddress: body?.domicileAddress?.trim() || null,
-            whatsapp: body?.whatsapp?.trim() || null,
-            institution: body?.institution?.trim() || null,
-            titlePrefix: body?.titlePrefix?.trim() || null,
-            titleSuffix: body?.titleSuffix?.trim() || null,
-            agreedTerms: Boolean(body?.agreedTerms),
-            agreedRefundPolicy: Boolean(body?.agreedRefundPolicy),
-            sourceChannel: sourceChannel ? (sourceChannel as never) : null,
-            sourceOtherText: body?.sourceOtherText?.trim() || null,
-            referralName: body?.referralName?.trim() || null,
-            totalFee: fees.totalFee,
-            status: submit ? "SUBMITTED" : undefined,
-            submittedAt: submit ? new Date() : undefined,
-        },
-        create: {
-            userId: user!.id,
-            eventId,
-            participantMode,
-            fullName: body?.fullName?.trim() || null,
-            birthPlace: body?.birthPlace?.trim() || null,
-            birthDate: body?.birthDate ? new Date(body.birthDate) : null,
-            gender: body?.gender?.trim() || null,
-            domicileAddress: body?.domicileAddress?.trim() || null,
-            whatsapp: body?.whatsapp?.trim() || null,
-            institution: body?.institution?.trim() || null,
-            titlePrefix: body?.titlePrefix?.trim() || null,
-            titleSuffix: body?.titleSuffix?.trim() || null,
-            agreedTerms: Boolean(body?.agreedTerms),
-            agreedRefundPolicy: Boolean(body?.agreedRefundPolicy),
-            sourceChannel: sourceChannel ? (sourceChannel as never) : null,
-            sourceOtherText: body?.sourceOtherText?.trim() || null,
-            referralName: body?.referralName?.trim() || null,
-            totalFee: fees.totalFee,
-            status: submit ? "SUBMITTED" : "DRAFT",
-            submittedAt: submit ? new Date() : null,
-        },
-        include: {
-            event: true,
-            documents: true,
-        },
-    });
-
-    if (submit) {
-        const missingFields = [
-            ["fullName", registration.fullName],
-            ["birthPlace", registration.birthPlace],
-            ["birthDate", registration.birthDate],
-            ["gender", registration.gender],
-            ["domicileAddress", registration.domicileAddress],
-            ["whatsapp", registration.whatsapp],
-            ["institution", registration.institution],
-        ].filter(([, value]) => !value).map(([key]) => key);
-
-        const uploadedTypes = new Set(registration.documents.map((document: { type: string }) => document.type));
-        const missingDocuments = getRequiredRegistrationDocumentTypes(getPaymentGatewayPublicConfig().enabled).filter((type) => !uploadedTypes.has(type));
-
-        if (!registration.agreedTerms || !registration.agreedRefundPolicy || missingFields.length > 0 || missingDocuments.length > 0) {
-            await prisma.registration.update({
-                where: { id: registration.id },
-                data: { status: "DRAFT", submittedAt: null },
+        if (submit) {
+            const submission = await submitRegistrationDraft({
+                prisma,
+                registration,
             });
-            return NextResponse.json(
-                {
-                    error: "Complete the required form fields and uploads before submitting",
-                    details: {
-                        missingFields,
-                        missingDocuments,
-                        agreedTerms: registration.agreedTerms,
-                        agreedRefundPolicy: registration.agreedRefundPolicy,
+
+            if (!submission.ok) {
+                return NextResponse.json(submission.response.body, { status: submission.response.status });
+            }
+
+            await createRegistrationNotification({
+                userId: user.id,
+                registrationId: registration.id,
+                eventId: event.id,
+                eventSlug: event.slug,
+                eventTitle: event.title,
+                type: "REGISTRATION_SUBMITTED",
+            });
+        }
+
+        const freshRegistration = await prisma.registration.findUnique({
+            where: { id: registration.id },
+            include: {
+                event: true,
+                documents: true,
+                classGroup: {
+                    select: {
+                        id: true,
+                        name: true,
+                        modality: true,
+                        location: true,
+                        zoomLink: true,
+                        zoomPasscode: true,
+                        startAt: true,
+                        endAt: true,
                     },
                 },
-                { status: 400 },
-            );
-        }
-
-        await prisma.registration.update({
-            where: { id: registration.id },
-            data: {
-                paymentStatus: uploadedTypes.has("PAYMENT_PROOF") ? "UPLOADED" : "PENDING",
-            },
-        });
-
-        await createRegistrationNotification({
-            userId: user!.id,
-            registrationId: registration.id,
-            eventId: event.id,
-            eventSlug: event.slug,
-            eventTitle: event.title,
-            type: "REGISTRATION_SUBMITTED",
-        });
-    }
-
-    const freshRegistration = await prisma.registration.findUnique({
-        where: { id: registration.id },
-        include: {
-            event: true,
-            documents: true,
-            classGroup: {
-                select: {
-                    id: true,
-                    name: true,
-                    modality: true,
-                    location: true,
-                    zoomLink: true,
-                    zoomPasscode: true,
-                    startAt: true,
-                    endAt: true,
+                payments: {
+                    orderBy: { createdAt: "desc" },
+                    take: 1,
                 },
             },
-            payments: {
-                orderBy: { createdAt: "desc" },
-                take: 1,
-            },
-        },
-    });
+        });
 
-    return NextResponse.json({ registration: freshRegistration }, { status: 201 });
+        return NextResponse.json({ registration: freshRegistration }, { status: 201 });
+    }, {
+        event: "registrations.post",
+        user,
+    });
 }

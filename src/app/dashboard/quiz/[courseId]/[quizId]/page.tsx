@@ -4,7 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchMyRegistrations, fetchQuizDetail, submitQuiz, fetchQuizAttempts } from "@/lib/api";
+import { fetchMyRegistrations, fetchQuizDetail, submitQuiz, fetchQuizAttempts } from "@/features/client/api/learner";
+import { isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useToast } from "@/components/ui/toast";
 import {
     ArrowLeft,
@@ -46,7 +47,7 @@ export default function QuizPlayerPage() {
     });
 
     const approvedRegistration = registrationData?.registrations.find(
-        (registration) => registration.event.courseId === courseId && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)
+        (registration) => registration.event.courseId === courseId && isLearningAccessibleRegistration(registration.status)
     );
 
     // Fetch quiz detail

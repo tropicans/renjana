@@ -138,6 +138,7 @@ model Course {
   evaluations Evaluation[]
   events      Event[]
 
+  @@index([status, createdAt])
   @@map("courses")
 }
 
@@ -153,6 +154,7 @@ model Module {
   lessons   Lesson[]
 
   @@map("modules")
+  @@index([courseId, order])
 }
 
 model Lesson {
@@ -174,6 +176,7 @@ model Lesson {
   attendances Attendance[]
 
   @@map("lessons")
+  @@index([moduleId, order])
 }
 
 model Enrollment {
@@ -269,6 +272,7 @@ model Quiz {
   questions    QuizQuestion[]
   attempts     QuizAttempt[]
 
+  @@index([courseId, type])
   @@map("quizzes")
 }
 
@@ -301,6 +305,7 @@ model QuizAttempt {
   user        User      @relation(fields: [userId], references: [id])
 
   @@map("quiz_attempts")
+  @@index([quizId, userId, completedAt])
 }
 
 model Evaluation {
@@ -381,6 +386,7 @@ model Event {
   classGroups           ClassGroup[]
 
   @@map("events")
+  @@index([status, isFeatured, eventStart, createdAt])
 }
 
 model ClassGroup {
@@ -476,6 +482,7 @@ model RegistrationPayment {
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
 
   @@index([registrationId])
+  @@index([registrationId, status, createdAt])
   @@map("registration_payments")
 }
 
@@ -510,4 +517,5 @@ model AuditLog {
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+  @@index([entity, entityId, createdAt])
 }

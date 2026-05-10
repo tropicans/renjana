@@ -1,4 +1,4 @@
-import { AdminTrainingNewPage } from "@/components/admin/admin-training-new-page";
+import { AdminTrainingNewPage } from "@/features/admin-training";
 
 export default function AdminPelatihanNewPage() {
     return <AdminTrainingNewPage />;

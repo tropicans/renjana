@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchEvaluations, fetchMyRegistrations, submitEvaluation } from "@/lib/api";
+import { isActiveRegistrationWorkflow, isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useToast } from "@/components/ui/toast";
 import {
     ClipboardCheck,
@@ -63,9 +64,9 @@ export default function EvaluationsPage() {
     }
 
     const evaluationReadyRegistrations = registrations.filter((registration) =>
-        registration.event.courseId && ["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status)
+        registration.event.courseId && isLearningAccessibleRegistration(registration.status)
     );
-    const activeRegistrations = registrations.filter((registration) => ["SUBMITTED", "UNDER_REVIEW", "REVISION_REQUIRED", "APPROVED", "ACTIVE"].includes(registration.status));
+    const activeRegistrations = registrations.filter((registration) => isActiveRegistrationWorkflow(registration.status));
     const evaluatedCount = evaluations.length;
     const pendingCount = evaluationReadyRegistrations.filter((registration) => !evaluatedRegistrationIds.has(registration.id)).length;
 

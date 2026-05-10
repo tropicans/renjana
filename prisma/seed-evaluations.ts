@@ -1,6 +1,5 @@
 // Seed script for Evaluasi feature — creates sample quiz data
-// Usage: npx ts-node --compiler-options '{"module":"CommonJS"}' prisma/seed-evaluations.ts
-// Or:    npx tsx prisma/seed-evaluations.ts
+// Usage: npx tsx prisma/seed-evaluations.ts
 
 import { PrismaClient } from "@prisma/client";
 

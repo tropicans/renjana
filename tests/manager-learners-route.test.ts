@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-    requireRole: vi.fn(),
+    requireApiAuthPolicy: vi.fn(),
     prisma: {
         enrollment: {
             findMany: vi.fn(),
+            count: vi.fn(),
         },
     },
 }));
 
-vi.mock("@/lib/auth-utils", () => ({
-    requireRole: mocks.requireRole,
+vi.mock("@/lib/route-policy", () => ({
+    requireApiAuthPolicy: mocks.requireApiAuthPolicy,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -25,9 +26,9 @@ describe("GET /api/manager/learners", () => {
     });
 
     it("returns manager-wide learner enrollments and derived stats", async () => {
-        mocks.requireRole.mockResolvedValue({
+        mocks.requireApiAuthPolicy.mockResolvedValue({
+            ok: true,
             user: { id: "manager-1", role: "MANAGER" },
-            error: null,
         });
         mocks.prisma.enrollment.findMany.mockResolvedValue([
             {
@@ -53,8 +54,9 @@ describe("GET /api/manager/learners", () => {
                 certificate: { id: "cert-1", issuedAt: new Date("2025-01-03T00:00:00.000Z") },
             },
         ]);
+        mocks.prisma.enrollment.count.mockResolvedValue(2);
 
-        const response = await GET();
+        const response = await GET(new Request("http://localhost/api/manager/learners?page=2&pageSize=1"));
         const body = await response.json();
 
         expect(response.status).toBe(200);
@@ -65,5 +67,13 @@ describe("GET /api/manager/learners", () => {
             completedEnrollments: 1,
             avgCompletion: 63,
         });
+        expect(body.pagination).toEqual({
+            page: 2,
+            pageSize: 1,
+            total: 2,
+            totalPages: 2,
+        });
+        expect(mocks.requireApiAuthPolicy).toHaveBeenCalledWith(expect.any(Request), { roles: ["MANAGER", "ADMIN"] });
+        expect(mocks.prisma.enrollment.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 1, take: 1 }));
     });
 });

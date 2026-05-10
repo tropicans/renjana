@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Loader2, Plus, Sparkles, Users } from "lucide-react";
-import { createAdminEvent, fetchAdminEvents, updateAdminEvent } from "@/lib/api";
+import { createAdminEvent, fetchAdminEvents, updateAdminEvent } from "@/features/client/api/admin-events";
 import { useToast } from "@/components/ui/toast";
 import { useUser } from "@/lib/context/user-context";
 import { validateEventPayload } from "@/lib/event-validation";

@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
 import { getAccessibleRegistrationForCourse } from "@/lib/registration-access";
 import { getEvaluationRegistrationId } from "@/lib/evaluation-link";
 
 // POST /api/evaluations — submit course evaluation
 export async function POST(req: Request) {
-    const { user, error } = await requireAuth();
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, { sameOrigin: true });
+    if (!policy.ok) return policy.response;
+
+    const { user } = policy;
 
     const { courseId, registrationId, rating, comment, answers } = await req.json();
 

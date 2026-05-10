@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
 import { collectManagedLessonMaterialUrls, deleteManagedLessonMaterialUrls } from "@/lib/lesson-material-storage";
+import { assertSameOrigin } from "@/lib/request-security";
 
 type ModuleInput = {
     title?: string;
@@ -74,6 +75,8 @@ export async function PUT(
 ) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const { title, description, status, modules } = await req.json();
@@ -210,11 +213,13 @@ export async function PUT(
 
 // DELETE /api/admin/courses/:id — delete course
 export async function DELETE(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const course = await prisma.course.findUnique({

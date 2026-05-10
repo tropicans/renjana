@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth-utils";
 import { getAdminCertificateEligibility } from "@/lib/certificate-eligibility";
 import { generateCertificateRecord } from "@/lib/certificate-service";
+import { assertSameOrigin } from "@/lib/request-security";
 
 export async function POST(
-    _req: Request,
+    req: Request,
     { params }: { params: Promise<{ enrollmentId: string }> }
 ) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { enrollmentId } = await params;
     if (!enrollmentId) {

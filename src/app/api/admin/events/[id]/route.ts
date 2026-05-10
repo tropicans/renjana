@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
 import { validateEventCourseReadiness } from "@/lib/event-course-readiness";
 import { validateEventPayload } from "@/lib/event-validation";
+import { assertSameOrigin } from "@/lib/request-security";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
@@ -27,6 +28,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const body = await req.json().catch(() => null);

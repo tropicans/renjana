@@ -57,7 +57,7 @@ export async function getAdminRegistrationsWithReadiness(page: number, pageSize 
         prisma.registration.count(),
     ]);
 
-    const registrationCoursePairs = registrations
+    const registrationPairs = registrations
         .filter((registration) => registration.event.courseId)
         .map((registration) => ({
             registrationId: registration.id,
@@ -65,16 +65,16 @@ export async function getAdminRegistrationsWithReadiness(page: number, pageSize 
             courseId: registration.event.courseId!,
         }));
 
-    const uniqueUserIds = Array.from(new Set(registrationCoursePairs.map((pair) => pair.userId)));
-    const uniqueCourseIds = Array.from(new Set(registrationCoursePairs.map((pair) => pair.courseId)));
-    const registrationIds = registrations.map((registration) => registration.id);
+    const uniqueCourseIds = Array.from(new Set(registrationPairs.map((pair) => pair.courseId)));
 
     const [enrollments, postTests, evaluations] = await Promise.all([
-        uniqueCourseIds.length && uniqueUserIds.length
+        registrationPairs.length
             ? prisma.enrollment.findMany({
                 where: {
-                    userId: { in: uniqueUserIds },
-                    courseId: { in: uniqueCourseIds },
+                    OR: registrationPairs.map((pair) => ({
+                        userId: pair.userId,
+                        courseId: pair.courseId,
+                    })),
                 },
                 select: {
                     id: true,
@@ -92,15 +92,17 @@ export async function getAdminRegistrationsWithReadiness(page: number, pageSize 
                 select: { id: true, courseId: true },
             })
             : Promise.resolve([]),
-        uniqueCourseIds.length && uniqueUserIds.length
+        registrationPairs.length
             ? prisma.evaluation.findMany({
                 where: {
-                    courseId: { in: uniqueCourseIds },
-                    userId: { in: uniqueUserIds },
-                    OR: [
-                        { registrationId: { in: registrationIds } },
-                        { registrationId: null },
-                    ],
+                    OR: registrationPairs.map((pair) => ({
+                        courseId: pair.courseId,
+                        userId: pair.userId,
+                        OR: [
+                            { registrationId: pair.registrationId },
+                            { registrationId: null },
+                        ],
+                    })),
                 },
                 select: { id: true, courseId: true, userId: true, registrationId: true, answers: true },
             })
@@ -112,24 +114,37 @@ export async function getAdminRegistrationsWithReadiness(page: number, pageSize 
     );
     const postTestMap = new Map(postTests.map((quiz) => [quiz.courseId, quiz.id]));
 
-    const postTestAttempts = postTests.length && uniqueUserIds.length
+    const postTestAttemptPairs = registrationPairs
+        .map((pair) => {
+            const quizId = postTestMap.get(pair.courseId);
+            if (!quizId) return null;
+
+            return {
+                quizId,
+                userId: pair.userId,
+            };
+        })
+        .filter((pair): pair is { quizId: string; userId: string } => Boolean(pair));
+
+    const postTestAttempts = postTestAttemptPairs.length
         ? await prisma.quizAttempt.findMany({
             where: {
-                quizId: { in: postTests.map((quiz) => quiz.id) },
-                userId: { in: uniqueUserIds },
+                OR: postTestAttemptPairs,
             },
-            orderBy: [{ completedAt: "desc" }, { startedAt: "desc" }],
+            orderBy: [
+                { userId: "asc" },
+                { quizId: "asc" },
+                { completedAt: "desc" },
+                { startedAt: "desc" },
+            ],
+            distinct: ["userId", "quizId"],
             select: { quizId: true, userId: true, passed: true },
         })
         : [];
 
-    const passedPostTestMap = new Map<string, boolean>();
-    for (const attempt of postTestAttempts) {
-        const key = `${attempt.userId}:${attempt.quizId}`;
-        if (!passedPostTestMap.has(key)) {
-            passedPostTestMap.set(key, attempt.passed);
-        }
-    }
+    const passedPostTestMap = new Map(
+        postTestAttempts.map((attempt) => [`${attempt.userId}:${attempt.quizId}`, attempt.passed])
+    );
 
     const evaluationMap = new Map(
         evaluations.map((evaluation) => [
@@ -138,22 +153,29 @@ export async function getAdminRegistrationsWithReadiness(page: number, pageSize 
         ])
     );
 
-    const registrationsWithReadiness = registrations.map((registration) => ({
-        ...registration,
-        certificateReadiness: getCertificateReadiness({
-            registration,
-            enrollment: registration.event.courseId
-                ? enrollmentMap.get(`${registration.userId}:${registration.event.courseId}`) ?? null
-                : null,
-            postTestId: registration.event.courseId ? postTestMap.get(registration.event.courseId) ?? null : null,
-            hasPassedPostTest: registration.event.courseId
-                ? Boolean(postTestMap.get(registration.event.courseId) && passedPostTestMap.get(`${registration.userId}:${postTestMap.get(registration.event.courseId)}`))
-                : false,
-            evaluation: registration.event.courseId
-                ? evaluationMap.get(`${registration.userId}:${registration.event.courseId}:${registration.id}`) ?? null
-                : null,
-        }),
-    }));
+    const registrationsWithReadiness = registrations.map((registration) => {
+        const courseId = registration.event.courseId;
+        const postTestId = courseId ? postTestMap.get(courseId) ?? null : null;
+
+        return {
+            ...registration,
+            certificateReadiness: getCertificateReadiness({
+                registration,
+                enrollment: courseId
+                    ? enrollmentMap.get(`${registration.userId}:${courseId}`) ?? null
+                    : null,
+                postTestId,
+                hasPassedPostTest: postTestId
+                    ? Boolean(passedPostTestMap.get(`${registration.userId}:${postTestId}`))
+                    : false,
+                evaluation: courseId
+                    ? evaluationMap.get(`${registration.userId}:${courseId}:${registration.id}`)
+                        ?? evaluationMap.get(`${registration.userId}:${courseId}:`)
+                        ?? null
+                    : null,
+            }),
+        };
+    });
 
     return {
         registrations: registrationsWithReadiness,

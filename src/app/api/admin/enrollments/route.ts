@@ -1,27 +1,50 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireRole } from "@/lib/auth-utils";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
 
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 100;
+
+function parsePagination(req: Request) {
+    const url = new URL(req.url);
+    const page = Math.max(1, Number.parseInt(url.searchParams.get("page") || "1", 10) || 1);
+    const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number.parseInt(url.searchParams.get("pageSize") || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE));
+    return { page, pageSize, skip: (page - 1) * pageSize };
+}
 // GET /api/admin/enrollments — list all enrollments
-export async function GET() {
-    const { error } = await requireRole("ADMIN");
-    if (error) return error;
+export async function GET(req: Request) {
+    const policy = await requireApiAuthPolicy(req, { roles: ["ADMIN"] });
+    if (!policy.ok) return policy.response;
 
-    const enrollments = await prisma.enrollment.findMany({
-        include: {
-            user: { select: { id: true, fullName: true, email: true, role: true } },
-            course: { select: { id: true, title: true } },
+    const { page, pageSize, skip } = parsePagination(req);
+    const [enrollments, total] = await Promise.all([
+        prisma.enrollment.findMany({
+            include: {
+                user: { select: { id: true, fullName: true, email: true, role: true } },
+                course: { select: { id: true, title: true } },
+            },
+            orderBy: { enrolledAt: "desc" },
+            skip,
+            take: pageSize,
+        }),
+        prisma.enrollment.count(),
+    ]);
+
+    return NextResponse.json({
+        enrollments,
+        pagination: {
+            page,
+            pageSize,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / pageSize)),
         },
-        orderBy: { enrolledAt: "desc" },
     });
-
-    return NextResponse.json({ enrollments });
 }
 
 // POST /api/admin/enrollments — admin-enroll a user
 export async function POST(req: Request) {
-    const { error } = await requireRole("ADMIN");
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, { roles: ["ADMIN"], sameOrigin: true });
+    if (!policy.ok) return policy.response;
 
     const { userId, courseId } = await req.json();
     if (!userId || !courseId) {

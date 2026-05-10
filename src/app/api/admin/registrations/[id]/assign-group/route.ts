@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { canAssignClassGroup } from "@/lib/domain/registration-rules";
+import { assignRegistrationClassGroup } from "@/lib/domain/registration-workflow";
+import { assertSameOrigin } from "@/lib/request-security";
 import { createRegistrationNotification } from "@/lib/notifications";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { user, error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { id } = await params;
     const body = await req.json().catch(() => null);
@@ -16,7 +21,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    if (!["APPROVED", "ACTIVE", "COMPLETED"].includes(registration.status) || registration.paymentStatus !== "VERIFIED") {
+    if (!canAssignClassGroup(registration)) {
         return NextResponse.json({ error: "Registration must be approved and payment verified before class assignment" }, { status: 400 });
     }
 
@@ -34,26 +39,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         }
     }
 
-    const updated = await prisma.registration.update({
-        where: { id },
-        data: { classGroupId },
-        include: {
-            classGroup: true,
-            user: { select: { id: true, fullName: true, email: true } },
-            event: { select: { id: true, slug: true, title: true, category: true, modality: true } },
-            documents: true,
-            payments: { orderBy: { createdAt: "desc" }, take: 1 },
-        },
-    });
-
-    await prisma.auditLog.create({
-        data: {
-            userId: user!.id,
-            action: classGroupId ? "ASSIGN_CLASS_GROUP" : "UNASSIGN_CLASS_GROUP",
-            entity: "REGISTRATION",
-            entityId: id,
-            metadata: { classGroupId },
-        },
+    const updated = await assignRegistrationClassGroup({
+        prisma,
+        registrationId: id,
+        actorUserId: user!.id,
+        classGroupId,
     });
 
     if (registration.classGroupId !== updated.classGroup?.id) {

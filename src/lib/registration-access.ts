@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/db";
-
-const ACCESSIBLE_REGISTRATION_STATUSES = ["APPROVED", "ACTIVE", "COMPLETED"] as const;
-type AccessibleRegistrationStatus = (typeof ACCESSIBLE_REGISTRATION_STATUSES)[number];
+import { isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 
 export async function getCourseLifecycleAccess(userId: string, courseId: string) {
     const linkedEvents = await prisma.event.findMany({
@@ -32,7 +30,7 @@ export async function getCourseLifecycleAccess(userId: string, courseId: string)
     }
 
     return {
-        allowed: ACCESSIBLE_REGISTRATION_STATUSES.includes(registration.status as AccessibleRegistrationStatus),
+        allowed: isLearningAccessibleRegistration(registration.status),
         requiresRegistration: true,
         registration,
         linkedEvent: registration.event,
@@ -72,7 +70,7 @@ export async function getAccessibleRegistrationForCourse(userId: string, courseI
     return {
         access: {
             ...access,
-            allowed: ACCESSIBLE_REGISTRATION_STATUSES.includes(selectedRegistration.status as AccessibleRegistrationStatus),
+            allowed: isLearningAccessibleRegistration(selectedRegistration.status),
             registration: selectedRegistration,
             linkedEvent: selectedRegistration.event,
         },

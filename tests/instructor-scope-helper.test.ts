@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
     prisma: {
-        registration: {
+        classGroup: {
             findMany: vi.fn(),
         },
     },
@@ -20,31 +20,29 @@ describe("getInstructorScope", () => {
     });
 
     it("prefers instructorUserId and falls back to instructorName only for legacy rows", async () => {
-        mocks.prisma.registration.findMany.mockResolvedValue([
+        mocks.prisma.classGroup.findMany.mockResolvedValue([
             {
-                userId: "learner-1",
+                id: "group-1",
                 eventId: "event-1",
-                classGroupId: "group-1",
                 event: { courseId: "course-1" },
+                registrations: [{ userId: "learner-1" }],
             },
         ]);
 
         const scope = await getInstructorScope("inst-1", "Instructor One");
 
-        expect(mocks.prisma.registration.findMany).toHaveBeenCalledWith(expect.objectContaining({
+        expect(mocks.prisma.classGroup.findMany).toHaveBeenCalledWith(expect.objectContaining({
             where: expect.objectContaining({
-                classGroup: {
-                    OR: [
-                        { instructorUserId: "inst-1" },
-                        {
-                            instructorUserId: null,
-                            instructorName: {
-                                equals: "Instructor One",
-                                mode: "insensitive",
-                            },
+                OR: [
+                    { instructorUserId: "inst-1" },
+                    {
+                        instructorUserId: null,
+                        instructorName: {
+                            equals: "Instructor One",
+                            mode: "insensitive",
                         },
-                    ],
-                },
+                    },
+                ],
             }),
         }));
         expect(scope.courseIds).toEqual(["course-1"]);
@@ -55,6 +53,6 @@ describe("getInstructorScope", () => {
         const scope = await getInstructorScope(null, null);
 
         expect(scope.courseIds).toEqual([]);
-        expect(mocks.prisma.registration.findMany).not.toHaveBeenCalled();
+        expect(mocks.prisma.classGroup.findMany).not.toHaveBeenCalled();
     });
 });

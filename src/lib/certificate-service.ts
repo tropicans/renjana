@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/db";
+import { saveManagedUpload } from "@/lib/server/upload-storage";
 
 export async function generateCertificateRecord(input: {
     enrollmentId: string;
@@ -69,14 +68,15 @@ export async function generateCertificateRecord(input: {
     doc.setTextColor(80, 80, 80);
     doc.text("Renjana Training Director", 148.5, 177, { align: "center" });
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "certificates");
-    await mkdir(uploadDir, { recursive: true });
     const fileName = `cert-${input.enrollmentId.slice(0, 8)}-${Date.now()}.pdf`;
-    const filePath = path.join(uploadDir, fileName);
     const pdfBuffer = doc.output("arraybuffer");
-    await writeFile(filePath, Buffer.from(pdfBuffer));
+    const managedUpload = await saveManagedUpload({
+        bucket: "certificates",
+        fileName,
+        buffer: Buffer.from(pdfBuffer),
+    });
 
-    const pdfUrl = `/uploads/certificates/${fileName}`;
+    const pdfUrl = managedUpload.fileUrl;
 
     return prisma.certificate.create({
         data: {

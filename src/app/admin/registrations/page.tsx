@@ -70,41 +70,82 @@ export default function AdminRegistrationsPage() {
         enabled: user?.role === "ADMIN",
     });
 
-    const registrations = data?.registrations ?? [];
+    const registrations = React.useMemo(() => data?.registrations ?? [], [data?.registrations]);
     const legacySource = searchParams.get("fromLegacy");
-    const eventOptions = Array.from(
-        new Map(registrations.map((registration) => [registration.event.id, registration.event])).values()
-    ).sort((a, b) => a.title.localeCompare(b.title));
-    const readyCount = registrations.filter((registration) => registration.certificateReadiness.status === "ready").length;
-    const issuedCount = registrations.filter((registration) => registration.certificateReadiness.status === "issued").length;
-    const attentionCount = registrations.filter((registration) => isAttentionStatus(registration.certificateReadiness.status)).length;
-    const notApplicableCount = registrations.filter((registration) => ["not_enabled", "not_applicable"].includes(registration.certificateReadiness.status)).length;
-    const prioritizedRegistrations = [...registrations].sort((a, b) => {
-        const priorityDiff = readinessPriority(a.certificateReadiness.status) - readinessPriority(b.certificateReadiness.status);
-        if (priorityDiff !== 0) return priorityDiff;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-    const eventScopedRegistrations = prioritizedRegistrations.filter((registration) => {
-        if (eventFilter === "all") return true;
-        return registration.event.id === eventFilter;
-    });
-    const filteredRegistrations = eventScopedRegistrations.filter((registration) => {
-        const status = registration.certificateReadiness.status;
+    const registrationSummary = React.useMemo(() => {
+        const eventMap = new Map<string, (typeof registrations)[number]["event"]>();
+        const eventCountMap = new Map<string, number>();
+        let readyCount = 0;
+        let issuedCount = 0;
+        let attentionCount = 0;
+        let notApplicableCount = 0;
 
-        if (readinessFilter === "ready") return status === "ready";
-        if (readinessFilter === "issued") return status === "issued";
-        if (readinessFilter === "not-applicable") {
-            return status === "not_enabled" || status === "not_applicable";
-        }
-        if (readinessFilter === "attention") {
-            return isAttentionStatus(status);
+        for (const registration of registrations) {
+            eventMap.set(registration.event.id, registration.event);
+            eventCountMap.set(registration.event.id, (eventCountMap.get(registration.event.id) ?? 0) + 1);
+
+            const status = registration.certificateReadiness.status;
+            if (status === "ready") readyCount += 1;
+            if (status === "issued") issuedCount += 1;
+            if (isAttentionStatus(status)) attentionCount += 1;
+            if (status === "not_enabled" || status === "not_applicable") notApplicableCount += 1;
         }
 
-        return true;
-    });
-    const visibleReadyRegistrations = filteredRegistrations.filter(
-        (registration) => registration.certificateReadiness.status === "ready" && registration.certificateReadiness.enrollmentId
-    );
+        const eventOptions = Array.from(eventMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+        const prioritizedRegistrations = [...registrations].sort((a, b) => {
+            const priorityDiff = readinessPriority(a.certificateReadiness.status) - readinessPriority(b.certificateReadiness.status);
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
+        return {
+            eventOptions,
+            eventCountMap,
+            prioritizedRegistrations,
+            readyCount,
+            issuedCount,
+            attentionCount,
+            notApplicableCount,
+        };
+    }, [registrations]);
+    const {
+        eventOptions,
+        eventCountMap,
+        prioritizedRegistrations,
+        readyCount,
+        issuedCount,
+        attentionCount,
+        notApplicableCount,
+    } = registrationSummary;
+    const eventScopedRegistrations = React.useMemo(() => {
+        return prioritizedRegistrations.filter((registration) => {
+            if (eventFilter === "all") return true;
+            return registration.event.id === eventFilter;
+        });
+    }, [eventFilter, prioritizedRegistrations]);
+
+    const filteredRegistrations = React.useMemo(() => {
+        return eventScopedRegistrations.filter((registration) => {
+            const status = registration.certificateReadiness.status;
+
+            if (readinessFilter === "ready") return status === "ready";
+            if (readinessFilter === "issued") return status === "issued";
+            if (readinessFilter === "not-applicable") {
+                return status === "not_enabled" || status === "not_applicable";
+            }
+            if (readinessFilter === "attention") {
+                return isAttentionStatus(status);
+            }
+
+            return true;
+        });
+    }, [eventScopedRegistrations, readinessFilter]);
+
+    const visibleReadyRegistrations = React.useMemo(() => {
+        return filteredRegistrations.filter(
+            (registration) => registration.certificateReadiness.status === "ready" && registration.certificateReadiness.enrollmentId
+        );
+    }, [filteredRegistrations]);
 
     React.useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
@@ -233,14 +274,11 @@ export default function AdminRegistrationsPage() {
                     className="rounded-xl border border-gray-200 bg-transparent px-4 py-2.5 text-sm dark:border-gray-700"
                 >
                     <option value="all">Semua event ({registrations.length})</option>
-                    {eventOptions.map((event) => {
-                        const count = registrations.filter((registration) => registration.event.id === event.id).length;
-                        return (
-                            <option key={event.id} value={event.id}>
-                                {event.title} ({count})
-                            </option>
-                        );
-                    })}
+                    {eventOptions.map((event) => (
+                        <option key={event.id} value={event.id}>
+                            {event.title} ({eventCountMap.get(event.id) ?? 0})
+                        </option>
+                    ))}
                 </select>
             </div>
 

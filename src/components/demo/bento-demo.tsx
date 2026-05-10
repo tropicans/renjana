@@ -1,17 +1,17 @@
 import {
-    BellIcon,
-    CalendarIcon,
-    FileTextIcon,
-    GlobeIcon,
-    InputIcon,
-} from "@radix-ui/react-icons";
+    Bell,
+    Calendar,
+    FileText,
+    Globe,
+    Keyboard,
+} from "lucide-react";
 import Image from "next/image";
 
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 
 const features = [
     {
-        Icon: FileTextIcon,
+        Icon: FileText,
         name: "Activity-Based Learning",
         description: "Tracks active learning events and real-time evidence.",
         href: "/",
@@ -20,7 +20,7 @@ const features = [
         className: "lg:row-start-1 lg:row-end-4 lg:col-start-2 lg:col-end-3",
     },
     {
-        Icon: InputIcon,
+        Icon: Keyboard,
         name: "Full Visibility",
         description: "Monitor learner progress with high granularity.",
         href: "/",
@@ -29,7 +29,7 @@ const features = [
         className: "lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-3",
     },
     {
-        Icon: GlobeIcon,
+        Icon: Globe,
         name: "Multi-Tenant",
         description: "Scalable architecture for corporate and public edu.",
         href: "/",
@@ -38,7 +38,7 @@ const features = [
         className: "lg:col-start-1 lg:col-end-2 lg:row-start-3 lg:row-end-4",
     },
     {
-        Icon: CalendarIcon,
+        Icon: Calendar,
         name: "Smart Scheduling",
         description: "Auto-assign remedial and notify instructors.",
         href: "/",
@@ -47,7 +47,7 @@ const features = [
         className: "lg:col-start-3 lg:col-end-3 lg:row-start-1 lg:row-end-2",
     },
     {
-        Icon: BellIcon,
+        Icon: Bell,
         name: "Rule Engine",
         description: "Event-driven automation triggered by learning events.",
         href: "/",

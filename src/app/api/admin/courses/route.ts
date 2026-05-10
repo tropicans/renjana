@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 
 // GET /api/admin/courses — list all courses (admin)
 export async function GET() {
@@ -25,6 +26,8 @@ export async function GET() {
 export async function POST(req: Request) {
     const { error } = await requireRole("ADMIN");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { title, description, status, modules } = await req.json();
     if (!title) {

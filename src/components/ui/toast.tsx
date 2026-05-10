@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, useRef, useEffect, ReactNode } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,14 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
+    const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
     const removeToast = useCallback((id: string) => {
+        const timeoutId = timeoutRefs.current.get(id);
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutRefs.current.delete(id);
+        }
+
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
@@ -40,19 +47,36 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             setToasts((prev) => [...prev, newToast]);
 
             if (duration > 0) {
-                setTimeout(() => removeToast(id), duration);
+                const timeoutId = setTimeout(() => {
+                    timeoutRefs.current.delete(id);
+                    removeToast(id);
+                }, duration);
+                timeoutRefs.current.set(id, timeoutId);
             }
         },
         [removeToast]
     );
-
     const success = useCallback((message: string) => addToast(message, "success"), [addToast]);
     const error = useCallback((message: string) => addToast(message, "error"), [addToast]);
     const info = useCallback((message: string) => addToast(message, "info"), [addToast]);
     const warning = useCallback((message: string) => addToast(message, "warning"), [addToast]);
 
+    useEffect(() => {
+        const timeoutMap = timeoutRefs.current;
+
+        return () => {
+            timeoutMap.forEach((timeoutId) => clearTimeout(timeoutId));
+            timeoutMap.clear();
+        };
+    }, []);
+
+    const contextValue = useMemo(
+        () => ({ toasts, addToast, removeToast, success, error, info, warning }),
+        [toasts, addToast, removeToast, success, error, info, warning]
+    );
+
     return (
-        <ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, info, warning }}>
+        <ToastContext.Provider value={contextValue}>
             <>{children}</>
             <ToastContainer toasts={toasts} removeToast={removeToast} />
         </ToastContext.Provider>

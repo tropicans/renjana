@@ -16,6 +16,11 @@ const mocks = vi.hoisted(() => ({
     },
 }));
 
+function withOrigin(init?: RequestInit) {
+    const headers = new Headers(init?.headers);
+    headers.set("Origin", "http://localhost");
+    return { ...init, headers };
+}
 vi.mock("@/lib/auth-utils", () => ({
     requireAuth: mocks.requireAuth,
 }));
@@ -62,7 +67,7 @@ describe("POST /api/registrations", () => {
                 participantMode: "ONLINE",
                 submit: true,
             }),
-            headers: { "Content-Type": "application/json" },
+            headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }));
 
         expect(response.status).toBe(403);
@@ -70,5 +75,20 @@ describe("POST /api/registrations", () => {
             error: "Registration is not open for this event",
         });
         expect(mocks.prisma.registration.upsert).not.toHaveBeenCalled();
+    });
+
+    it("rejects missing origin on mutating request", async () => {
+        const response = await POST(new Request("http://localhost/api/registrations", {
+            method: "POST",
+            body: JSON.stringify({
+                eventId: "event-1",
+                participantMode: "ONLINE",
+            }),
+            headers: { "Content-Type": "application/json" },
+        }));
+
+        expect(response.status).toBe(403);
+        await expect(response.json()).resolves.toEqual({ error: "Missing origin header" });
+        expect(mocks.prisma.event.findUnique).not.toHaveBeenCalled();
     });
 });

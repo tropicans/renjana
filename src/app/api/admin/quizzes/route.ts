@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { assertSameOrigin } from "@/lib/request-security";
 
 // POST /api/admin/quizzes — create quiz with questions
 export async function POST(req: Request) {
     const { user, error } = await requireRole("ADMIN", "INSTRUCTOR");
     if (error) return error;
+    const sameOriginError = assertSameOrigin(req);
+    if (sameOriginError) return sameOriginError;
 
     const { courseId, type, title, timeLimit, passingScore, questions } = await req.json();
 

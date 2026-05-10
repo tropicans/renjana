@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { summarizeFinanceRegistrationMetrics } from "@/lib/dashboard-metrics";
 
 // GET /api/dashboard/stats — role-based dashboard statistics
 export async function GET() {
@@ -175,23 +176,11 @@ export async function GET() {
             }
         }
 
-        const totalRegistrations = registrations.length;
-        const pendingPayments = registrations.filter((registration) => ["PENDING", "UPLOADED"].includes(registration.paymentStatus)).length;
-        const verifiedPayments = registrations.filter((registration) => registration.paymentStatus === "VERIFIED").length;
-        const rejectedPayments = registrations.filter((registration) => registration.paymentStatus === "REJECTED").length;
-        const totalBilled = registrations.reduce((sum, registration) => sum + (registration.totalFee ?? 0), 0);
-        const totalCollected = registrations.reduce((sum, registration) => (
-            registration.paymentStatus === "VERIFIED" ? sum + (registration.totalFee ?? 0) : sum
-        ), 0);
+        const metrics = summarizeFinanceRegistrationMetrics(registrations);
 
         return NextResponse.json({
             role,
-            totalRegistrations,
-            pendingPayments,
-            verifiedPayments,
-            rejectedPayments,
-            totalBilled,
-            totalCollected,
+            ...metrics,
             recentTransactions: registrations
                 .map((registration) => ({
                     id: registration.id,

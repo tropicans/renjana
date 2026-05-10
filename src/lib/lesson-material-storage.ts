@@ -1,13 +1,22 @@
 import { unlink } from "fs/promises";
 import path from "path";
 
+const MANAGED_UPLOAD_ROOT = path.resolve(process.cwd(), "public", "uploads", "lesson-materials");
 const MANAGED_PREFIX = "/uploads/lesson-materials/";
 
 function toManagedAbsolutePath(fileUrl: string): string | null {
     if (!fileUrl.startsWith(MANAGED_PREFIX)) return null;
 
-    const relativePath = fileUrl.replace(/^\//, "");
-    return path.join(process.cwd(), "public", relativePath);
+    const relativePath = fileUrl.slice(MANAGED_PREFIX.length);
+    if (!relativePath || relativePath.includes("\\")) return null;
+
+    const resolvedPath = path.resolve(MANAGED_UPLOAD_ROOT, relativePath);
+    const relativeToRoot = path.relative(MANAGED_UPLOAD_ROOT, resolvedPath);
+    if (relativeToRoot.startsWith("..") || path.isAbsolute(relativeToRoot)) {
+        return null;
+    }
+
+    return resolvedPath;
 }
 
 export function collectManagedLessonMaterialUrls(urls: Array<string | null | undefined>): string[] {

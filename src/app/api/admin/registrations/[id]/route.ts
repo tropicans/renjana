@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth-utils";
+import { writeAuditLog } from "@/lib/audit";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
 import { createRegistrationNotification } from "@/lib/notifications";
-import { ensureEnrollmentForCourse } from "@/lib/enrollment-sync";
+import { canApproveRegistration } from "@/lib/domain/registration-rules";
+import { decideRegistration, finalizeRegistrationDecision, reviewRegistrationDocuments } from "@/lib/domain/registration-workflow";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { error } = await requireRole("ADMIN");
@@ -50,8 +53,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-    const { user, error } = await requireRole("ADMIN");
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, { roles: ["ADMIN"], sameOrigin: true });
+    if (!policy.ok) return policy.response;
+
+    const { user } = policy;
 
     const { id } = await params;
     const body = await req.json().catch(() => null);
@@ -69,125 +74,57 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: "Registration not found" }, { status: 404 });
     }
 
-    if (status === "APPROVED" && registration.paymentStatus !== "VERIFIED") {
+    if (status === "APPROVED" && !canApproveRegistration(registration)) {
         return NextResponse.json({ error: "Payment must be verified by Finance before approval" }, { status: 400 });
     }
 
-    if (documentUpdates.length > 0) {
-        for (const document of documentUpdates as Array<{ id: string; reviewStatus?: string; adminNote?: string | null }>) {
-            const registrationDocument = await prisma.registrationDocument.findUnique({ where: { id: document.id } });
-            if (!registrationDocument || registrationDocument.registrationId !== id) {
-                return NextResponse.json({ error: "Document not found" }, { status: 404 });
-            }
-
-            if (registrationDocument.type === "PAYMENT_PROOF") {
-                return NextResponse.json({ error: "Admin cannot review payment proof documents" }, { status: 403 });
-            }
-
-            await prisma.registrationDocument.update({
-                where: { id: document.id },
-                data: {
-                    ...(document.reviewStatus ? { reviewStatus: document.reviewStatus as never } : {}),
-                    ...(document.adminNote !== undefined ? { adminNote: document.adminNote?.trim() || null } : {}),
-                },
-            });
-        }
-
-        await prisma.auditLog.create({
-            data: {
-                userId: user!.id,
-                action: "UPDATE_REGISTRATION_DOCUMENT_REVIEW",
-                entity: "REGISTRATION",
-                entityId: id,
-                metadata: {
-                    documentUpdates,
-                },
-            },
-        });
+    const documentReview = await reviewRegistrationDocuments({
+        prisma,
+        registrationId: id,
+        actorUserId: user.id,
+        documentUpdates,
+        allowedType: "NON_PAYMENT_PROOF",
+        auditAction: "UPDATE_REGISTRATION_DOCUMENT_REVIEW",
+        auditEntity: "REGISTRATION",
+    });
+    if (!documentReview.ok) {
+        return NextResponse.json({ error: documentReview.response.error }, { status: documentReview.response.status });
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-        const nextRegistration = await tx.registration.update({
-            where: { id },
-            data: {
-                ...(status ? { status: status as never } : {}),
-                ...(adminNote !== undefined ? { adminNote: adminNote || null } : {}),
-                ...(status === "APPROVED" ? { approvedAt: new Date() } : {}),
-            },
-            include: {
-                user: { select: { id: true, fullName: true, email: true, phone: true } },
-                event: {
-                    include: {
-                        course: { select: { id: true, title: true } },
-                    },
-                },
-                classGroup: true,
-                documents: { orderBy: { createdAt: "asc" } },
-            },
-        });
+    const decision = await prisma.$transaction(async (tx) => decideRegistration(tx, registration, {
+        registrationId: id,
+        actorUserId: user.id,
+        status,
+        adminNote,
+    }));
 
-        const shouldEnsureEnrollment = status === "APPROVED"
-            && registration.status !== "APPROVED"
-            && Boolean(nextRegistration.event.courseId)
-            && nextRegistration.event.learningEnabled;
+    if (!decision.ok) {
+        return NextResponse.json({ error: decision.response.error }, { status: decision.response.status });
+    }
 
-        if (shouldEnsureEnrollment && nextRegistration.event.courseId) {
-            await ensureEnrollmentForCourse(tx, {
-                userId: nextRegistration.user.id,
-                courseId: nextRegistration.event.courseId,
-            });
-        }
-
-        return nextRegistration;
+    const { updated } = decision;
+    const postDecision = await finalizeRegistrationDecision({
+        actorUserId: user.id,
+        registration,
+        updated,
+        status,
+        adminNote,
     });
 
-    if (status || adminNote !== undefined) {
-        await prisma.auditLog.create({
-            data: {
-                userId: user!.id,
-                action: status === "APPROVED"
-                    ? "APPROVE_REGISTRATION"
-                    : status === "REJECTED"
-                        ? "REJECT_REGISTRATION"
-                        : status === "REVISION_REQUIRED"
-                            ? "REQUEST_REGISTRATION_REVISION"
-                            : "UPDATE_REGISTRATION",
-                entity: "REGISTRATION",
-                entityId: id,
-                metadata: {
-                    previous: {
-                        status: registration.status,
-                        adminNote: registration.adminNote,
-                    },
-                    next: {
-                        status: updated.status,
-                        adminNote: updated.adminNote,
-                    },
-                },
-            },
-        });
+    if (postDecision.audit) {
+        await writeAuditLog(prisma, postDecision.audit);
     }
 
-    if (status && status !== registration.status) {
-        const notificationType = status === "APPROVED"
-            ? "REGISTRATION_APPROVED"
-            : status === "REVISION_REQUIRED"
-                ? "REGISTRATION_REVISION_REQUIRED"
-                : status === "REJECTED"
-                    ? "REGISTRATION_REJECTED"
-                    : null;
-
-        if (notificationType) {
-            await createRegistrationNotification({
-                userId: updated.user.id,
-                registrationId: updated.id,
-                eventId: updated.event.id,
-                eventSlug: updated.event.slug,
-                eventTitle: updated.event.title,
-                type: notificationType,
-                adminNote: updated.adminNote,
-            });
-        }
+    if (postDecision.notification?.type) {
+        await createRegistrationNotification({
+            userId: postDecision.notification.userId,
+            registrationId: postDecision.notification.registrationId,
+            eventId: postDecision.notification.eventId,
+            eventSlug: postDecision.notification.eventSlug,
+            eventTitle: postDecision.notification.eventTitle,
+            type: postDecision.notification.type,
+            adminNote: postDecision.notification.adminNote,
+        });
     }
 
     return NextResponse.json({ registration: updated });

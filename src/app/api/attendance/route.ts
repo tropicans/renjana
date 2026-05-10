@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { requireApiAuthPolicy } from "@/lib/route-policy";
 
 // POST /api/attendance — check-in with optional GPS
 export async function POST(req: Request) {
-    const { user, error } = await requireAuth();
-    if (error) return error;
+    const policy = await requireApiAuthPolicy(req, { sameOrigin: true });
+    if (!policy.ok) return policy.response;
+
+    const { user } = policy;
 
     const { lessonId, courseId, latitude, longitude, notes } = await req.json();
     if (!lessonId && !courseId) {

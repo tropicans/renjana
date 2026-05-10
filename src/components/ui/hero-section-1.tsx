@@ -70,6 +70,40 @@ const ctaVariants: { container: Variants; item: Variants } = {
     item: transitionVariants.item,
 }
 
+function useScrollThreshold(threshold: number) {
+    const [isScrolled, setIsScrolled] = React.useState(false)
+    const lastValueRef = React.useRef(false)
+    const frameRef = React.useRef<number | null>(null)
+
+    React.useEffect(() => {
+        const update = () => {
+            frameRef.current = null
+            const nextValue = window.scrollY > threshold
+            if (lastValueRef.current !== nextValue) {
+                lastValueRef.current = nextValue
+                setIsScrolled(nextValue)
+            }
+        }
+
+        update()
+
+        const handleScroll = () => {
+            if (frameRef.current !== null) return
+            frameRef.current = window.requestAnimationFrame(update)
+        }
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+            if (frameRef.current !== null) {
+                window.cancelAnimationFrame(frameRef.current)
+            }
+        }
+    }, [threshold])
+
+    return isScrolled
+}
+
 export function HeroSection() {
     return (
         <>
@@ -239,15 +273,8 @@ const menuItems = [
 
 const HeroHeader = () => {
     const [menuState, setMenuState] = React.useState(false)
-    const [isScrolled, setIsScrolled] = React.useState(false)
+    const isScrolled = useScrollThreshold(50)
 
-    React.useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
     return (
         <header>
             <nav
