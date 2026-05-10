@@ -2,9 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-
-// Minimal user type based on NextAuth session
-export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'MANAGER' | 'FINANCE' | 'LEARNER';
+import { type UserRole } from "@/lib/dashboard-routing";
 
 export interface User {
     id: string;
@@ -17,9 +15,7 @@ interface UserContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
-    updateUser: (updates: Partial<User>) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -36,17 +32,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
         : null;
 
-    const login = async () => {
-        // Login is now handled by NextAuth signIn() in the login form
-        return { success: false, error: 'Use NextAuth signIn() instead' };
-    };
-
     const logout = async () => {
         await signOut({ callbackUrl: '/login' });
-    };
-
-    const updateUser = () => {
-        // No-op — user data comes from session
     };
 
     return (
@@ -55,9 +42,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 user,
                 isLoading: status === 'loading',
                 isAuthenticated: !!user,
-                login,
                 logout,
-                updateUser,
             }}
         >
             {children}
@@ -78,16 +63,4 @@ export function useRequireAuth(allowedRoles?: UserRole[]) {
     const { user, isLoading, isAuthenticated } = useUser();
     const hasAccess = isAuthenticated && (!allowedRoles || (user && allowedRoles.includes(user.role)));
     return { user, isLoading, isAuthenticated, hasAccess };
-}
-
-// Helper to get dashboard URL based on role
-export function getDashboardUrl(role: UserRole): string {
-    switch (role) {
-        case 'ADMIN': return '/admin';
-        case 'INSTRUCTOR': return '/instructor';
-        case 'MANAGER': return '/manager';
-        case 'FINANCE': return '/finance';
-        case 'LEARNER':
-        default: return '/dashboard';
-    }
 }
