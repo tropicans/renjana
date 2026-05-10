@@ -1,26 +1,40 @@
-import NextAuth from "next-auth";
+import { buildRateLimitKey, enforceRateLimit, getRateLimitIp } from "@/lib/rate-limit";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const nextAuthConfig: NextAuthConfig = {
     providers: [
         Credentials({
             credentials: {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
             },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null;
+            async authorize(credentials, request) {
+                const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : "";
+                const password = typeof credentials?.password === "string" ? credentials.password : "";
+
+                const rateLimitResponse = enforceRateLimit({
+                    key: buildRateLimitKey(["auth-login", getRateLimitIp(request), email]),
+                    limit: 5,
+                    windowMs: 15 * 60 * 1000,
+                    message: "Too many login attempts. Please try again later.",
+                });
+                if (rateLimitResponse) {
+                    throw new Error("RATE_LIMITED");
+                }
+
+                if (!email || !password) return null;
 
                 const user = await prisma.user.findUnique({
-                    where: { email: credentials.email as string },
+                    where: { email },
                 });
 
                 if (!user || !user.isActive) return null;
 
                 const isValid = await bcrypt.compare(
-                    credentials.password as string,
+                    password,
                     user.passwordHash
                 );
 
@@ -58,4 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session: {
         strategy: "jwt",
     },
-});
+};
+
+export const { handlers, signIn, signOut, auth } = NextAuth(nextAuthConfig);
+export { nextAuthConfig };

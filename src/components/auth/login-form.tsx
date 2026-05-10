@@ -6,18 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useLanguage } from "@/lib/i18n";
-
-const ROLE_DASHBOARD: Record<string, string> = {
-    ADMIN: "/admin",
-    INSTRUCTOR: "/instructor",
-    MANAGER: "/manager",
-    FINANCE: "/finance",
-    LEARNER: "/dashboard",
-};
-
-function wait(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { resolveSessionRedirectPath } from "@/features/auth/auth-redirect";
 
 export function LoginForm() {
     const searchParams = useSearchParams();
@@ -48,19 +37,11 @@ export function LoginForm() {
                 return;
             }
 
-            let dashboardUrl: string | null = null;
-            for (let attempt = 0; attempt < 6; attempt += 1) {
-                const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
-                const session = await sessionRes.json().catch(() => null);
-                const role = (session?.user?.role as string | undefined) ?? null;
-                if (role) {
-                    dashboardUrl = ROLE_DASHBOARD[role] ?? "/dashboard";
-                    break;
-                }
-                await wait(250);
-            }
-
-            window.location.assign(redirectUrl || dashboardUrl || result.url || "/auth/redirect");
+            const nextPath = await resolveSessionRedirectPath({
+                requestedPath: redirectUrl,
+                fallbackPath: "/auth/redirect",
+            });
+            window.location.assign(nextPath);
         } catch {
             setError(t.auth.invalidCredentials);
             setIsLoading(false);

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Menu, Bell, User, LogOut, Settings, Search, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/context/user-context";
-import { getDashboardUrl } from "@/lib/context/user-context";
+import { getDashboardUrl } from "@/lib/dashboard-routing";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {

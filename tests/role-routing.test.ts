@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getDashboardUrl } from "@/lib/context/user-context";
+import { getDashboardUrl } from "@/lib/dashboard-routing";
 
 describe("getDashboardUrl", () => {
     it("routes learner to learner dashboard", () => {

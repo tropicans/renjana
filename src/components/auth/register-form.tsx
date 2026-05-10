@@ -5,19 +5,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { User, Mail, Lock, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
-import { getDashboardUrl, type UserRole } from "@/lib/context/user-context";
-
-const ROLE_DASHBOARD: Record<string, string> = {
-    ADMIN: "/admin",
-    INSTRUCTOR: "/instructor",
-    MANAGER: "/manager",
-    FINANCE: "/finance",
-    LEARNER: "/dashboard",
-};
-
-function wait(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { resolveSessionRedirectPath } from "@/features/auth/auth-redirect";
 
 export function RegisterForm() {
     const searchParams = useSearchParams();
@@ -38,6 +26,7 @@ export function RegisterForm() {
         event.preventDefault();
         setIsLoading(true);
         setError(null);
+        const redirectUrl = searchParams.get("redirect") || searchParams.get("callbackUrl");
 
         const registerRes = await fetch("/api/auth/register", {
             method: "POST",
@@ -57,6 +46,7 @@ export function RegisterForm() {
             email,
             password,
             redirect: false,
+            callbackUrl: redirectUrl || "/auth/redirect",
         });
 
         if (!signInResult?.ok) {
@@ -65,19 +55,12 @@ export function RegisterForm() {
             return;
         }
 
-        let dashboardUrl: string | null = null;
-        for (let attempt = 0; attempt < 6; attempt += 1) {
-            const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
-            const session = await sessionRes.json().catch(() => null);
-            const role = (session?.user?.role as string | undefined) ?? null;
-            if (role) {
-                dashboardUrl = ROLE_DASHBOARD[role] ?? getDashboardUrl("LEARNER" as UserRole);
-                break;
-            }
-            await wait(250);
-        }
+        const nextPath = await resolveSessionRedirectPath({
+            requestedPath: redirectUrl,
+            fallbackPath: "/auth/redirect",
+        });
 
-        window.location.assign(searchParams.get("redirect") || searchParams.get("callbackUrl") || dashboardUrl || "/auth/redirect");
+        window.location.assign(nextPath);
     }
 
     return (
