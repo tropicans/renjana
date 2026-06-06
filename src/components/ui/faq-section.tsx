@@ -3,38 +3,12 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 interface FAQItem {
     question: string;
     answer: string;
 }
-
-const faqs: FAQItem[] = [
-    {
-        question: "What is Renjana?",
-        answer: "Renjana is a professional training provider specializing in law education and development. We deliver tailored programs to help individuals and organizations enhance their legal knowledge and skills."
-    },
-    {
-        question: "How are the training sessions conducted?",
-        answer: "We offer both virtual and in-person training sessions, ensuring flexibility to accommodate your schedule and location. Our hybrid learning approach combines digital content with intensive workshops."
-    },
-    {
-        question: "What types of law training programs do you offer?",
-        answer: "We offer training on Corporate Law, Litigation Strategy, Intellectual Property, Legal Tech & AI, Contract Drafting, and more. You can access our Learning Management System with flexible study hours."
-    },
-    {
-        question: "Who can join Renjana's training programs?",
-        answer: "Our training programs are open to legal professionals, law students, corporate professionals, and organizations looking to enhance their expertise in various areas of law."
-    },
-    {
-        question: "Do you provide certifications?",
-        answer: "Yes! We provide official CLE credits and certifications recognized across major jurisdictions. Our certified programs are designed to boost your professional credentials."
-    },
-    {
-        question: "How can I contact Renjana?",
-        answer: "You can reach us via email at info@renjana.com, WhatsApp us at +62 812-3456-7890, or fill out the contact form on our website. Our team typically responds within 24 hours."
-    }
-];
 
 function FAQAccordionItem({ item, isOpen, onToggle }: { item: FAQItem; isOpen: boolean; onToggle: () => void }) {
     return (
@@ -69,6 +43,34 @@ function FAQAccordionItem({ item, isOpen, onToggle }: { item: FAQItem; isOpen: b
 
 export function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
+    const { t } = useLanguage();
+
+    const faqs: FAQItem[] = [
+        {
+            question: t.home.faqQuestion1,
+            answer: t.home.faqAnswer1
+        },
+        {
+            question: t.home.faqQuestion2,
+            answer: t.home.faqAnswer2
+        },
+        {
+            question: t.home.faqQuestion3,
+            answer: t.home.faqAnswer3
+        },
+        {
+            question: t.home.faqQuestion4,
+            answer: t.home.faqAnswer4
+        },
+        {
+            question: t.home.faqQuestion5,
+            answer: t.home.faqAnswer5
+        },
+        {
+            question: t.home.faqQuestion6,
+            answer: t.home.faqAnswer6
+        }
+    ];
 
     return (
         <section className="py-24 px-6 bg-[#fbfbfb] dark:bg-[#151d28]">
@@ -77,10 +79,10 @@ export function FAQSection() {
                 <div className="text-center mb-12">
                     <span className="text-primary text-sm font-bold uppercase tracking-widest">FAQ</span>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-4 mb-4">
-                        Frequently Asked Questions
+                        {t.home.faqTitle}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 text-lg">
-                        Everything you need to know about our training programs
+                        {t.home.faqSubtitle}
                     </p>
                 </div>
 
@@ -99,13 +101,13 @@ export function FAQSection() {
                 {/* CTA */}
                 <div className="text-center mt-10">
                     <p className="text-gray-500 dark:text-gray-400 mb-4">
-                        Still have questions?
+                        {t.home.faqStillQuestions}
                     </p>
                     <a
                         href="/contact"
                         className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
                     >
-                        Contact our team →
+                        {t.home.faqContactTeam}
                     </a>
                 </div>
             </div>

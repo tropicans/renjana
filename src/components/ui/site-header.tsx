@@ -52,9 +52,9 @@ export function SiteHeader({ className }: { className?: string }) {
     const { unreadCount: unreadNotificationCount } = useNotifications()
 
     const menuItems = [
-        { name: 'Batch & Event', href: '/events' },
-        { name: 'Pelatihan', href: '/courses' },
-        { name: 'Partners', href: '/#partners' },
+        { name: t.nav.batchAndEvent, href: '/events' },
+        { name: t.nav.courses, href: '/courses' },
+        { name: t.nav.partners, href: '/#partners' },
         { name: t.nav.about, href: '/about-us' },
     ]
 
@@ -106,10 +106,10 @@ export function SiteHeader({ className }: { className?: string }) {
                                 ) : null}
                             </Link>
                             <Link href={getDashboardUrl(user!.role)} className="hidden md:block text-xs font-medium text-black/80 dark:text-white/80 hover:text-primary transition-colors px-2 py-1">
-                                Dashboard
+                                {t.nav.dashboard}
                             </Link>
                             <Button onClick={() => logout()} variant="outline" className="text-xs font-bold px-3 sm:px-4 py-2 hover:bg-opacity-90 transition-all h-8 sm:h-9 whitespace-nowrap hidden md:inline-flex">
-                                Logout
+                                {t.nav.logout}
                             </Button>
                         </>
                     ) : (
@@ -160,20 +160,20 @@ export function SiteHeader({ className }: { className?: string }) {
                                     onClick={() => setMenuState(false)}
                                     className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
                                 >
-                                    Notifikasi{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}
+                                    {t.common.notifications}{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ""}
                                 </Link>
                                 <Link
                                     href={getDashboardUrl(user!.role)}
                                     onClick={() => setMenuState(false)}
                                     className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
                                 >
-                                    Dashboard
+                                    {t.nav.dashboard}
                                 </Link>
                                 <button
                                     onClick={() => { setMenuState(false); logout(); }}
                                     className="text-lg font-medium text-black/70 dark:text-white/70 hover:text-primary"
                                 >
-                                    Logout
+                                    {t.nav.logout}
                                 </button>
                             </>
                         ) : (

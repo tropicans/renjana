@@ -1,6 +1,9 @@
+"use client";
+
 import { SiteHeader } from "@/components/ui/site-header";
 import Link from "next/link";
 import { ArrowRight, MapPin, Briefcase, Clock, BookOpen, Users, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 const openPositions = [
   {
@@ -38,6 +41,8 @@ const openPositions = [
 ];
 
 export default function CareerPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased">
       <SiteHeader />
@@ -46,22 +51,22 @@ export default function CareerPage() {
         {/* Hero Section */}
         <section className="py-24 px-6 text-center">
           <div className="max-w-[800px] mx-auto">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">Join Our Team</h1>
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">{t.careerPage.title}</h1>
             <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-medium mb-10">
-              Build your career with Renjana and help empower legal professionals across Indonesia.
+              {t.careerPage.subtitle}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Link
                 href="#positions"
                 className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all"
               >
-                View Open Positions
+                {t.careerPage.viewPositions}
               </Link>
               <Link
                 href="#contact"
                 className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 px-8 py-4 rounded-full font-bold hover:border-primary/50 transition-all"
               >
-                Send Your CV
+                {t.careerPage.sendCV}
               </Link>
             </div>
           </div>
@@ -70,28 +75,28 @@ export default function CareerPage() {
         {/* Why Join Us */}
         <section className="py-24 px-6 bg-white dark:bg-[#0a0f14]">
           <div className="max-w-[1200px] mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center">Why Work at Renjana?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center">{t.careerPage.whyWork}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-background-light dark:bg-[#1a242f] p-10 rounded-2xl border border-gray-100 dark:border-gray-800 text-center hover:shadow-xl transition-all">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
                   <BookOpen className="size-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-4">Continuous Learning</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Access to professional development programs and legal training resources.</p>
+                <h3 className="text-xl font-bold mb-4">{t.careerPage.continuousLearning}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{t.careerPage.continuousLearningDesc}</p>
               </div>
               <div className="bg-background-light dark:bg-[#1a242f] p-10 rounded-2xl border border-gray-100 dark:border-gray-800 text-center hover:shadow-xl transition-all">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
                   <Users className="size-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-4">Collaborative Environment</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Work with passionate professionals committed to excellence in legal education.</p>
+                <h3 className="text-xl font-bold mb-4">{t.careerPage.collaborativeEnv}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{t.careerPage.collaborativeEnvDesc}</p>
               </div>
               <div className="bg-background-light dark:bg-[#1a242f] p-10 rounded-2xl border border-gray-100 dark:border-gray-800 text-center hover:shadow-xl transition-all">
                 <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
                   <TrendingUp className="size-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-4">Growth Opportunities</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Clear career progression paths and opportunities for advancement.</p>
+                <h3 className="text-xl font-bold mb-4">{t.careerPage.growthOps}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{t.careerPage.growthOpsDesc}</p>
               </div>
             </div>
           </div>
@@ -100,9 +105,9 @@ export default function CareerPage() {
         {/* Open Positions */}
         <section id="positions" className="py-24 px-6 bg-background-light dark:bg-background-dark">
           <div className="max-w-[1000px] mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">Open Positions</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">{t.careerPage.openPositions}</h2>
             <p className="text-gray-500 text-center mb-16 max-w-2xl mx-auto">
-              Explore our current job openings and find the perfect role to advance your career.
+              {t.careerPage.openPositionsDesc}
             </p>
 
             <div className="space-y-6">
@@ -134,7 +139,7 @@ export default function CareerPage() {
                       href="#contact"
                       className="bg-primary/10 text-primary px-6 py-3 rounded-full font-bold text-sm hover:bg-primary hover:text-white transition-all flex items-center gap-2"
                     >
-                      Apply Now <ArrowRight className="size-4" />
+                      {t.careerPage.applyNow} <ArrowRight className="size-4" />
                     </Link>
                   </div>
                 </div>
@@ -146,13 +151,13 @@ export default function CareerPage() {
         {/* Contact Section */}
         <section id="contact" className="py-24 px-6 bg-white dark:bg-[#0a0f14]">
           <div className="max-w-[600px] mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Don&apos;t see the right fit?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.careerPage.noFit}</h2>
             <p className="text-gray-500 mb-10">
-              We&apos;re always looking for talented individuals to join our team. Send us your CV and we&apos;ll keep you in mind for future opportunities.
+              {t.careerPage.noFitDesc}
             </p>
             <div className="bg-background-light dark:bg-[#1a242f] rounded-2xl border border-gray-100 dark:border-gray-800 p-10">
               <span className="material-symbols-outlined text-5xl text-primary mb-4">mail</span>
-              <h3 className="font-bold text-lg mb-2">Submit Your Application</h3>
+              <h3 className="font-bold text-lg mb-2">{t.careerPage.submitApp}</h3>
               <p className="text-gray-500 text-sm mb-6">
                 Email your CV to: <span className="text-primary font-semibold">careers@renjanahp.com</span>
               </p>
@@ -160,7 +165,7 @@ export default function CareerPage() {
                 href="mailto:careers@renjanahp.com"
                 className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all inline-flex items-center gap-2"
               >
-                Send Email <ArrowRight className="size-4" />
+                {t.careerPage.sendEmail} <ArrowRight className="size-4" />
               </Link>
             </div>
           </div>

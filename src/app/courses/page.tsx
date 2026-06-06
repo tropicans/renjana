@@ -7,12 +7,14 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import Link from "next/link";
 import { ChevronRight, ArrowRight, Loader2, BookOpen, Clock, Users } from "lucide-react";
 import { fetchCourses } from "@/lib/api";
+import { useLanguage } from "@/lib/i18n";
 
 export default function CoursesPage() {
     const { data, isLoading, error } = useQuery({
         queryKey: ["courses"],
         queryFn: () => fetchCourses(),
     });
+    const { t } = useLanguage();
 
     const courses = data?.courses ?? [];
 
@@ -25,11 +27,11 @@ export default function CoursesPage() {
                 <ScrollReveal>
                     <div className="text-center mb-16">
                         <span className="mb-5 inline-flex rounded-full bg-primary/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-primary">
-                            Pelatihan
+                            {t.nav.courses}
                         </span>
-                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">Pilih pelatihan yang paling sesuai untuk Anda</h1>
+                        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">{t.courses.chooseTraining}</h1>
                         <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto font-medium">
-                            Jelajahi pelatihan profesional Renjana dengan kurikulum terstruktur untuk memperkuat praktik hukum modern.
+                            {t.courses.exploreProfessional}
                         </p>
                     </div>
                 </ScrollReveal>
@@ -44,7 +46,7 @@ export default function CoursesPage() {
                 {/* Error */}
                 {error && (
                     <div className="text-center py-24 text-red-500">
-                        Gagal memuat daftar pelatihan. Silakan coba lagi.
+                        {t.courses.failedToLoad}
                     </div>
                 )}
 
@@ -71,22 +73,22 @@ export default function CoursesPage() {
                                         <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
                                             <span className="flex items-center gap-1">
                                                 <BookOpen className="h-3.5 w-3.5" />
-                                                {course._count.modules} modul
+                                                {course._count.modules} {t.courses.modulesCount}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Clock className="h-3.5 w-3.5" />
-                                                {course.totalDurationMin} menit
+                                                {course.totalDurationMin} {t.courses.minutesCount}
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Users className="h-3.5 w-3.5" />
-                                                {course._count.enrollments} peserta
+                                                {course._count.enrollments} {t.courses.learnersCount}
                                             </span>
                                         </div>
                                         <Link
                                             href={`/course/${course.id}`}
                                             className="flex items-center gap-1 text-primary font-bold text-sm hover:gap-2 transition-all"
                                         >
-                                            Lihat Detail <ChevronRight className="size-4" />
+                                            {t.courses.viewDetails} <ChevronRight className="size-4" />
                                         </Link>
                                     </div>
                                 </div>
@@ -98,29 +100,29 @@ export default function CoursesPage() {
                 {/* Empty State */}
                 {!isLoading && !error && courses.length === 0 && (
                     <div className="text-center py-24 text-gray-500">
-                        Belum ada pelatihan yang tersedia. Cek lagi sebentar lagi.
+                        {t.courses.noCoursesAvailable}
                     </div>
                 )}
 
                 {/* CTA Section */}
                 <ScrollReveal delay={200}>
                     <div className="mt-24 bg-primary/5 dark:bg-primary/10 rounded-2xl p-12 md:p-16 text-center border border-primary/10">
-                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Siap melangkah ke level berikutnya?</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">{t.courses.readyNextStep}</h2>
                         <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-10 text-lg">
-                            Bergabunglah dengan profesional hukum lain yang mengembangkan kompetensinya lewat pelatihan premium Renjana.
+                            {t.courses.joinOtherProfessionals}
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                             <Link
                                 href="/register"
                                 className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
                             >
-                                Daftar Sekarang
+                                {t.courses.enrollNow}
                             </Link>
                             <Link
                                 href="/contact"
                                 className="flex items-center gap-2 font-bold text-primary hover:underline underline-offset-4"
                             >
-                                Hubungi Tim Admission <ArrowRight className="size-4" />
+                                {t.courses.contactAdmission} <ArrowRight className="size-4" />
                             </Link>
                         </div>
                     </div>
@@ -131,10 +133,10 @@ export default function CoursesPage() {
             <footer className="border-t border-gray-100 dark:border-white/10 py-12 bg-white dark:bg-background-dark">
                 <div className="max-w-[1200px] mx-auto px-6 text-center">
                     <div className="flex justify-center gap-8 mb-8 text-gray-400 dark:text-gray-500 font-medium text-sm flex-wrap">
-                        <Link className="hover:text-primary transition-colors" href="#">Terms of Service</Link>
-                        <Link className="hover:text-primary transition-colors" href="#">Privacy Policy</Link>
-                        <Link className="hover:text-primary transition-colors" href="#">Accessibility</Link>
-                        <Link className="hover:text-primary transition-colors" href="/contact">Contact Us</Link>
+                        <Link className="hover:text-primary transition-colors" href="#">{t.courses.termsOfService}</Link>
+                        <Link className="hover:text-primary transition-colors" href="#">{t.courses.privacyPolicy}</Link>
+                        <Link className="hover:text-primary transition-colors" href="#">{t.courses.accessibility}</Link>
+                        <Link className="hover:text-primary transition-colors" href="/contact">{t.courses.contactUs}</Link>
                     </div>
                     <p className="text-gray-400 dark:text-gray-600 text-xs">
                         © {new Date().getFullYear()} Renjana Legal Training. All rights reserved.

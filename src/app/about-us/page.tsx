@@ -1,9 +1,14 @@
+"use client";
+
 import { SiteHeader } from "@/components/ui/site-header";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export default function AboutPage() {
+    const { t } = useLanguage();
+
     return (
         <div className="min-h-screen bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased">
             <SiteHeader />
@@ -23,16 +28,16 @@ export default function AboutPage() {
                     </div>
                     <div className="relative z-20 text-center px-6 max-w-4xl">
                         <h1 className="text-white text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-6">
-                            Building Excellence, One Lesson at a Time.
+                            {t.aboutPage.title}
                         </h1>
                         <p className="text-white/90 text-lg md:text-xl font-normal max-w-2xl mx-auto mb-10">
-                            Redefining legal training through cinematic education and professional rigor.
+                            {t.aboutPage.subtitle}
                         </p>
                         <Link
                             href="/courses"
                             className="bg-white text-black hover:bg-gray-100 px-8 py-4 rounded-full text-base font-bold transition-all inline-flex items-center gap-2"
                         >
-                            Explore the Vision
+                            {t.aboutPage.exploreVision}
                             <ArrowRight className="size-4" />
                         </Link>
                     </div>
@@ -44,10 +49,12 @@ export default function AboutPage() {
                 {/* Mission Statement */}
                 <section className="py-24 md:py-40 px-6">
                     <div className="max-w-[800px] mx-auto text-center">
-                        <h2 className="text-[#111418] dark:text-white text-4xl md:text-5xl font-bold tracking-tight mb-8">Our Mission</h2>
+                        <h2 className="text-[#111418] dark:text-white text-4xl md:text-5xl font-bold tracking-tight mb-8">
+                            {t.aboutPage.missionTitle}
+                        </h2>
                         <div className="w-20 h-1 bg-primary mx-auto mb-12"></div>
                         <p className="text-lg md:text-2xl leading-relaxed text-gray-600 dark:text-gray-400 font-light italic">
-                            &ldquo;Renjana was born from the belief that legal education should be as compelling as it is rigorous. We combine architectural precision with academic depth to create a learning experience that empowers the next generation of legal professionals.&rdquo;
+                            &ldquo;{t.aboutPage.missionQuote}&rdquo;
                         </p>
                     </div>
                 </section>
@@ -64,23 +71,33 @@ export default function AboutPage() {
                 <section className="py-24 md:py-40 px-6 bg-white dark:bg-[#0a0f14]">
                     <div className="max-w-[1000px] mx-auto grid md:grid-cols-2 gap-16 items-center">
                         <div className="space-y-6">
-                            <span className="text-primary font-bold tracking-widest text-xs uppercase">The Philosophy</span>
-                            <h2 className="text-4xl font-bold tracking-tight">Cinematic Learning</h2>
+                            <span className="text-primary font-bold tracking-widest text-xs uppercase">
+                                {t.aboutPage.philosophyTag}
+                            </span>
+                            <h2 className="text-4xl font-bold tracking-tight">
+                                {t.aboutPage.philosophyTitle}
+                            </h2>
                             <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed">
-                                We believe that the medium is as important as the message. Our courses are produced with high-fidelity cinematography, ensuring that complex legal concepts are visually mapped and emotionally resonant.
+                                {t.aboutPage.philosophyDesc}
                             </p>
                             <ul className="space-y-4">
                                 <li className="flex items-start gap-3">
                                     <CheckCircle className="text-primary mt-1 size-5" />
-                                    <span className="text-gray-800 dark:text-gray-200">High-definition instructional modules</span>
+                                    <span className="text-gray-800 dark:text-gray-200">
+                                        {t.aboutPage.hdModules}
+                                    </span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <CheckCircle className="text-primary mt-1 size-5" />
-                                    <span className="text-gray-800 dark:text-gray-200">Expert-led case study breakdowns</span>
+                                    <span className="text-gray-800 dark:text-gray-200">
+                                        {t.aboutPage.expertCaseBreakdowns}
+                                    </span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <CheckCircle className="text-primary mt-1 size-5" />
-                                    <span className="text-gray-800 dark:text-gray-200">Interactive architectural visualizers</span>
+                                    <span className="text-gray-800 dark:text-gray-200">
+                                        {t.aboutPage.interactiveVisualizers}
+                                    </span>
                                 </li>
                             </ul>
                         </div>
@@ -100,27 +117,31 @@ export default function AboutPage() {
                 <section className="py-24 md:py-40 px-6 bg-background-light dark:bg-background-dark">
                     <div className="max-w-[1200px] mx-auto">
                         <div className="text-center mb-20">
-                            <h2 className="text-4xl font-bold tracking-tight mb-4">The Standard</h2>
-                            <p className="text-gray-500">Every module is built to exacting professional specifications.</p>
+                            <h2 className="text-4xl font-bold tracking-tight mb-4">
+                                {t.aboutPage.standardTitle}
+                            </h2>
+                            <p className="text-gray-500">
+                                {t.aboutPage.standardDesc}
+                            </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {/* Spec Card 1 */}
                             <div className="bg-white dark:bg-[#1a242f] p-10 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center group hover:shadow-xl transition-all">
                                 <span className="material-symbols-outlined text-4xl text-primary mb-6">verified_user</span>
-                                <h3 className="text-xl font-bold mb-4">Accreditation</h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">Recognized by major bar associations for continuing legal education credits nationwide.</p>
+                                <h3 className="text-xl font-bold mb-4">{t.aboutPage.accreditationTitle}</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">{t.aboutPage.accreditationDesc}</p>
                             </div>
                             {/* Spec Card 2 */}
                             <div className="bg-white dark:bg-[#1a242f] p-10 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center group hover:shadow-xl transition-all">
                                 <span className="material-symbols-outlined text-4xl text-primary mb-6">model_training</span>
-                                <h3 className="text-xl font-bold mb-4">Interactive Design</h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">Dynamic testing modules that adapt to your knowledge gaps in real-time.</p>
+                                <h3 className="text-xl font-bold mb-4">{t.aboutPage.interactiveDesignTitle}</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">{t.aboutPage.interactiveDesignDesc}</p>
                             </div>
                             {/* Spec Card 3 */}
                             <div className="bg-white dark:bg-[#1a242f] p-10 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center group hover:shadow-xl transition-all">
                                 <span className="material-symbols-outlined text-4xl text-primary mb-6">history_edu</span>
-                                <h3 className="text-xl font-bold mb-4">Expert Curation</h3>
-                                <p className="text-gray-500 text-sm leading-relaxed">Curriculum designed by top-tier legal architects and practicing partners.</p>
+                                <h3 className="text-xl font-bold mb-4">{t.aboutPage.expertCurationTitle}</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">{t.aboutPage.expertCurationDesc}</p>
                             </div>
                         </div>
                     </div>
@@ -139,12 +160,14 @@ export default function AboutPage() {
                         />
                     </div>
                     <div className="relative z-20 text-center px-6">
-                        <h2 className="text-white text-3xl md:text-5xl font-bold tracking-tight mb-6">Join the Elite.</h2>
+                        <h2 className="text-white text-3xl md:text-5xl font-bold tracking-tight mb-6">
+                            {t.aboutPage.joinElite}
+                        </h2>
                         <Link
                             href="/register"
                             className="bg-primary text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-primary/90 transition-all"
                         >
-                            Apply for Membership
+                            {t.aboutPage.applyMembership}
                         </Link>
                     </div>
                 </section>
@@ -166,34 +189,34 @@ export default function AboutPage() {
                             </p>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Platform</h4>
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">{t.aboutPage.platform}</h4>
                             <ul className="space-y-4 text-sm text-gray-500">
-                                <li><Link className="hover:text-primary transition-colors" href="/courses">Curriculum</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">Pricing</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">Enterprise</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">FAQ</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="/courses">{t.aboutPage.curriculum}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.pricing}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.enterprise}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.faq}</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Company</h4>
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">{t.aboutPage.company}</h4>
                             <ul className="space-y-4 text-sm text-gray-500">
-                                <li><Link className="hover:text-primary transition-colors" href="/about-us">About Us</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">Values</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="/news-and-publications">Newsroom</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="/contact">Contact</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="/about-us">{t.nav.about}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.values}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="/news-and-publications">{t.aboutPage.newsroom}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="/contact">{t.contactPage.title}</Link></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">Legal</h4>
+                            <h4 className="font-bold mb-6 text-sm uppercase tracking-widest">{t.aboutPage.legal}</h4>
                             <ul className="space-y-4 text-sm text-gray-500">
-                                <li><Link className="hover:text-primary transition-colors" href="#">Privacy Policy</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">Terms of Service</Link></li>
-                                <li><Link className="hover:text-primary transition-colors" href="#">Cookie Policy</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.privacy}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.terms}</Link></li>
+                                <li><Link className="hover:text-primary transition-colors" href="#">{t.aboutPage.cookiePolicy}</Link></li>
                             </ul>
                         </div>
                     </div>
                     <div className="max-w-[1200px] mx-auto mt-20 pt-8 border-t border-gray-100 dark:border-gray-800 text-center text-xs text-gray-400">
-                        © {new Date().getFullYear()} Renjana Legal Training. All rights reserved. Designed for Excellence.
+                        © {new Date().getFullYear()} Renjana Legal Training. {t.aboutPage.footerRights}
                     </div>
                 </footer>
             </main>

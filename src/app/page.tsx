@@ -1,3 +1,5 @@
+"use client";
+
 import { SiteHeader } from "@/components/ui/site-header";
 import { FAQSection } from "@/components/ui/faq-section";
 import { WhatsAppWidget } from "@/components/ui/whatsapp-widget";
@@ -5,8 +7,11 @@ import { LearningMethodsSection } from "@/components/ui/learning-methods-section
 import Image from "next/image";
 import Link from "next/link";
 import { PlayCircle, ArrowRight, Phone, Mail, MapPin } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Home() {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#1d1d1f] dark:text-gray-100 antialiased overflow-x-hidden font-display min-h-screen">
       <SiteHeader />
@@ -15,21 +20,21 @@ export default function Home() {
       <section className="hero-gradient pt-32 pb-20 md:pt-48 md:pb-32 px-6">
         <div className="max-w-[960px] mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] animate-slide-up">
-            Empowering Professionals. <br />
-            <span className="text-primary">Redefining Legal Excellence.</span>
+            {t.home.heroTitle} <br />
+            <span className="text-primary">{t.home.heroSubtitle}</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-500 dark:text-gray-400 font-medium max-w-2xl mx-auto mb-10 animate-slide-up-delay-1">
-            Elite legal training designed for the next generation of practitioners.
+            {t.home.heroDescription}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up-delay-2">
             <Link
               href="/courses"
               className="bg-primary text-white text-base font-bold px-8 py-4 rounded-full min-w-[200px] hover:shadow-lg hover:scale-105 transition-all text-center"
             >
-              Jelajahi Pelatihan
+              {t.home.explorePrograms}
             </Link>
             <button className="flex items-center gap-2 text-primary text-base font-semibold hover:underline group">
-              Watch the film <PlayCircle className="size-6 group-hover:scale-110 transition-transform" />
+              {t.home.watchFilm} <PlayCircle className="size-6 group-hover:scale-110 transition-transform" />
             </button>
           </div>
         </div>
@@ -38,7 +43,9 @@ export default function Home() {
       {/* Partners Strip */}
       <section id="partners" className="py-12 bg-white dark:bg-background-dark border-y border-gray-100 dark:border-gray-800 animate-fade-in">
         <div className="max-w-[1200px] mx-auto px-6">
-          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 text-center mb-8">Trusted by Leading Firms Worldwide</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400 text-center mb-8">
+            {t.home.trustedFirms}
+          </p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-20 text-gray-500 dark:text-gray-400 transition-all duration-500 hover:text-gray-900 dark:hover:text-white stagger-children">
             <div className="flex items-center gap-2 hover:scale-110 transition-transform cursor-default">
               <span className="material-symbols-outlined text-3xl">account_balance</span>
@@ -65,11 +72,11 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto">
           <div className="flex justify-between items-end mb-12">
             <div className="max-w-xl">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Curated Excellence</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">Pelajari topik hukum modern melalui pelatihan pilihan dengan kurikulum yang terarah.</p>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{t.home.curatedExcellence}</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">{t.home.curatedDesc}</p>
             </div>
             <Link className="text-primary font-semibold hover:underline hidden md:flex items-center gap-1 group" href="/courses">
-              Lihat semua pelatihan <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+              {t.home.viewAllCourses} <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
@@ -129,30 +136,34 @@ export default function Home() {
             {/* Large Feature */}
             <div className="md:col-span-2 bg-[#f5f5f7] dark:bg-gray-900 rounded-3xl p-10 flex flex-col justify-between min-h-[400px] border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all duration-500 group">
               <div>
-                <h3 className="text-4xl font-bold tracking-tight mb-4 group-hover:text-primary transition-colors">Elite Mentorship</h3>
-                <p className="text-lg text-gray-500 max-w-sm">One-on-one sessions with partners from tier-1 global law firms.</p>
+                <h3 className="text-4xl font-bold tracking-tight mb-4 group-hover:text-primary transition-colors">
+                  {t.home.bentoMentorshipTitle}
+                </h3>
+                <p className="text-lg text-gray-500 max-w-sm">
+                  {t.home.bentoMentorshipDesc}
+                </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-primary">groups</span>
                 </div>
-                <span className="font-bold">Connect with experts</span>
+                <span className="font-bold">{t.home.bentoConnectExperts}</span>
               </div>
             </div>
             {/* Small Feature 1 */}
             <div className="bg-primary text-white rounded-3xl p-10 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300 animate-pulse-soft">
               <span className="material-symbols-outlined text-4xl animate-float">verified</span>
               <div>
-                <h3 className="text-2xl font-bold mb-2">Certified Excellence</h3>
-                <p className="text-white/80 text-sm">Official CLE credits recognized across all major jurisdictions.</p>
+                <h3 className="text-2xl font-bold mb-2">{t.home.bentoCertifiedTitle}</h3>
+                <p className="text-white/80 text-sm">{t.home.bentoCertifiedDesc}</p>
               </div>
             </div>
             {/* Small Feature 2 */}
             <div className="bg-black text-white dark:bg-gray-800 rounded-3xl p-10 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300">
               <span className="material-symbols-outlined text-4xl">distance</span>
               <div>
-                <h3 className="text-2xl font-bold mb-2">Hybrid Learning</h3>
-                <p className="text-white/60 text-sm">Flexible digital content paired with intensive in-person workshops.</p>
+                <h3 className="text-2xl font-bold mb-2">{t.home.bentoHybridTitle}</h3>
+                <p className="text-white/60 text-sm">{t.home.bentoHybridDesc}</p>
               </div>
             </div>
             {/* Medium Feature */}
@@ -161,10 +172,14 @@ export default function Home() {
                 <span className="material-symbols-outlined text-6xl text-primary group-hover:scale-110 transition-transform">school</span>
               </div>
               <div>
-                <h3 className="text-3xl font-bold mb-4 group-hover:text-primary transition-colors">Career Acceleration</h3>
-                <p className="text-gray-500 mb-6">Our alumni have seen a 40% increase in placement at magic circle firms.</p>
+                <h3 className="text-3xl font-bold mb-4 group-hover:text-primary transition-colors">
+                  {t.home.bentoCareerTitle}
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {t.home.bentoCareerDesc}
+                </p>
                 <button className="text-primary font-bold hover:underline group/btn flex items-center gap-1">
-                  Read the success stories <ArrowRight className="size-4 group-hover/btn:translate-x-1 transition-transform" />
+                  {t.home.bentoReadSuccess} <ArrowRight className="size-4 group-hover/btn:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
@@ -199,7 +214,7 @@ export default function Home() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-6">Explore</h4>
               <ul className="space-y-4 text-sm font-medium">
-                <li><Link className="hover:text-primary transition-colors" href="/courses">Semua Pelatihan</Link></li>
+                <li><Link className="hover:text-primary transition-colors" href="/courses">{t.courses.catalog}</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Masterclasses</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Corporate Training</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Certifications</Link></li>
@@ -208,9 +223,9 @@ export default function Home() {
             <div>
               <h4 className="text-xs font-bold uppercase tracking-widest text-black/40 dark:text-white/40 mb-6">Company</h4>
               <ul className="space-y-4 text-sm font-medium">
-                <li><Link className="hover:text-primary transition-colors" href="/about-us">About Us</Link></li>
-                <li><Link className="hover:text-primary transition-colors" href="/career">Careers</Link></li>
-                <li><Link className="hover:text-primary transition-colors" href="/#partners">Partners</Link></li>
+                <li><Link className="hover:text-primary transition-colors" href="/about-us">{t.nav.about}</Link></li>
+                <li><Link className="hover:text-primary transition-colors" href="/career">{t.nav.career}</Link></li>
+                <li><Link className="hover:text-primary transition-colors" href="/#partners">{t.nav.partners}</Link></li>
                 <li><Link className="hover:text-primary transition-colors" href="#">Press Kit</Link></li>
               </ul>
             </div>
@@ -247,7 +262,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-200 dark:border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-gray-400">Copyright © {new Date().getFullYear()} Renjana Legal. All rights reserved.</p>
+            <p className="text-xs text-gray-400">Copyright © {new Date().getFullYear()} Renjana Legal. {t.footer.rights}</p>
             <div className="flex gap-6">
               <Link className="text-gray-400 hover:text-primary hover:scale-110 transition-all" href="#"><span className="material-symbols-outlined text-xl">brand_family</span></Link>
               <Link className="text-gray-400 hover:text-primary hover:scale-110 transition-all" href="#"><span className="material-symbols-outlined text-xl">share</span></Link>
