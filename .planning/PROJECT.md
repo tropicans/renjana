@@ -8,6 +8,17 @@ Renjana LMS is a multi-role legal training platform for Justitia Training Center
 
 Ensure instructors can securely grade learner evidence and view scoped metrics while maintaining 100% test suite reliability.
 
+## Current Milestone: v2.0 Landing Page Intro & Learner Dashboard Enhancements
+
+**Goal:** Implement introductory educational content on the landing page and build a comprehensive visual Learner Dashboard with progress tracking, timeline, and automated insights.
+
+**Target features:**
+- Landing Page: Introduction to digital/flexible learning, LMS/LXP, and definitions of learning methods (Mandiri, hybrid, Online, Offline).
+- User Identity & Achievement: Display user profile info and high-level progress statistics.
+- Visual Progress Tracking: Progress bar, module status, and interactive timeline/milestones.
+- Continue Learning Card: Active learning card with "Continue Learning" action and automatic reminder to resume.
+- Analytics & Insights: Interactive learning trends graph and automatic insight messages.
+
 ## Requirements
 
 ### Validated
@@ -17,23 +28,31 @@ Ensure instructors can securely grade learner evidence and view scoped metrics w
 - ✓ PostgreSQL schema relations with Prisma ORM — existing
 - ✓ Midtrans Snap payments integrations and webhooks verification — existing
 - ✓ On-demand landscape A4 certificate generator with jsPDF — existing
+- ✓ FEAT-01: Instructor statistics totalEvidences database count query (v1.0)
+- ✓ FEAT-02: Instructor-scoped evidence access control checks on GET /api/evidence (v1.0)
+- ✓ FEAT-03: Instructor database-backed grading/feedback PUT /api/evidence/[id] (v1.0)
+- ✓ FEAT-04: Instructor feedback UI integration for real evidence rating and grading (v1.0)
+- ✓ TEST-01: Restored registration document review boundaries tests (v1.0)
+- ✓ TEST-02: Restored registration submit rules tests (v1.0)
 
 ### Active
 
-- [ ] **FEAT-01**: Retrieve actual database count for `totalEvidences` in instructor stats endpoint instead of returning hardcoded 0.
-- [ ] **FEAT-02**: Enforce secure access controls on `GET /api/evidence` to return only evidence uploaded by learners scoped to the instructor.
-- [ ] **FEAT-03**: Support database-backed grading and comment feedback on `Evidence` uploads via PUT method on `/api/evidence/[id]`.
-- [ ] **FEAT-04**: Replace mock instructor feedback UI to fetch real learner evidence submissions and submit actual grade/comments.
-- [ ] **TEST-01**: Repair failing document review boundaries tests in `tests/registration-document-review-boundaries.test.ts`.
-- [ ] **TEST-02**: Repair failing registration submit rules tests in `tests/registration-submit-rules.test.ts`.
+- [ ] **INTRO-01**: Add landing page content introducing digital/flexible learning, LMS/LXP, and definitions of learning methods (Mandiri, hybrid, Online, Offline).
+- [ ] **LEARN-01**: Display user identity/profile details and high-level learning status/achievement statistics on the learner dashboard.
+- [ ] **LEARN-02**: Build a visual timeline or milestone track representing course/module progress.
+- [ ] **LEARN-03**: Create a "Continue Learning Card" with progress bar, module status, and automatic resume reminders.
+- [ ] **LEARN-04**: Add learning trend charts and automated insights (e.g. drop-off alerts at specific modules) on the learner dashboard.
 
 ### Out of Scope
 
 - [ ] Complete learner-facing evidence upload UI — deferred to future phases (learner evidence is currently verified via registrations and direct admin review).
+- [ ] Admin Dashboard trends & download features (deferred to v3.0).
+- [ ] Instructor Dashboard trends & module updates features (deferred to v3.0).
+- [ ] Webinar/PKPA/Mediator activity registration and certificate flow (deferred to v3.0).
 
 ## Context
 
-The codebase contains some mock UI and hardcoded API responses for the instructor role. Additionally, several pre-existing tests in the test suite are failing due to slight differences in error message expectations and HTTP status codes returned by registration routes.
+The codebase contains some mock UI and hardcoded API responses for the instructor role, which were addressed in v1.0. For v2.0, the landing page is simple and the learner dashboard is basic, displaying static numbers rather than a visual learning path or dynamic insights. We need to implement these new interfaces and the necessary data support.
 
 ## Constraints
 
@@ -44,7 +63,8 @@ The codebase contains some mock UI and hardcoded API responses for the instructo
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Implement Evidence grading | Allow instructors to review and save rating/comments directly to the database | — Pending |
+| Implement Evidence grading | Allow instructors to review and save rating/comments directly to the database | ✓ Completed in v1.0 |
+| Visual Learning Path / Timeline | Provide learners with visual progress indicator instead of just a number | — Pending |
 
 ## Evolution
 
@@ -64,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-06 after initialization*
+*Last updated: 2026-06-06 after v2.0 initialization*

@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Awaiting next milestone
-stopped_at: Phase 3 planned
-last_updated: "2026-06-06T13:57:08.677Z"
+milestone: v2.0
+milestone_name: Landing Page Intro & Learner Dashboard Enhancements
+status: planning
+last_updated: "2026-06-06T14:02:16.597Z"
 last_activity: 2026-06-06
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Awaiting next milestone
-Last activity: 2026-06-06
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-06 — Milestone v2.0 started
 
 ## Performance Metrics
 
