@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
+import { getInstructorScope } from "@/lib/instructor-scope";
 import { requireApiAuthPolicy } from "@/lib/route-policy";
 import { saveManagedUpload } from "@/lib/server/upload-storage";
 import { buildSafeUploadFileName, validateUploadedFile } from "@/lib/upload-security";
@@ -69,9 +70,28 @@ export async function GET() {
 
     const role = user!.role;
 
-    // Admins/Instructors see all evidence
-    if (role === "ADMIN" || role === "INSTRUCTOR") {
+    // Admins see all evidence
+    if (role === "ADMIN") {
         const records = await prisma.evidence.findMany({
+            include: {
+                user: { select: { id: true, fullName: true, email: true } },
+            },
+            orderBy: { uploadedAt: "desc" },
+        });
+        return NextResponse.json({ evidences: records });
+    }
+
+    // Instructors see only their scoped learners' evidence
+    if (role === "INSTRUCTOR") {
+        const scope = await getInstructorScope(user!.id, user!.name);
+        const learnerIds = Array.from(new Set(scope.enrollmentPairs.map((pair) => pair.userId)));
+        if (learnerIds.length === 0) {
+            return NextResponse.json({ evidences: [] });
+        }
+        const records = await prisma.evidence.findMany({
+            where: {
+                userId: { in: learnerIds },
+            },
             include: {
                 user: { select: { id: true, fullName: true, email: true } },
             },
