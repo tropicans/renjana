@@ -14,11 +14,11 @@ Requirements for current milestone.
 
 ### Learner Submissions & Instructor Feedback
 
-- [ ] **FEEDB-01**: Create `PUT /api/evidence/[id]` endpoint to allow instructors to grade evidence submissions (1-5 star rating and comment feedback) and persist results in the database.
-- [ ] **FEEDB-02**: Replace mock data list in `src/app/instructor/feedback/page.tsx` with live evidence list fetched from `/api/evidence`.
-- [ ] **FEEDB-03**: Display submission details (learner name, title, program, upload date, file attachment link) in the feedback list and review panel.
-- [ ] **FEEDB-04**: Wire up the "Submit Feedback" form on the instructor page to invoke the `PUT /api/evidence/[id]` endpoint and reload the query.
-- [ ] **FEEDB-05**: Filter the pending submissions list to only display evidence uploads that have not yet been graded.
+- [x] **FEEDB-01**: Create `PUT /api/evidence/[id]` endpoint to allow instructors to grade evidence submissions (1-5 star rating and comment feedback) and persist results in the database.
+- [x] **FEEDB-02**: Replace mock data list in `src/app/instructor/feedback/page.tsx` with live evidence list fetched from `/api/evidence`.
+- [x] **FEEDB-03**: Display submission details (learner name, title, program, upload date, file attachment link) in the feedback list and review panel.
+- [x] **FEEDB-04**: Wire up the "Submit Feedback" form on the instructor page to invoke the `PUT /api/evidence/[id]` endpoint and reload the query.
+- [x] **FEEDB-05**: Filter the pending submissions list to only display evidence uploads that have not yet been graded.
 
 ### Test Suite Reliability
 
@@ -49,15 +49,16 @@ Which phases cover which requirements.
 |-------------|-------|--------|
 | STAT-01 | Phase 1 | Pending |
 | STAT-02 | Phase 1 | Pending |
-| FEEDB-01 | Phase 2 | Pending |
-| FEEDB-02 | Phase 2 | Pending |
-| FEEDB-03 | Phase 2 | Pending |
-| FEEDB-04 | Phase 2 | Pending |
-| FEEDB-05 | Phase 2 | Pending |
+| FEEDB-01 | Phase 2 | Complete |
+| FEEDB-02 | Phase 2 | Complete |
+| FEEDB-03 | Phase 2 | Complete |
+| FEEDB-04 | Phase 2 | Complete |
+| FEEDB-05 | Phase 2 | Complete |
 | TEST-01 | Phase 3 | Pending |
 | TEST-02 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 9 total
 - Mapped to phases: 9
 - Unmapped: 0 ✓

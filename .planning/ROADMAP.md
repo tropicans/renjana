@@ -7,7 +7,7 @@ This roadmap defines the phases required to transition the Renjana LMS instructo
 ## Phases
 
 - [x] **Phase 1: Instructor Stats & Scoping** - Secure and scope evidence statistics and listings for instructors.
-- [ ] **Phase 2: Database-Backed Evidence Feedback** - Implement grading, review, and saving feedback for learner evidence.
+- [x] **Phase 2: Database-Backed Evidence Feedback** - Implement grading, review, and saving feedback for learner evidence. (completed 2026-06-06)
 - [ ] **Phase 3: Test Suite Recovery** - Fix failing tests in document review and registration submit rules.
 
 ## Phase Details
@@ -40,7 +40,7 @@ Plans:
 **Plans**: 1 plan
 Plans:
 
-- [ ] 02-01: Create grading API endpoint and wire up the instructor feedback UI.
+- [x] 02-01: Create grading API endpoint and wire up the instructor feedback UI.
 
 ### Phase 3: Test Suite Recovery
 
@@ -65,7 +65,7 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Instructor Stats & Scoping | 1/1 | Completed | 2026-06-06 |
-| 2. Database-Backed Evidence Feedback | 0/1 | Not started | - |
+| 2. Database-Backed Evidence Feedback | 1/1 | Complete    | 2026-06-06 |
 | 3. Test Suite Recovery | 0/1 | Not started | - |
 
 ---
