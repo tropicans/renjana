@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/auth-utils";
 import { getInstructorScope } from "@/lib/instructor-scope";
 import { requireApiAuthPolicy } from "@/lib/route-policy";
@@ -72,7 +73,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const all = searchParams.get("all") === "true";
 
-    const whereClause: any = {};
+    const whereClause: Prisma.EvidenceWhereInput = {};
     if (!all) {
         whereClause.rating = null;
     }
