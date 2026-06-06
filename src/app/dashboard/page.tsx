@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations } from "@/features/client/api/learner";
+import { fetchEvidences } from "@/lib/api";
 import { isActiveRegistrationWorkflow, isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useUser } from "@/lib/context/user-context";
 import {
@@ -16,6 +17,7 @@ import {
     Sparkles,
     PlayCircle,
     Loader2,
+    Star,
 } from "lucide-react";
 
 const InsightsCard = dynamic(() => import("@/components/learner/dashboard-visuals").then((mod) => mod.InsightsCard), {
@@ -24,6 +26,15 @@ const InsightsCard = dynamic(() => import("@/components/learner/dashboard-visual
 const ProgressChart = dynamic(() => import("@/components/learner/dashboard-visuals").then((mod) => mod.ProgressChart), {
     ssr: false,
 });
+
+const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name ? name.substring(0, 2).toUpperCase() : "LN";
+};
+
 export default function DashboardPage() {
     const { user, isLoading: userLoading } = useUser();
 
@@ -51,11 +62,18 @@ export default function DashboardPage() {
         ...learnerQueryOptions,
     });
 
+    const { data: evidenceData, isLoading: evidencesLoading } = useQuery({
+        queryKey: ["my-evidences"],
+        queryFn: fetchEvidences,
+        ...learnerQueryOptions,
+    });
+
     const enrollments = enrollmentData?.enrollments ?? [];
     const registrations = registrationData?.registrations ?? [];
+    const evidences = evidenceData?.evidences ?? [];
     const activeEnrollment = enrollments.find((e) => e.status === "ACTIVE");
     const activeRegistration = registrations.find((registration) => isActiveRegistrationWorkflow(registration.status));
-    const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading;
+    const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading || evidencesLoading;
 
     if (isLoading) {
         return (
@@ -67,14 +85,47 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-                    Welcome back, {user?.name?.split(" ")[0] || "Learner"}! 👋
-                </h1>
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
-                    Here&apos;s what&apos;s happening with your learning journey today.
-                </p>
+            {/* User Identity Card & Welcome Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 md:p-8 rounded-3xl bg-white dark:bg-[#1a242f] border border-gray-100 dark:border-gray-800 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 w-full md:w-auto">
+                    {/* Avatar / Initials */}
+                    <div className="relative flex-shrink-0">
+                        {user?.avatarUrl ? (
+                            <img 
+                                src={user.avatarUrl} 
+                                alt={user.name} 
+                                className="h-20 w-20 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+                            />
+                        ) : (
+                            <div className="h-20 w-20 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center font-extrabold text-2xl border border-primary/20 shadow-sm">
+                                {user?.name ? getInitials(user.name) : "LN"}
+                            </div>
+                        )}
+                        <span className="absolute bottom-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-900" title="Active">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                        </span>
+                    </div>
+                    {/* Details */}
+                    <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                                {user?.name || "Learner"}
+                            </h1>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground border border-primary/20 uppercase tracking-wider">
+                                {user?.role || "LEARNER"}
+                            </span>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base font-medium">
+                            {user?.email}
+                        </p>
+                    </div>
+                </div>
+                <div className="text-left md:text-right space-y-1">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest block">Ekosistem Pembelajaran</span>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                        Renjana LMS & LXP
+                    </h3>
+                </div>
             </div>
 
             {/* Stats Grid */}
@@ -236,6 +287,90 @@ export default function DashboardPage() {
                     </div>
                 )
             }
+
+            {/* Ulasan & Feedback Tugas */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-bold">Ulasan & Feedback Tugas</h2>
+                {evidences.length === 0 ? (
+                    <div className="p-8 text-center rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <p className="text-gray-950 dark:text-white font-semibold mb-2">Belum ada ulasan tugas</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-lg mx-auto">
+                            Kirim bukti tugas atau evidence pembelajaran di kelas untuk mendapatkan penilaian dan komentar dari instruktur.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {evidences.map((evidence) => {
+                            const isGraded = evidence.rating !== null && evidence.rating !== undefined;
+                            return (
+                                <div
+                                    key={evidence.id}
+                                    className="p-6 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a242f] flex flex-col justify-between"
+                                >
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2">
+                                                {evidence.title}
+                                            </h3>
+                                            {isGraded ? (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 border border-green-200/50 dark:border-green-800/30 shrink-0">
+                                                    Dinilai
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/30 shrink-0">
+                                                    Menunggu Penilaian
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                                            Diunggah pada: {new Date(evidence.uploadedAt).toLocaleDateString("id-ID", {
+                                                day: "numeric",
+                                                month: "long",
+                                                year: "numeric",
+                                            })}
+                                        </p>
+                                    </div>
+
+                                    {isGraded ? (
+                                        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-gray-800/50 space-y-2">
+                                            <div className="flex items-center gap-1">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <Star
+                                                        key={star}
+                                                        className={`h-4 w-4 ${
+                                                            star <= (evidence.rating || 0)
+                                                                ? "text-amber-500 fill-amber-500"
+                                                                : "text-gray-300 dark:text-gray-600"
+                                                        }`}
+                                                    />
+                                                ))}
+                                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 ml-1">
+                                                    ({evidence.rating}/5)
+                                                </span>
+                                            </div>
+                                            {evidence.comment ? (
+                                                <p className="text-sm text-gray-600 dark:text-gray-300 italic bg-gray-50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-100/50 dark:border-gray-800/30 leading-relaxed">
+                                                    &ldquo;{evidence.comment}&rdquo;
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm text-gray-400 dark:text-gray-500 italic">
+                                                    Tidak ada komentar dari instruktur.
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-gray-800/50">
+                                            <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">
+                                                Tugas Anda sedang ditinjau oleh instruktur.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
 
             {/* Quick Actions */}
             <div className="space-y-4">

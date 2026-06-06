@@ -9,6 +9,7 @@ export interface User {
     email: string;
     name: string;
     role: UserRole;
+    avatarUrl?: string | null;
 }
 
 interface UserContextType {
@@ -29,6 +30,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             email: session.user.email ?? '',
             name: session.user.name ?? '',
             role: ((session.user as { role?: string }).role as UserRole) ?? 'LEARNER',
+            avatarUrl: session.user.image ?? null,
         }
         : null;
 
