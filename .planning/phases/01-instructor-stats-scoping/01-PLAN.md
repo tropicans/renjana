@@ -1,6 +1,9 @@
 ---
 wave: 1
 depends_on: []
+requirements:
+  - STAT-01
+  - STAT-02
 files_modified:
   - src/app/api/instructor/stats/route.ts
   - src/app/api/evidence/route.ts
@@ -89,9 +92,9 @@ Enforce secure data scoping on evidence statistics and evidence lists for the `I
 - No manual verification required (all scopes are covered by unit/integration tests).
 
 ## Must Haves
-- Correctly filter database-backed data for `INSTRUCTOR` roles to their scoped learners.
-- Retain unscoped full data access for `ADMIN` roles.
-- Implement early return/short-circuiting for empty scope to save DB calls.
+- **D-01**: Implement early return/short-circuiting for empty scope to save DB calls in `/api/instructor/stats` and `/api/evidence`.
+- **D-02**: Correctly filter database-backed data for `INSTRUCTOR` roles to their scoped learners regardless of enrollment status.
+- **D-03**: Retain unscoped full data access for `ADMIN` roles in `/api/evidence`.
 
 ## Artifacts this phase produces
 No new symbols or files are created in this phase. Existing API handlers and tests are updated:
