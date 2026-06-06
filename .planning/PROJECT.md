@@ -8,16 +8,16 @@ Renjana LMS is a multi-role legal training platform for Justitia Training Center
 
 Ensure instructors can securely grade learner evidence and view scoped metrics while maintaining 100% test suite reliability.
 
-## Current Milestone: v2.0 Landing Page Intro & Learner Dashboard Enhancements
+## Current Milestone: v3.0 Role Flow Audit & Bug Fixes
 
-**Goal:** Implement introductory educational content on the landing page and build a comprehensive visual Learner Dashboard with progress tracking, timeline, and automated insights.
+**Goal:** Audit and verify the existing flows for every role (ADMIN, INSTRUCTOR, MANAGER, FINANCE, LEARNER) to check whether any bugs or issues exist, and resolve them.
 
 **Target features:**
-- Landing Page: Introduction to digital/flexible learning, LMS/LXP, and definitions of learning methods (Mandiri, hybrid, Online, Offline).
-- User Identity & Achievement: Display user profile info and high-level progress statistics.
-- Visual Progress Tracking: Progress bar, module status, and interactive timeline/milestones.
-- Continue Learning Card: Active learning card with "Continue Learning" action and automatic reminder to resume.
-- Analytics & Insights: Interactive learning trends graph and automatic insight messages.
+- Admin Portal: Verify class assignment, event configuration, and registration flows.
+- Instructor Portal: Validate scoped evidence viewing, grading, feedback interface, and dashboard stats.
+- Manager Portal: Verify learning metrics, risk metrics, and overview charts.
+- Finance Portal: Validate registration invoices, payment statuses, and audit checks.
+- Learner Portal: Verify catalog registrations, lesson completion reader, pre/post quizzes, and visual progress timeline.
 
 ## Requirements
 
@@ -34,25 +34,28 @@ Ensure instructors can securely grade learner evidence and view scoped metrics w
 - ✓ FEAT-04: Instructor feedback UI integration for real evidence rating and grading (v1.0)
 - ✓ TEST-01: Restored registration document review boundaries tests (v1.0)
 - ✓ TEST-02: Restored registration submit rules tests (v1.0)
+- ✓ INTRO-01: Landing page educational content on LMS/LXP and learning methods (v2.0)
+- ✓ LEARN-01: Display user profile details and summary statistics on dashboard (v2.0)
+- ✓ LEARN-02: Visual timeline module and lesson progress subway map (v2.0)
+- ✓ LEARN-03: Continue Learning Card banner with last active Indonesian formatted date (v2.0)
+- ✓ LEARN-04: Recharts progress indicators and dynamic context insights (v2.0)
 
 ### Active
 
-- [ ] **INTRO-01**: Add landing page content introducing digital/flexible learning, LMS/LXP, and definitions of learning methods (Mandiri, hybrid, Online, Offline).
-- [ ] **LEARN-01**: Display user identity/profile details and high-level learning status/achievement statistics on the learner dashboard.
-- [ ] **LEARN-02**: Build a visual timeline or milestone track representing course/module progress.
-- [ ] **LEARN-03**: Create a "Continue Learning Card" with progress bar, module status, and automatic resume reminders.
-- [ ] **LEARN-04**: Add learning trend charts and automated insights (e.g. drop-off alerts at specific modules) on the learner dashboard.
+- [ ] **AUDIT-01**: Audit and fix any bugs/issues in the ADMIN portal flows.
+- [ ] **AUDIT-02**: Audit and fix any bugs/issues in the INSTRUCTOR portal flows.
+- [ ] **AUDIT-03**: Audit and fix any bugs/issues in the MANAGER portal flows.
+- [ ] **AUDIT-04**: Audit and fix any bugs/issues in the FINANCE portal flows.
+- [ ] **AUDIT-05**: Audit and fix any bugs/issues in the LEARNER portal flows.
 
 ### Out of Scope
 
-- [ ] Complete learner-facing evidence upload UI — deferred to future phases (learner evidence is currently verified via registrations and direct admin review).
-- [ ] Admin Dashboard trends & download features (deferred to v3.0).
-- [ ] Instructor Dashboard trends & module updates features (deferred to v3.0).
-- [ ] Webinar/PKPA/Mediator activity registration and certificate flow (deferred to v3.0).
+- [ ] Complete learner-facing evidence upload UI — deferred to future milestones.
+- [ ] Webinar/PKPA/Mediator activity registration and certificate flow (deferred to future milestones).
 
 ## Context
 
-The codebase contains some mock UI and hardcoded API responses for the instructor role, which were addressed in v1.0. For v2.0, the landing page is simple and the learner dashboard is basic, displaying static numbers rather than a visual learning path or dynamic insights. We need to implement these new interfaces and the necessary data support.
+In Milestone v1.0 and v2.0, the core instructor evidence review features and learner visual dashboard enhancements were implemented and verified. For Milestone v3.0, we will perform a comprehensive end-to-end audit across all LMS roles to identify, debug, and resolve any functional, access gating, visual, or performance issues.
 
 ## Constraints
 
@@ -64,7 +67,8 @@ The codebase contains some mock UI and hardcoded API responses for the instructo
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Implement Evidence grading | Allow instructors to review and save rating/comments directly to the database | ✓ Completed in v1.0 |
-| Visual Learning Path / Timeline | Provide learners with visual progress indicator instead of just a number | — Pending |
+| Visual Learning Path / Timeline | Provide learners with visual progress indicator instead of just a number | ✓ Completed in v2.0 |
+| End-to-End Role Audit | Systematically verify and resolve issues across all 5 roles | — Pending |
 
 ## Evolution
 
@@ -84,4 +88,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-06 after v2.0 initialization*
+*Last updated: 2026-06-07 after v3.0 initialization*
