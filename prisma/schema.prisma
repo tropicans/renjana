@@ -237,6 +237,8 @@ model Evidence {
   fileUrl     String   @map("file_url")
   fileType    String   @map("file_type") // image, pdf
   uploadedAt  DateTime @default(now()) @map("uploaded_at")
+  rating      Int?
+  comment     String?
 
   // Relations
   user        User     @relation(fields: [userId], references: [id])
