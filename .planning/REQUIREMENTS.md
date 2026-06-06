@@ -52,21 +52,21 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INTRO-01    | —     | Pending |
-| INTRO-02    | —     | Pending |
-| INTRO-03    | —     | Pending |
-| LEARN-01    | —     | Pending |
-| LEARN-02    | —     | Pending |
-| LEARN-03    | —     | Pending |
-| LEARN-04    | —     | Pending |
-| LEARN-05    | —     | Pending |
-| LEARN-06    | —     | Pending |
+| INTRO-01    | Phase 4 | Pending |
+| INTRO-02    | Phase 4 | Pending |
+| INTRO-03    | Phase 4 | Pending |
+| LEARN-01    | Phase 4 | Pending |
+| LEARN-02    | Phase 5 | Pending |
+| LEARN-03    | Phase 5 | Pending |
+| LEARN-04    | Phase 6 | Pending |
+| LEARN-05    | Phase 6 | Pending |
+| LEARN-06    | Phase 4 | Pending |
 
 **Coverage:**
 
 - Active requirements: 9 total
-- Mapped to phases: 0
-- Unmapped: 9
+- Mapped to phases: 9
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-06*
