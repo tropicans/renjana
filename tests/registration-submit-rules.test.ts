@@ -103,19 +103,9 @@ describe("POST /api/registrations submit rules", () => {
             headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }));
 
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(409);
         await expect(response.json()).resolves.toEqual({
-            error: "Complete the required form fields and uploads before submitting",
-            details: {
-                missingFields: [],
-                missingDocuments: ["PHOTO_4X6", "KTP", "DIPLOMA_OR_SKL"],
-                agreedTerms: true,
-                agreedRefundPolicy: true,
-            },
-        });
-        expect(mocks.prisma.registration.update).toHaveBeenCalledWith({
-            where: { id: "reg-1" },
-            data: { status: "DRAFT", submittedAt: null },
+            error: "Registration can no longer be edited",
         });
         expect(mocks.createRegistrationNotification).not.toHaveBeenCalled();
     });
@@ -163,14 +153,9 @@ describe("POST /api/registrations submit rules", () => {
             headers: withOrigin({ headers: { "Content-Type": "application/json" } }).headers,
         }));
 
-        expect(response.status).toBe(201);
-        expect(mocks.prisma.registration.update).toHaveBeenCalledWith({
-            where: { id: "reg-1" },
-            data: { paymentStatus: "UPLOADED" },
+        expect(response.status).toBe(409);
+        await expect(response.json()).resolves.toEqual({
+            error: "Registration can no longer be edited",
         });
-        expect(mocks.createRegistrationNotification).toHaveBeenCalledWith(expect.objectContaining({
-            type: "REGISTRATION_SUBMITTED",
-            registrationId: "reg-1",
-        }));
     });
 });
