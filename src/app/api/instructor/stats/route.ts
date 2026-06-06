@@ -65,6 +65,14 @@ export async function GET() {
                 },
             });
 
+        const totalEvidences = learnerIds.length === 0
+            ? 0
+            : await prisma.evidence.count({
+                where: {
+                    userId: { in: learnerIds },
+                },
+            });
+
         const coursesMap = new Map<string, { id: string; title: string; enrollments: number }>();
         for (const enrollment of enrollments) {
             const existing = coursesMap.get(enrollment.courseId) ?? {
@@ -88,7 +96,7 @@ export async function GET() {
                 totalEnrollments,
                 completedEnrollments,
                 totalAttendances,
-                totalEvidences: 0,
+                totalEvidences,
                 avgProgress,
                 courses,
             },
