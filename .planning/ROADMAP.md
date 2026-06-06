@@ -38,7 +38,6 @@ Plans:
   2. Instructor feedback page fetches real submissions from `/api/evidence` with functional document links, hides graded ones, and triggers feedback mutations.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 02-01: Create grading API endpoint and wire up the instructor feedback UI.
