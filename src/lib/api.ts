@@ -566,6 +566,8 @@ export interface ApiEvidence {
     fileType: string;
     uploadedAt: string;
     user?: { id: string; fullName: string; email: string };
+    rating?: number | null;
+    comment?: string | null;
 }
 
 export function fetchEvidences() {
@@ -581,6 +583,19 @@ export async function uploadEvidence(title: string, file: File) {
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Upload failed ${res.status}`);
+    }
+    return res.json() as Promise<{ evidence: ApiEvidence }>;
+}
+
+export async function gradeEvidence(id: string, rating: number, comment: string) {
+    const res = await fetch(`/api/evidence/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment }),
+    });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Grading failed ${res.status}`);
     }
     return res.json() as Promise<{ evidence: ApiEvidence }>;
 }
