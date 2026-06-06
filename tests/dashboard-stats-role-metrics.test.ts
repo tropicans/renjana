@@ -98,6 +98,9 @@ describe("dashboard stats role metrics", () => {
                 { participantMode: "ONLINE" },
                 { participantMode: "OFFLINE" },
                 { participantMode: "ONLINE" },
+                { participantMode: "HYBRID" },
+                { participantMode: "HYBRID" },
+                { participantMode: "HYBRID" },
             ])
             .mockResolvedValueOnce([
                 { id: "reg-1", createdAt: new Date("2025-01-01T00:00:00.000Z"), user: { fullName: "Learner One" }, event: { title: "Event One" } },

@@ -6,6 +6,12 @@ export default defineConfig({
         environment: "node",
         clearMocks: true,
         restoreMocks: true,
+        exclude: [
+            "**/node_modules/**",
+            "**/.next/**",
+            "**/.agent/**",
+            "**/.git/**",
+        ],
     },
     resolve: {
         alias: {

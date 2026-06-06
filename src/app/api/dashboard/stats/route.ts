@@ -122,6 +122,7 @@ export async function GET() {
 
         const onlineParticipants = participantModes.filter((registration) => registration.participantMode === "ONLINE").length;
         const offlineParticipants = participantModes.filter((registration) => registration.participantMode === "OFFLINE").length;
+        const hybridParticipants = participantModes.filter((registration) => registration.participantMode === "HYBRID").length;
 
         return NextResponse.json({
             role,
@@ -137,7 +138,7 @@ export async function GET() {
             hybridPrograms,
             onlineParticipants,
             offlineParticipants,
-            hybridParticipants: completedEnrollments,
+            hybridParticipants,
             recentRegistrations: recentRegistrations.map((registration) => ({
                 id: registration.id,
                 createdAt: registration.createdAt,
