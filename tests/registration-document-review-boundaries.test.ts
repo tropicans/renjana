@@ -79,7 +79,7 @@ describe("registration document review boundaries", () => {
 
         expect(response.status).toBe(403);
         await expect(response.json()).resolves.toEqual({
-            error: "Admin cannot review payment proof documents",
+            error: "Payment proof documents must be reviewed by Finance",
         });
         expect(mocks.prisma.registrationDocument.update).not.toHaveBeenCalled();
         expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe("registration document review boundaries", () => {
 
         expect(response.status).toBe(403);
         await expect(response.json()).resolves.toEqual({
-            error: "Finance can only review payment proof documents",
+            error: "This action only applies to payment proof documents",
         });
         expect(mocks.prisma.registrationDocument.update).not.toHaveBeenCalled();
         expect(mocks.prisma.auditLog.create).not.toHaveBeenCalled();
