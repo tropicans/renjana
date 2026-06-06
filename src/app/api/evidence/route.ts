@@ -65,13 +65,12 @@ export async function POST(req: Request) {
 }
 
 // GET /api/evidence — list evidence
-export async function GET(req: Request) {
+export async function GET(req?: Request) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
     const role = user!.role;
-    const { searchParams } = new URL(req.url);
-    const all = searchParams.get("all") === "true";
+    const all = req ? new URL(req.url).searchParams.get("all") === "true" : true;
 
     const whereClause: Prisma.EvidenceWhereInput = {};
     if (!all) {
