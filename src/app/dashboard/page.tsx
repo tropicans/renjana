@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations } from "@/features/client/api/learner";
+import { fetchDashboardStats, fetchMyEnrollments, fetchMyRegistrations, fetchCourseById, fetchProgress } from "@/features/client/api/learner";
 import { fetchEvidences } from "@/lib/api";
 import { isActiveRegistrationWorkflow, isLearningAccessibleRegistration } from "@/lib/domain/registration-rules";
 import { useUser } from "@/lib/context/user-context";
@@ -18,7 +18,21 @@ import {
     PlayCircle,
     Loader2,
     Star,
+    CheckCircle2,
+    ChevronDown,
+    ChevronRight,
+    Video,
+    Users,
+    Award,
+    HelpCircle,
+    FileText,
 } from "lucide-react";
+import {
+    getNextIncompleteLesson,
+    getLastActiveDate,
+    formatLastActiveDate,
+    getLessonStatus,
+} from "@/lib/dashboard-timeline-utils";
 
 const InsightsCard = dynamic(() => import("@/components/learner/dashboard-visuals").then((mod) => mod.InsightsCard), {
     ssr: false,
@@ -73,7 +87,90 @@ export default function DashboardPage() {
     const evidences = evidenceData?.evidences ?? [];
     const activeEnrollment = enrollments.find((e) => e.status === "ACTIVE");
     const activeRegistration = registrations.find((registration) => isActiveRegistrationWorkflow(registration.status));
-    const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading || evidencesLoading;
+
+    // Fetch course detail for the active enrollment
+    const { data: activeCourseData, isLoading: activeCourseLoading } = useQuery({
+        queryKey: ["course", activeEnrollment?.courseId],
+        queryFn: () => fetchCourseById(activeEnrollment!.courseId),
+        enabled: !!activeEnrollment?.courseId,
+        staleTime: 60_000,
+        refetchOnWindowFocus: false,
+    });
+
+    // Fetch progress for the active enrollment
+    const { data: activeProgressData, isLoading: activeProgressLoading } = useQuery({
+        queryKey: ["progress", activeEnrollment?.id],
+        queryFn: () => fetchProgress(activeEnrollment!.id),
+        enabled: !!activeEnrollment?.id,
+        staleTime: 60_000,
+        refetchOnWindowFocus: false,
+    });
+
+    const activeCourse = activeCourseData?.course;
+    const activeProgress = activeProgressData;
+
+    // Flatten all lessons of the active course
+    const activeLessons = React.useMemo(() => {
+        if (!activeCourse) return [];
+        return activeCourse.modules.flatMap((m) =>
+            m.lessons.map((l) => ({
+                ...l,
+                moduleId: m.id,
+            }))
+        );
+    }, [activeCourse]);
+
+    // Next incomplete lesson
+    const nextIncompleteLesson = React.useMemo(() => {
+        if (!activeLessons.length || !activeProgress) return null;
+        return getNextIncompleteLesson(activeLessons, activeProgress.progresses);
+    }, [activeLessons, activeProgress]);
+
+    // Format last active date
+    const formattedLastActive = React.useMemo(() => {
+        if (!activeProgress || !activeEnrollment) return null;
+        const lastActiveDate = getLastActiveDate(activeProgress.progresses, activeEnrollment.enrolledAt);
+        return formatLastActiveDate(lastActiveDate);
+    }, [activeProgress, activeEnrollment]);
+
+    // Set of completed lesson IDs
+    const completedLessonIds = React.useMemo(() => {
+        const set = new Set<string>();
+        activeProgress?.progresses?.forEach((p) => {
+            if (p.isCompleted) set.add(p.lessonId);
+        });
+        return set;
+    }, [activeProgress]);
+
+    const activeModuleId = React.useMemo(() => {
+        return nextIncompleteLesson?.moduleId || activeCourse?.modules[activeCourse.modules.length - 1]?.id || null;
+    }, [nextIncompleteLesson, activeCourse]);
+
+    const [collapsedModules, setCollapsedModules] = React.useState<Record<string, boolean>>({});
+
+    const toggleModule = (moduleId: string) => {
+        setCollapsedModules((prev) => ({
+            ...prev,
+            [moduleId]: !(prev[moduleId] ?? (moduleId !== activeModuleId)),
+        }));
+    };
+
+    const isModuleCollapsed = (moduleId: string) => {
+        return collapsedModules[moduleId] ?? (moduleId !== activeModuleId);
+    };
+
+    const getActivityIcon = (type: string) => {
+        switch (type.toUpperCase()) {
+            case "VIDEO": return <Video className="h-4 w-4" />;
+            case "QUIZ": return <HelpCircle className="h-4 w-4" />;
+            case "ASSIGNMENT": return <FileText className="h-4 w-4" />;
+            case "READING": return <FileText className="h-4 w-4" />;
+            case "LIVE_SESSION": return <Users className="h-4 w-4" />;
+            default: return <PlayCircle className="h-4 w-4" />;
+        }
+    };
+
+    const isLoading = userLoading || statsLoading || enrollmentsLoading || registrationsLoading || evidencesLoading || (!!activeEnrollment && (activeCourseLoading || activeProgressLoading));
 
     if (isLoading) {
         return (
@@ -170,28 +267,234 @@ export default function DashboardPage() {
 
             {/* Next Action - Prominent CTA */}
             {activeEnrollment ? (
-                <div className="rounded-3xl border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <span className="rounded-full bg-primary text-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest">
-                                    Continue Learning
-                                </span>
+                <div className="space-y-6">
+                    {/* Continue Learning Card */}
+                    <div className="rounded-3xl border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-6 md:p-8 shadow-sm">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            {/* Left Side: Course & Next Lesson Info */}
+                            <div className="space-y-4 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full bg-primary text-white px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+                                        Lanjutkan Belajar
+                                    </span>
+                                    {formattedLastActive && (
+                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+                                            Terakhir belajar: {formattedLastActive}
+                                        </span>
+                                    )}
+                                </div>
+                                
+                                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                                    {activeEnrollment.course.title}
+                                </h2>
+
+                                {nextIncompleteLesson ? (
+                                    <div className="p-4 rounded-2xl bg-white/50 dark:bg-[#1a242f]/30 border border-gray-100 dark:border-gray-800 flex items-start gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                            {getActivityIcon(nextIncompleteLesson.type)}
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-extrabold text-primary uppercase tracking-wider block">
+                                                Aktivitas Berikutnya (Up Next)
+                                            </span>
+                                            <p className="font-bold text-sm text-gray-800 dark:text-gray-200 line-clamp-1">
+                                                {nextIncompleteLesson.title}
+                                            </p>
+                                            {nextIncompleteLesson.durationMin && (
+                                                <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 font-medium">
+                                                    <Clock className="h-3.5 w-3.5" />
+                                                    {nextIncompleteLesson.durationMin} menit
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-4 rounded-2xl bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30 flex items-center gap-3">
+                                        <Award className="h-8 w-8 text-green-500 shrink-0" />
+                                        <div>
+                                            <p className="font-bold text-sm text-green-800 dark:text-green-400">
+                                                Semua materi modul telah diselesaikan!
+                                            </p>
+                                            <p className="text-xs text-green-600 dark:text-green-500 font-medium">
+                                                Selesaikan pre/post-test atau tunggu penerbitan sertifikat Anda.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <h2 className="text-2xl font-bold">{activeEnrollment.course.title}</h2>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <ProgressChart completionPercentage={activeEnrollment.completionPercentage} />
-                            <Link
-                                href={`/learn/${activeEnrollment.courseId}`}
-                                className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0"
-                            >
-                                <PlayCircle className="h-5 w-5" />
-                                Resume Course
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
+
+                            {/* Right Side: Circular Progress & Button */}
+                            <div className="flex flex-col sm:flex-row items-center gap-6 shrink-0 lg:self-stretch justify-center">
+                                <div className="h-px w-full bg-gray-100 dark:bg-gray-800 lg:hidden" />
+                                <ProgressChart completionPercentage={activeEnrollment.completionPercentage} />
+                                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                    <Link
+                                        href={`/learn/${activeEnrollment.courseId}`}
+                                        className="bg-primary text-white px-8 py-4 rounded-full font-bold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 shrink-0"
+                                    >
+                                        <PlayCircle className="h-5 w-5" />
+                                        Resume Course
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Progress Timeline */}
+                    {activeCourse && (
+                        <div className="bg-white dark:bg-[#1a242f] rounded-3xl border border-gray-100 dark:border-gray-800 p-6 md:p-8 shadow-sm space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                                        Rencana Belajar & Progress
+                                    </h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 text-xs md:text-sm font-medium">
+                                        Ikuti alur materi secara berurutan untuk menyelesaikan kelas ini.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs bg-gray-50 dark:bg-[#101922] px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800 shrink-0 font-semibold text-gray-600 dark:text-gray-400">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    <span>Total durasi: {activeLessons.reduce((sum, l) => sum + (l.durationMin ?? 0), 0)} menit</span>
+                                </div>
+                            </div>
+
+                            <div className="relative pl-1">
+                                {/* Main timeline connecting line */}
+                                <div className="absolute left-[21px] top-6 bottom-6 w-0.5 bg-gray-100 dark:bg-gray-800/80" />
+
+                                <div className="space-y-4">
+                                    {activeCourse.modules.map((module, mIdx) => {
+                                        const collapsed = isModuleCollapsed(module.id);
+                                        const moduleLessons = module.lessons || [];
+                                        const allModuleLessonsCompleted = moduleLessons.length > 0 && moduleLessons.every(l => completedLessonIds.has(l.id));
+
+                                        return (
+                                            <div key={module.id} className="relative z-10 space-y-2">
+                                                {/* Module Header */}
+                                                <button
+                                                    onClick={() => toggleModule(module.id)}
+                                                    className="w-full flex items-center justify-between bg-gray-50/50 hover:bg-gray-50 dark:bg-[#101922]/30 dark:hover:bg-[#101922]/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800/80 shadow-sm transition-all duration-200 group text-left cursor-pointer"
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 border-2 font-bold text-sm transition-all duration-200 shadow-sm ${
+                                                            allModuleLessonsCompleted
+                                                                ? "bg-green-500 border-green-500 text-white"
+                                                                : "bg-white dark:bg-[#1a242f] border-primary text-primary"
+                                                        }`}>
+                                                            {allModuleLessonsCompleted ? (
+                                                                <CheckCircle2 className="h-5 w-5" />
+                                                            ) : (
+                                                                <span>{mIdx + 1}</span>
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] uppercase font-extrabold text-primary tracking-wider block">
+                                                                Modul {mIdx + 1}
+                                                            </span>
+                                                            <h3 className="font-extrabold text-sm md:text-base text-gray-900 dark:text-white group-hover:text-primary transition-colors line-clamp-1">
+                                                                {module.title}
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="text-xs text-gray-400 font-medium">
+                                                            {moduleLessons.filter(l => completedLessonIds.has(l.id)).length}/{moduleLessons.length} Materi
+                                                        </span>
+                                                        {collapsed ? (
+                                                            <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                                                        ) : (
+                                                            <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                                                        )}
+                                                    </div>
+                                                </button>
+
+                                                {/* Lessons List under the module */}
+                                                {!collapsed && (
+                                                    <div className="pl-5 ml-5 border-l border-dashed border-gray-200 dark:border-gray-800 space-y-2 pt-1 pb-3">
+                                                        {moduleLessons.map((lesson) => {
+                                                            const status = getLessonStatus(lesson.id, nextIncompleteLesson?.id || null, completedLessonIds);
+                                                            const isCompleted = status === "COMPLETED";
+                                                            const isInProgress = status === "IN_PROGRESS";
+
+                                                            return (
+                                                                <div
+                                                                    key={lesson.id}
+                                                                    className="relative flex items-center gap-3 p-1"
+                                                                >
+                                                                    {/* Connector branch line */}
+                                                                    <div className="absolute -left-[21px] top-1/2 w-[21px] border-t border-dashed border-gray-200 dark:border-gray-800" />
+
+                                                                    {isCompleted ? (
+                                                                        <Link
+                                                                            href={`/learn/${activeEnrollment.courseId}`}
+                                                                            className="flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-[#101922]/20 transition-all duration-200 flex-1 text-left"
+                                                                        >
+                                                                            <div className="h-7 w-7 rounded-full bg-green-50 dark:bg-green-950/20 text-green-500 border border-green-200/30 dark:border-green-800/20 flex items-center justify-center shrink-0">
+                                                                                <CheckCircle2 className="h-4 w-4" />
+                                                                            </div>
+                                                                            <div className="flex-1 space-y-0.5">
+                                                                                <span className="font-semibold text-sm text-gray-500 dark:text-gray-400 line-through line-clamp-1">
+                                                                                    {lesson.title}
+                                                                                </span>
+                                                                            </div>
+                                                                            {lesson.durationMin && (
+                                                                                <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-[#101922] px-2 py-0.5 rounded-full shrink-0 font-medium">
+                                                                                    {lesson.durationMin}m
+                                                                                </span>
+                                                                            )}
+                                                                        </Link>
+                                                                    ) : isInProgress ? (
+                                                                        <Link
+                                                                            href={`/learn/${activeEnrollment.courseId}`}
+                                                                            className="flex items-center gap-3 p-3.5 rounded-xl border border-primary/20 bg-primary/5 dark:bg-primary/10 shadow-sm hover:bg-primary/10 transition-all duration-200 flex-1 text-left ring-2 ring-primary/10"
+                                                                        >
+                                                                            <div className="h-7 w-7 rounded-full bg-primary text-white flex items-center justify-center shrink-0 shadow-md shadow-primary/20 animate-pulse">
+                                                                                {getActivityIcon(lesson.type)}
+                                                                            </div>
+                                                                            <div className="flex-1 space-y-0.5">
+                                                                                <span className="text-[9px] font-extrabold text-primary uppercase tracking-wider block">
+                                                                                    Sedang Dipelajari
+                                                                                </span>
+                                                                                <span className="font-extrabold text-sm text-gray-900 dark:text-white line-clamp-1">
+                                                                                    {lesson.title}
+                                                                                </span>
+                                                                            </div>
+                                                                            {lesson.durationMin && (
+                                                                                <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0 font-extrabold uppercase tracking-wider">
+                                                                                    {lesson.durationMin}m
+                                                                                </span>
+                                                                            )}
+                                                                        </Link>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-3 p-3 rounded-xl border border-transparent opacity-60 flex-1 text-left cursor-not-allowed">
+                                                                            <div className="h-7 w-7 rounded-full bg-gray-100 dark:bg-[#101922] text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-800 flex items-center justify-center shrink-0">
+                                                                                {getActivityIcon(lesson.type)}
+                                                                            </div>
+                                                                            <div className="flex-1">
+                                                                                <span className="font-semibold text-sm text-gray-400 dark:text-gray-500 line-clamp-1">
+                                                                                    {lesson.title}
+                                                                                </span>
+                                                                            </div>
+                                                                            {lesson.durationMin && (
+                                                                                <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-800/50 px-2 py-0.5 rounded-full shrink-0 font-medium">
+                                                                                    {lesson.durationMin}m
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : activeRegistration ? (
                 <div className="rounded-3xl border-2 border-sky-200 bg-sky-50 p-8 dark:border-sky-800 dark:bg-sky-950/20">
