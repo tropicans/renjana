@@ -64,15 +64,23 @@ export async function POST(req: Request) {
 }
 
 // GET /api/evidence — list evidence
-export async function GET() {
+export async function GET(req: Request) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
     const role = user!.role;
+    const { searchParams } = new URL(req.url);
+    const all = searchParams.get("all") === "true";
+
+    const whereClause: any = {};
+    if (!all) {
+        whereClause.rating = null;
+    }
 
     // Admins see all evidence
     if (role === "ADMIN") {
         const records = await prisma.evidence.findMany({
+            where: whereClause,
             include: {
                 user: { select: { id: true, fullName: true, email: true } },
             },
@@ -91,6 +99,7 @@ export async function GET() {
         const records = await prisma.evidence.findMany({
             where: {
                 userId: { in: learnerIds },
+                ...whereClause,
             },
             include: {
                 user: { select: { id: true, fullName: true, email: true } },
@@ -102,7 +111,10 @@ export async function GET() {
 
     // Learners see their own
     const records = await prisma.evidence.findMany({
-        where: { userId: user!.id },
+        where: {
+            userId: user!.id,
+            ...whereClause,
+        },
         orderBy: { uploadedAt: "desc" },
     });
 
