@@ -8,16 +8,14 @@ Renjana LMS is a multi-role legal training platform for Justitia Training Center
 
 Ensure instructors can securely grade learner evidence and view scoped metrics while maintaining 100% test suite reliability.
 
-## Current Milestone: v3.0 Role Flow Audit & Bug Fixes
+## Current Milestone: v4.0 Language Consistency Audit & Fixes
 
-**Goal:** Audit and verify the existing flows for every role (ADMIN, INSTRUCTOR, MANAGER, FINANCE, LEARNER) to check whether any bugs or issues exist, and resolve them.
+**Goal:** Audit UI files and translation integration to ensure language consistency, preventing mixed English and Indonesian strings on all pages and components.
 
 **Target features:**
-- Admin Portal: Verify class assignment, event configuration, and registration flows.
-- Instructor Portal: Validate scoped evidence viewing, grading, feedback interface, and dashboard stats.
-- Manager Portal: Verify learning metrics, risk metrics, and overview charts.
-- Finance Portal: Validate registration invoices, payment statuses, and audit checks.
-- Learner Portal: Verify catalog registrations, lesson completion reader, pre/post quizzes, and visual progress timeline.
+- Standardize translations and i18n file structures.
+- Audit public and portal pages (Header, Home, Dashboard, etc.) for mixed languages.
+- Resolve any hardcoded mixed-language strings in favor of the active selected locale.
 
 ## Requirements
 
@@ -39,14 +37,16 @@ Ensure instructors can securely grade learner evidence and view scoped metrics w
 - ✓ LEARN-02: Visual timeline module and lesson progress subway map (v2.0)
 - ✓ LEARN-03: Continue Learning Card banner with last active Indonesian formatted date (v2.0)
 - ✓ LEARN-04: Recharts progress indicators and dynamic context insights (v2.0)
+- ✓ AUDIT-01: Audit and fix any bugs/issues in the ADMIN portal flows (v3.0)
+- ✓ AUDIT-02: Audit and fix any bugs/issues in the INSTRUCTOR portal flows (v3.0)
+- ✓ AUDIT-03: Audit and fix any bugs/issues in the MANAGER portal flows (v3.0)
+- ✓ AUDIT-04: Audit and fix any bugs/issues in the FINANCE portal flows (v3.0)
+- ✓ AUDIT-05: Audit and fix any bugs/issues in the LEARNER portal flows (v3.0)
 
 ### Active
 
-- [ ] **AUDIT-01**: Audit and fix any bugs/issues in the ADMIN portal flows.
-- [ ] **AUDIT-02**: Audit and fix any bugs/issues in the INSTRUCTOR portal flows.
-- [ ] **AUDIT-03**: Audit and fix any bugs/issues in the MANAGER portal flows.
-- [ ] **AUDIT-04**: Audit and fix any bugs/issues in the FINANCE portal flows.
-- [ ] **AUDIT-05**: Audit and fix any bugs/issues in the LEARNER portal flows.
+- [ ] **LANG-01**: Audit public pages and headers for mixed language usage.
+- [ ] **LANG-02**: Audit and resolve mixed English/Indonesian strings in the Learner dashboard.
 
 ### Out of Scope
 
@@ -55,7 +55,7 @@ Ensure instructors can securely grade learner evidence and view scoped metrics w
 
 ## Context
 
-In Milestone v1.0 and v2.0, the core instructor evidence review features and learner visual dashboard enhancements were implemented and verified. For Milestone v3.0, we will perform a comprehensive end-to-end audit across all LMS roles to identify, debug, and resolve any functional, access gating, visual, or performance issues.
+In Milestone v3.0, a comprehensive audit across all portals was completed, resolving a data boundary aggregation bug on the Manager dashboard. For Milestone v4.0, we focus on language consistency across all public views and learner dashboard pages, ensuring a cohesive locale experience (either fully Indonesian or fully English depending on selector).
 
 ## Constraints
 
@@ -68,7 +68,8 @@ In Milestone v1.0 and v2.0, the core instructor evidence review features and lea
 |----------|-----------|---------|
 | Implement Evidence grading | Allow instructors to review and save rating/comments directly to the database | ✓ Completed in v1.0 |
 | Visual Learning Path / Timeline | Provide learners with visual progress indicator instead of just a number | ✓ Completed in v2.0 |
-| End-to-End Role Audit | Systematically verify and resolve issues across all 5 roles | — Pending |
+| End-to-End Role Audit | Systematically verify and resolve issues across all 5 roles | ✓ Completed in v3.0 |
+| Language Consistency | Ensure clean localization isolation without mixed-language strings | — Pending |
 
 ## Evolution
 
@@ -88,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-07 after v3.0 initialization*
+*Last updated: 2026-06-07 after v4.0 initialization*

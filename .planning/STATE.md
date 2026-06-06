@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.0
-milestone_name: Role Flow Audit
+milestone: v4.0
+milestone_name: Language Consistency Audit & Fixes
 status: planning
-last_updated: "2026-06-06T23:02:20.615Z"
+last_updated: "2026-06-06T23:47:40.254Z"
 last_activity: 2026-06-06
 progress:
   total_phases: 0
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-06-06 — Milestone v3.0 started
+Last activity: 2026-06-06 — Milestone v4.0 started
 
 ## Performance Metrics
 

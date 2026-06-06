@@ -1,19 +1,23 @@
-# Requirements: Renjana LMS Milestone v3.0
+# Requirements: Renjana LMS Milestone v4.0
 
 **Defined:** 2026-06-07
-**Core Value:** Verify and audit all role portal flows (ADMIN, INSTRUCTOR, MANAGER, FINANCE, LEARNER) to identify, debug, and fix any functional, access gating, visual, or performance issues.
+**Core Value:** Ensure language consistency across all public pages, portal views, and the learner dashboard, preventing mixed English and Indonesian strings on all pages and components.
 
-## Active Requirements (v3.0)
+## Active Requirements (v4.0)
 
-### Role Portal Flow Audit (AUDIT)
+### Language Consistency Audit (LANG)
 
-- [ ] **AUDIT-01**: Audit and fix any bugs/issues in the ADMIN portal flows (events, class groups, registration reviews, and configurations).
-- [ ] **AUDIT-02**: Audit and fix any bugs/issues in the INSTRUCTOR portal flows (scoped evidence viewing, grading feedback, and instructor dashboard metrics).
-- [ ] **AUDIT-03**: Audit and fix any bugs/issues in the MANAGER portal flows (impact analysis, risk overview, metrics cards).
-- [ ] **AUDIT-04**: Audit and fix any bugs/issues in the FINANCE portal flows (registration invoices list, details view, payment status updates).
-- [ ] **AUDIT-05**: Audit and fix any bugs/issues in the LEARNER portal flows (events browsing, registration steps, learning portal, quizzes, and visual progress timeline).
+- [ ] **LANG-01**: Audit public pages and header navigation for mixed English/Indonesian text. Ensure the layout handles dynamic translations based on the selected language context (`useLanguage`).
+- [ ] **LANG-02**: Audit and resolve mixed English/Indonesian strings in the Learner dashboard, including widgets like Continue Learning, Rencana Belajar, and stats cards.
 
 ## Completed Requirements
+
+### v3.0 (Shipped: 2026-06-07)
+- ✓ **AUDIT-01**: Audit and fix any bugs/issues in the ADMIN portal flows (events, class groups, registration reviews, and configurations).
+- ✓ **AUDIT-02**: Audit and fix any bugs/issues in the INSTRUCTOR portal flows (scoped evidence viewing, grading feedback, and instructor dashboard metrics).
+- ✓ **AUDIT-03**: Audit and fix any bugs/issues in the MANAGER portal flows (impact analysis, risk overview, metrics cards).
+- ✓ **AUDIT-04**: Audit and fix any bugs/issues in the FINANCE portal flows (registration invoices list, details view, payment status updates).
+- ✓ **AUDIT-05**: Audit and fix any bugs/issues in the LEARNER portal flows (events browsing, registration steps, learning portal, quizzes, and visual progress timeline).
 
 ### v2.0 (Shipped: 2026-06-07)
 - ✓ **INTRO-01**: Add introductory text on the landing page explaining the digital, independent, and flexible learning programs.
@@ -57,18 +61,15 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUDIT-01    | Phase 7 | Pending |
-| AUDIT-02    | Phase 8 | Pending |
-| AUDIT-03    | Phase 9 | Pending |
-| AUDIT-04    | Phase 10 | Pending |
-| AUDIT-05    | Phase 11 | Pending |
+| LANG-01     | Phase 12 | Pending |
+| LANG-02     | Phase 13 | Pending |
 
 **Coverage:**
 
-- Active requirements: 5 total
-- Mapped to phases: 5
+- Active requirements: 2 total
+- Mapped to phases: 2
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-07*
-*Last updated: 2026-06-07 after v3.0 definition*
+*Last updated: 2026-06-07 after v4.0 definition*
