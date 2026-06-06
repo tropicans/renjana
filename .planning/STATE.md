@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-06-06T14:05:52.357Z"
+stopped_at: Phase 4 UI-SPEC approved
+last_updated: "2026-06-06T14:07:16.850Z"
 last_activity: 2026-06-06 — Milestone v2.0 started
 progress:
   total_phases: 6
@@ -84,9 +84,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-06T14:05:52.349Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-landing-page-intro-basic-learner-info/04-CONTEXT.md
+Last session: 2026-06-06T14:07:16.843Z
+Stopped at: Phase 4 UI-SPEC approved
+Resume file: .planning/phases/04-landing-page-intro-basic-learner-info/04-UI-SPEC.md
 
 ## Operator Next Steps
 
