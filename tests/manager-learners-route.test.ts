@@ -76,4 +76,34 @@ describe("GET /api/manager/learners", () => {
         expect(mocks.requireApiAuthPolicy).toHaveBeenCalledWith(expect.any(Request), { roles: ["MANAGER", "ADMIN"] });
         expect(mocks.prisma.enrollment.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 1, take: 1 }));
     });
+
+    it("returns all records without pagination when no query parameters are provided", async () => {
+        mocks.requireApiAuthPolicy.mockResolvedValue({
+            ok: true,
+            user: { id: "manager-1", role: "MANAGER" },
+        });
+        mocks.prisma.enrollment.findMany.mockResolvedValue([
+            {
+                id: "enroll-1",
+                userId: "learner-1",
+                courseId: "course-1",
+                status: "ACTIVE",
+                completionPercentage: 25,
+                enrolledAt: new Date("2025-01-01T00:00:00.000Z"),
+                user: { id: "learner-1", fullName: "Learner One", email: "one@example.com" },
+                course: { id: "course-1", title: "Course One" },
+                certificate: null,
+            },
+        ]);
+        mocks.prisma.enrollment.count.mockResolvedValue(1);
+
+        const response = await GET(new Request("http://localhost/api/manager/learners"));
+        const body = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(body.enrollments).toHaveLength(1);
+        expect(body.pagination.pageSize).toBe(1);
+        expect(body.pagination.totalPages).toBe(1);
+        expect(mocks.prisma.enrollment.findMany).not.toHaveBeenCalledWith(expect.objectContaining({ skip: expect.any(Number) }));
+    });
 });
