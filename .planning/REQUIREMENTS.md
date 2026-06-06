@@ -22,8 +22,8 @@ Requirements for current milestone.
 
 ### Test Suite Reliability
 
-- [ ] **TEST-01**: Fix `tests/registration-document-review-boundaries.test.ts` document review boundary assertions to align with correct error responses.
-- [ ] **TEST-02**: Fix `tests/registration-submit-rules.test.ts` registration submit status assertions to match the returned 409 status code.
+- [x] **TEST-01**: Fix `tests/registration-document-review-boundaries.test.ts` document review boundary assertions to align with correct error responses.
+- [x] **TEST-02**: Fix `tests/registration-submit-rules.test.ts` registration submit status assertions to match the returned 409 status code.
 
 ## v2 Requirements
 
@@ -54,8 +54,8 @@ Which phases cover which requirements.
 | FEEDB-03 | Phase 2 | Complete |
 | FEEDB-04 | Phase 2 | Complete |
 | FEEDB-05 | Phase 2 | Complete |
-| TEST-01 | Phase 3 | Pending |
-| TEST-02 | Phase 3 | Pending |
+| TEST-01 | Phase 3 | Complete |
+| TEST-02 | Phase 3 | Complete |
 
 **Coverage:**
 
