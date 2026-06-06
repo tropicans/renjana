@@ -95,12 +95,9 @@ describe("dashboard stats role metrics", () => {
         ]);
         mocks.prisma.registration.findMany
             .mockResolvedValueOnce([
-                { participantMode: "ONLINE" },
-                { participantMode: "OFFLINE" },
-                { participantMode: "ONLINE" },
-                { participantMode: "HYBRID" },
-                { participantMode: "HYBRID" },
-                { participantMode: "HYBRID" },
+                { participantMode: "ONLINE", event: { modality: "HYBRID" } },
+                { participantMode: "ONLINE", event: { modality: "HYBRID" } },
+                { participantMode: "OFFLINE", event: { modality: "HYBRID" } },
             ])
             .mockResolvedValueOnce([
                 { id: "reg-1", createdAt: new Date("2025-01-01T00:00:00.000Z"), user: { fullName: "Learner One" }, event: { title: "Event One" } },

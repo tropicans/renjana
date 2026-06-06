@@ -100,7 +100,10 @@ export async function GET() {
                 select: { modality: true },
             }),
             prisma.registration.findMany({
-                select: { participantMode: true },
+                select: {
+                    participantMode: true,
+                    event: { select: { modality: true } },
+                },
             }),
             prisma.registration.findMany({
                 take: 5,
@@ -122,7 +125,7 @@ export async function GET() {
 
         const onlineParticipants = participantModes.filter((registration) => registration.participantMode === "ONLINE").length;
         const offlineParticipants = participantModes.filter((registration) => registration.participantMode === "OFFLINE").length;
-        const hybridParticipants = participantModes.filter((registration) => registration.participantMode === "HYBRID").length;
+        const hybridParticipants = participantModes.filter((registration) => registration.event?.modality === "HYBRID").length;
 
         return NextResponse.json({
             role,
