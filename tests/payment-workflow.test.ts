@@ -122,7 +122,7 @@ describe("payment workflow", () => {
         const result = await applyWebhookPaymentUpdate({
             prisma: tx,
             payment: { id: "pay-1", registrationId: "reg-1", expiresAt: null },
-            registrationBefore: { userId: "learner-1", paymentStatus: "PENDING" },
+            registrationBefore: { id: "reg-1", userId: "learner-1", paymentStatus: "PENDING" },
             notificationPayload: { order_id: "INV-1" },
             orderId: "INV-1",
         });

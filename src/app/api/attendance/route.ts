@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-utils";
 import { requireApiAuthPolicy } from "@/lib/route-policy";
+import { haversineDistance } from "@/lib/geo";
 
 // POST /api/attendance — check-in with optional GPS
 export async function POST(req: Request) {
@@ -35,6 +36,35 @@ export async function POST(req: Request) {
     });
     if (!lesson) {
         return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    }
+
+    // GPS validation for offline/hybrid events
+    const courseType = lesson.module?.course?.type;
+    if (courseType === "OFFLINE_EVENT" || courseType === "HYBRID") {
+        if (latitude == null || longitude == null) {
+            return NextResponse.json(
+                { error: "Akses lokasi (GPS) diperlukan untuk absensi luring" },
+                { status: 400 }
+            );
+        }
+
+        const CHECK_IN_TARGET_LAT = -6.175392;
+        const CHECK_IN_TARGET_LNG = 106.827153;
+        const CHECK_IN_MAX_RADIUS_KM = 0.5;
+
+        const distanceKm = haversineDistance(
+            latitude,
+            longitude,
+            CHECK_IN_TARGET_LAT,
+            CHECK_IN_TARGET_LNG
+        );
+
+        if (distanceKm > CHECK_IN_MAX_RADIUS_KM) {
+            return NextResponse.json(
+                { error: "Di luar jangkauan" },
+                { status: 403 }
+            );
+        }
     }
 
     // Create attendance record
