@@ -1,15 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v4.0
-milestone_name: Language Consistency Audit & Fixes
-status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-06-06T23:49:40.287Z"
-last_activity: 2026-06-06 -- Phase 12 execution started
+milestone: v5.0
+milestone_name: Feature Health Audit & Fixes
+status: planning
+last_updated: "2026-06-07T01:14:34.964Z"
+last_activity: 2026-06-07
 progress:
-  total_phases: 2
+  total_phases: 0
   completed_phases: 0
-  total_plans: 1
+  total_plans: 0
   completed_plans: 0
   percent: 0
 ---
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-06)
 
 ## Current Position
 
-Phase: 12 — EXECUTING
-Plan: 1 of ?
-Status: Executing Phase 12
-Last activity: 2026-06-06 -- Phase 12 execution started
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-07 — Milestone v5.0 started
 
 ## Performance Metrics
 

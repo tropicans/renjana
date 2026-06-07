@@ -1,16 +1,23 @@
-# Requirements: Renjana LMS Milestone v4.0
+# Requirements: Renjana LMS Milestone v5.0
 
 **Defined:** 2026-06-07
-**Core Value:** Ensure language consistency across all public pages, portal views, and the learner dashboard, preventing mixed English and Indonesian strings on all pages and components.
+**Core Value:** Ensure all core platform features across all roles are fully functional, verified, and secure under both development and production configurations.
 
-## Active Requirements (v4.0)
+## Active Requirements (v5.0)
 
-### Language Consistency Audit (LANG)
+### Feature Health Audit (AUDIT)
 
-- [ ] **LANG-01**: Audit public pages and header navigation for mixed English/Indonesian text. Ensure the layout handles dynamic translations based on the selected language context (`useLanguage`).
-- [ ] **LANG-02**: Audit and resolve mixed English/Indonesian strings in the Learner dashboard, including widgets like Continue Learning, Rencana Belajar, and stats cards.
+- [ ] **AUDIT-06**: Audit and fix course/event registration and checkout flows. Ensure that learners can select events, submit registrations, and successfully complete the checkout process (including Midtrans integration).
+- [ ] **AUDIT-07**: Verify GPS-based attendance check-in coordinates validation logic. Ensure the check-in radius constraint works correctly against the event's configured coordinates.
+- [ ] **AUDIT-08**: Test and resolve evidence upload and instructor grading flows. Ensure learners can upload evidence files and instructors can view, grade, and comment on them.
+- [ ] **AUDIT-09**: Validate landscape A4 certificate PDF generation and download triggers. Ensure that certificates are generated correctly using jsPDF and the download trigger works as intended.
+- [ ] **AUDIT-10**: Verify NextAuth session redirects and middleware RBAC route gating. Ensure that pages and API routes are properly protected based on user roles and unauthorized requests are correctly handled.
 
 ## Completed Requirements
+
+### v4.0 (Shipped: 2026-06-07)
+- ✓ **LANG-01**: Audit public pages and header navigation for mixed English/Indonesian text. Ensure the layout handles dynamic translations based on the selected language context (`useLanguage`).
+- ✓ **LANG-02**: Audit and resolve mixed English/Indonesian strings in the Learner dashboard, including widgets like Continue Learning, Rencana Belajar, and stats cards.
 
 ### v3.0 (Shipped: 2026-06-07)
 - ✓ **AUDIT-01**: Audit and fix any bugs/issues in the ADMIN portal flows (events, class groups, registration reviews, and configurations).
@@ -61,15 +68,18 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LANG-01     | Phase 12 | Pending |
-| LANG-02     | Phase 13 | Pending |
+| AUDIT-06    | Phase 14 | Pending |
+| AUDIT-07    | Phase 15 | Pending |
+| AUDIT-08    | Phase 16 | Pending |
+| AUDIT-09    | Phase 17 | Pending |
+| AUDIT-10    | Phase 18 | Pending |
 
 **Coverage:**
 
-- Active requirements: 2 total
-- Mapped to phases: 2
+- Active requirements: 5 total
+- Mapped to phases: 5
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-07*
-*Last updated: 2026-06-07 after v4.0 definition*
+*Last updated: 2026-06-07 after v5.0 definition*
