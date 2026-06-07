@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 
 // Routes that are always public (no auth needed)

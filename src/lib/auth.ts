@@ -3,8 +3,10 @@ import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
-const nextAuthConfig: NextAuthConfig = {
+export const nextAuthConfig: NextAuthConfig = {
+    ...authConfig,
     providers: [
         Credentials({
             credentials: {
@@ -50,29 +52,6 @@ const nextAuthConfig: NextAuthConfig = {
             },
         }),
     ],
-    callbacks: {
-        async jwt({ token, user }) {
-            if (user) {
-                token.id = user.id;
-                token.role = (user as unknown as { role: string }).role;
-            }
-            return token;
-        },
-        async session({ session, token }) {
-            if (token && session.user) {
-                session.user.id = token.id as string;
-                (session.user as unknown as { role: string }).role = token.role as string;
-            }
-            return session;
-        },
-    },
-    pages: {
-        signIn: "/login",
-    },
-    session: {
-        strategy: "jwt",
-    },
 };
 
 export const { handlers, signIn, signOut, auth } = NextAuth(nextAuthConfig);
-export { nextAuthConfig };
