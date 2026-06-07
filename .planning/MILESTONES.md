@@ -1,5 +1,20 @@
 # Milestones
 
+## v5.0 (Shipped: 2026-06-07)
+
+**Phases completed:** 5 phases, 8 plans, 25 tasks
+
+**Key accomplishments:**
+
+- **Registration & Checkout Audit**: Fixed course/event registration and checkout flows with proper checkout triggers and payment webhook integrations.
+- **GPS Attendance Validation**: Verified coordinates verification via Haversine distance calculations, restricting check-in access correctly based on distance.
+- **Evidence Upload & Instructor Scoped Grading**: Securely gated evidence file uploads/serving and scoped instructor grading pages and metrics to their class groups.
+- **Certificate A4 PDF Generation**: Implemented dynamic landscape A4 PDF generation and download streaming, and enabled admin forced-regeneration.
+- **NextAuth & Middleware Gating**: Resolved Edge runtime compatibility by splitting NextAuth configuration, migrating to Next.js 16 Proxy layer, and implementing robust integration tests.
+- **100% Test and Lint Pass**: Satisfied ESLint completely and achieved 100% pass rate across all 170 tests (40 test suites).
+
+---
+
 ## v1.0 (Shipped: 2026-06-06)
 
 **Phases completed:** 3 phases, 3 plans, 11 tasks
