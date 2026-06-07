@@ -17,7 +17,7 @@ const bucketRoots: Record<UploadBucket, { disk: string[]; url: string[] }> = {
         url: ["uploads", "lesson-materials"],
     },
     certificates: {
-        disk: ["public", "uploads", "certificates"],
+        disk: ["uploads", "certificates"],
         url: ["uploads", "certificates"],
     },
 };

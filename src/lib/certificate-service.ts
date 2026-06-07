@@ -78,8 +78,15 @@ export async function generateCertificateRecord(input: {
 
     const pdfUrl = managedUpload.fileUrl;
 
-    return prisma.certificate.create({
-        data: {
+    return prisma.certificate.upsert({
+        where: {
+            enrollmentId: input.enrollmentId,
+        },
+        update: {
+            pdfUrl,
+            issuedAt: new Date(),
+        },
+        create: {
             enrollmentId: input.enrollmentId,
             userId: input.userId,
             pdfUrl,

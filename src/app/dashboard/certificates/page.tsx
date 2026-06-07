@@ -62,7 +62,7 @@ function CertificateCard({ enrollment }: { enrollment: { id: string; courseId: s
                         <div className="mt-4">
                             {certificate?.pdfUrl ? (
                                 <a
-                                    href={certificate.pdfUrl}
+                                    href={`/api/certificates/${enrollment.id}/file`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full font-bold text-sm hover:opacity-90 transition-all"
