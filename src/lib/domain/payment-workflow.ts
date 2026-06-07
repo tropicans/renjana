@@ -11,7 +11,7 @@ type CheckoutRegistration = {
     totalFee: number | null;
     paymentStatus?: string | null;
     event: { title: string; slug: string };
-    payments: Array<{ id: string; invoiceUrl: string | null; status: string }>;
+    payments: Array<{ id: string; invoiceUrl: string | null; status: string; expiresAt: Date | null }>;
 };
 
 export async function createRegistrationCheckout(params: {
@@ -22,7 +22,22 @@ export async function createRegistrationCheckout(params: {
 }) {
     const existingPayment = params.registration.payments[0];
     if (existingPayment?.invoiceUrl && params.registration.paymentStatus === "PENDING") {
-        return { reused: true as const, payment: existingPayment, status: 200 as const };
+        const isExpired = existingPayment.expiresAt ? new Date(existingPayment.expiresAt) < new Date() : false;
+        if (!isExpired) {
+            return { reused: true as const, payment: existingPayment, status: 200 as const };
+        }
+
+        // If expired, update status to EXPIRED to keep DB clean
+        if (typeof params.prisma.registrationPayment.update === "function") {
+            try {
+                await params.prisma.registrationPayment.update({
+                    where: { id: existingPayment.id },
+                    data: { status: "EXPIRED" },
+                });
+            } catch (err) {
+                console.error("Failed to update expired payment status:", err);
+            }
+        }
     }
 
     const orderId = `registration-${params.registration.id}-${Date.now()}`;
@@ -44,7 +59,7 @@ export async function createRegistrationCheckout(params: {
             invoiceUrl: checkout.redirect_url ?? null,
             amount: params.registration.totalFee!,
             status: "PENDING",
-            expiresAt: null,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
             description: `Pembayaran ${params.registration.event.title}`,
             metadata: { token: checkout.token },
         },

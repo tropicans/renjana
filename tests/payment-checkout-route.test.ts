@@ -61,6 +61,7 @@ describe("POST /api/payments/checkout", () => {
     });
 
     it("reuses pending payment when invoice url exists", async () => {
+        const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
         mocks.prisma.registration.findUnique.mockResolvedValue({
             id: "reg-1",
             userId: "learner-1",
@@ -68,7 +69,7 @@ describe("POST /api/payments/checkout", () => {
             submittedAt: new Date("2025-01-10T00:00:00.000Z"),
             totalFee: 150000,
             event: { title: "Event One", slug: "event-one" },
-            payments: [{ id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING" }],
+            payments: [{ id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING", expiresAt: futureDate }],
             paymentStatus: "PENDING",
         });
 
@@ -80,7 +81,7 @@ describe("POST /api/payments/checkout", () => {
 
         expect(response.status).toBe(200);
         await expect(response.json()).resolves.toEqual({
-            payment: { id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING" },
+            payment: { id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING", expiresAt: futureDate.toISOString() },
             reused: true,
         });
         expect(mocks.createMidtransCheckout).not.toHaveBeenCalled();
@@ -159,7 +160,7 @@ describe("POST /api/payments/checkout", () => {
             submittedAt: new Date("2025-01-10T00:00:00.000Z"),
             totalFee: 150000,
             event: { title: "Event One", slug: "event-one" },
-            payments: [{ id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING" }],
+            payments: [{ id: "pay-1", invoiceUrl: "https://pay.example/1", status: "PENDING", expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) }],
             paymentStatus: "PENDING",
         });
 

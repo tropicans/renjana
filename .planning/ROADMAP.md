@@ -19,7 +19,7 @@ This roadmap defines the phases required to audit and fix core platform features
 - [x] **Phase 11: Learner Portal Flow Audit** - Audit and fix bugs in LEARNER portal catalog, quizzes, timeline, and registration flows. (completed v3.0)
 - [x] **Phase 12: Public Pages & Header Localization Audit/Fix** - Audit and fix dynamic localization/translations in headers, catalog, and public pages. (completed v4.0)
 - [x] **Phase 13: Learner Dashboard Localization Audit/Fix** - Audit and resolve mixed-language strings in the Learner dashboard modules, timeline, stats cards, and charts. (completed v4.0)
-- [ ] **Phase 14: Registration & Checkout Flow Audit** - Audit and fix course/event registration and checkout flows.
+- [x] **Phase 14: Registration & Checkout Flow Audit** - Audit and fix course/event registration and checkout flows. (completed v5.0)
 - [ ] **Phase 15: GPS Attendance Validation Audit** - Verify and fix GPS-based attendance check-in coordinates validation logic.
 - [ ] **Phase 16: Evidence Upload & Instructor Grading Audit** - Test and resolve evidence upload and instructor grading capabilities.
 - [ ] **Phase 17: Certificate PDF Generation Audit** - Test and resolve landscape A4 certificate PDF generation and download triggers.
@@ -82,7 +82,7 @@ Phases execute in numeric order: 14 → 15 → 16 → 17 → 18
 | 11. Learner Portal Flow Audit | 1/1 | Completed | 2026-06-07 |
 | 12. Public Pages & Header Localization Audit/Fix | 1/1 | Completed | 2026-06-07 |
 | 13. Learner Dashboard Localization Audit/Fix | 1/1 | Completed | 2026-06-07 |
-| 14. Registration & Checkout Flow Audit | 0/1 | Not Started | — |
+| 14. Registration & Checkout Flow Audit | 1/1 | Completed | 2026-06-07 |
 | 15. GPS Attendance Validation Audit | 0/1 | Not Started | — |
 | 16. Evidence Upload & Instructor Grading Audit | 0/1 | Not Started | — |
 | 17. Certificate PDF Generation Audit | 0/1 | Not Started | — |
