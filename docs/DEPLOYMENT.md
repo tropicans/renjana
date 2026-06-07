@@ -1,264 +1,68 @@
-# LMS Application Deployment Guide
+<!-- generated-by: gsd-doc-writer -->
+# Deployment Guide
 
-Panduan lengkap untuk deploy aplikasi LMS ke berbagai hosting platform.
+This document describes how to build, deploy, rollback, and monitor the Renjana LMS application across various platforms.
 
----
+## Deployment Targets
 
-## Prerequisites
+The platform can be deployed to the following target hosting environments:
 
-- Docker dan Docker Compose terinstall
-- Git repository (GitHub/GitLab/Bitbucket)
-- Akun hosting (pilih salah satu di bawah)
-
----
-
-## Option 1: Railway (Recommended - Termudah)
-
-Railway otomatis mendeteksi Dockerfile dan deploy.
-
-### Steps:
-
-1. **Push ke GitHub**
-   ```bash
-   git add .
-   git commit -m "Add Docker deployment configuration"
-   git push origin main
-   ```
-
-2. **Connect Railway**
-   - Buka [railway.app](https://railway.app)
-   - Klik **New Project** → **Deploy from GitHub repo**
-   - Pilih repository `lmsapp`
-   - Railway akan auto-detect Dockerfile
-
-3. **Configure Environment**
-   - Settings → Variables → Add jika diperlukan
-   - Port akan otomatis terdeteksi (3000)
-
-4. **Generate Domain**
-   - Settings → Domains → **Generate Domain**
-   - Atau tambahkan custom domain
-
-**Biaya:** Free tier tersedia, $5/bulan untuk production
-
----
-
-## Option 2: DigitalOcean App Platform
-
-### Steps:
-
-1. **Push ke GitHub** (sama seperti di atas)
-
-2. **Create App**
-   - Buka [cloud.digitalocean.com/apps](https://cloud.digitalocean.com/apps)
-   - Klik **Create App** → Pilih GitHub
-   - Pilih repository dan branch
-
-3. **Configure Resources**
-   - Type: **Web Service**
-   - Source: **Dockerfile**
-   - HTTP Port: `3000`
-
-4. **Deploy**
-   - Review settings → **Create Resources**
-   - Tunggu build selesai (~3-5 menit)
-
-**Biaya:** Mulai $5/bulan (Basic)
-
----
-
-## Option 3: VPS Manual (DigitalOcean/Vultr/Linode)
-
-### Step 1: Setup VPS
-
-```bash
-# SSH ke VPS
-ssh root@your-vps-ip
-
-# Install Docker
-curl -fsSL https://get.docker.com | sh
-
-# Install Docker Compose
-apt install docker-compose-plugin -y
-```
-
-### Step 2: Clone & Deploy
-
-```bash
-# Clone repo
-git clone https://github.com/your-username/lmsapp.git
-cd lmsapp
-
-# Build & Run
-docker compose up -d --build
-
-# Verify
-docker compose ps
-curl http://localhost:3000
-```
-
-### Step 3: Setup Nginx Reverse Proxy (Optional)
-
-```bash
-apt install nginx -y
-```
-
-Buat file `/etc/nginx/sites-available/lmsapp`:
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-# Enable site
-ln -s /etc/nginx/sites-available/lmsapp /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-```
-
-### Step 4: SSL dengan Certbot
-
-```bash
-apt install certbot python3-certbot-nginx -y
-certbot --nginx -d yourdomain.com
-```
-
----
-
-## Option 4: Docker Hub + Any Hosting
-
-### Step 1: Build & Push ke Docker Hub
-
-```bash
-# Login
-docker login
-
-# Build dengan tag
-docker build -t yourusername/lmsapp:latest .
-
-# Push
-docker push yourusername/lmsapp:latest
-```
-
-### Step 2: Pull di Server
-
-```bash
-# Di server hosting
-docker pull yourusername/lmsapp:latest
-docker run -d -p 3000:3000 --name lmsapp yourusername/lmsapp:latest
-```
-
----
-
-## Local Testing (Sebelum Deploy)
-
-```bash
-# Build image
-docker compose build
-
-# Run container
-docker compose up -d
-
-# Check logs
-docker compose logs -f
-
-# Test
-curl http://localhost:3000
-
-# Stop
-docker compose down
-```
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Build gagal | Pastikan `npm ci` berhasil di local dulu |
-| Container crash | Cek logs: `docker compose logs` |
-| Port conflict | Ubah port di `docker-compose.yml` |
-| Image terlalu besar | Pastikan `.dockerignore` benar |
-
----
-
-## Environment Variables (Jika Diperlukan)
-
-Tambahkan di `docker-compose.yml`:
-
-```yaml
-environment:
-  - DATABASE_URL=postgresql://...
-  - NEXTAUTH_SECRET=your-secret
-  - NEXTAUTH_URL=https://yourdomain.com
-```
-
-Atau buat file `.env.production` dan mount ke container.
-
----
-
-## Rekomendasi
-
-| Platform | Cocok Untuk | Harga Mulai |
-|----------|-------------|-------------|
-| Railway | MVP, Startup | Free - $5/mo |
-| DigitalOcean App | Production | $5/mo |
-| VPS Manual | Full Control | $4-6/mo |
-| Vercel | Next.js Native | Free - $20/mo |
-
-> **Catatan:** Vercel adalah pilihan terbaik untuk Next.js jika tidak memerlukan Docker, karena terintegrasi langsung.
-
----
+- **Railway (Recommended)**: Automatically detects the `Dockerfile` and deploys the application container. Connect your repository to Railway, configure environment variables, and map the port.
+- **DigitalOcean App Platform**: Deploy as a Web Service sourced from the `Dockerfile` exposing port `3214` (mapped to `3000` or custom port if necessary). <!-- VERIFY: DigitalOcean app platform default port mapping -->
+- **VPS Manual Deployment**: Run the Docker Compose stack manually on a VPS (Ubuntu/Debian) behind an Nginx reverse proxy using Cloudflare Tunnels or SSL certs.
+- **Vercel**: Can be deployed natively for Next.js hosting. Note that file uploads and SQLite/Prisma operations require a persistent relational database connection (PostgreSQL) set via environment variables.
 
 ## Build Pipeline
 
-The application build is compiled via a multi-stage Docker build pipeline (`Dockerfile`):
+The application is built inside a multi-stage `Dockerfile`:
 
-1. **Stage 1 (deps)**: Installs development dependencies using `npm ci` inside a `node:20-alpine` image to prepare for the build process.
-2. **Stage 2 (builder)**: Copies dependencies, runs `npx prisma generate` to generate the client type maps, and builds the standalone application via `npm run build`.
-3. **Stage 3 (runner)**: Copies build artifacts (`.next/standalone`, `.next/static`, and `public` folders) into a lightweight runner stage. It configures a non-root `nextjs` user for security and exposes port `3214`.
+1. **deps Stage**: Installs the complete node dependency tree from `package-lock.json` via `npm ci`.
+2. **builder Stage**: Traces imports, runs `npx prisma generate` to construct database types, and executes `npm run build` to compile the Next.js standalone folder.
+3. **runner Stage**: Builds a lightweight production runner container using `node:20-alpine`, copying only standalone build files, static assets, and Prisma clients. Runs under a non-root `nextjs` user for container security.
 
-The production container runs `docker-entrypoint.sh` at startup, which automatically applies schema migrations (`prisma migrate deploy`) before launching the standalone Node.js server (`node server.js`).
+On startup, the container triggers `docker-entrypoint.sh` which executes `prisma migrate deploy` to deploy schema updates before starting the Node server via `node server.js`.
+
+## Environment Setup
+
+To deploy the application in a production environment, configure the following variables on your hosting provider:
+
+- `DATABASE_URL`: Production PostgreSQL database connection string.
+- `NEXTAUTH_SECRET`: Random long string for session security.
+- `NEXTAUTH_URL`: Canonical public URL of your platform.
+- `AUTH_TRUST_HOST`: Set to `true` when running behind a proxy or inside Docker.
+- `NEXT_PUBLIC_PAYMENT_PROVIDER`: Set to `MIDTRANS` to enable payments.
+- `MIDTRANS_SERVER_KEY`: Server secret token for Midtrans webhook authorization.
+- `METRICS_TOKEN`: Secure API token for metrics scraping.
+
+Refer to [Configuration Guide](CONFIGURATION.md) for the full parameter specifications.
 
 ## Rollback Procedure
 
-If a deployed version experiences issues, execute the following rollback steps:
+If a release introduces a blocker, proceed with these rollback steps:
 
-### VPS Rollback
-1. Revert to the previous working Git commit:
+### VPS Docker Rollback
+1. Checkout the previous stable Git commit tag on the server:
    ```bash
-   git checkout <previous-stable-commit-hash>
+   git checkout <previous-working-tag-or-commit>
    ```
-2. Rebuild and restart the container services:
+2. Rebuild and restart the container services in background:
    ```bash
    docker compose up -d --build
    ```
 
-### Platform (Railway / DigitalOcean) Rollback
-1. Open the platform control panel dashboard.
-2. Navigate to the deployment history list.
-3. Select the previous stable deployment and trigger the **Rollback** or **Redeploy** action.
+### PaaS Dashboard Rollback
+1. Open your hosting provider dashboard (Railway / DigitalOcean).
+2. Locate the deployment history logs.
+3. Select the last stable version and click **Rollback** or **Redeploy**.
 
 ### Database Rollback
-If a database migration was applied but needs to be undone:
-1. Revert the schema migration in the database or restore the PostgreSQL instance from the latest automated database backup snapshot.
+1. If a migration needs to be reverted, restore the PostgreSQL database to a backup snapshot captured prior to the deployment.
 
 ## Monitoring
 
-- **Container Logs**: Application errors and server startup logs can be examined using standard Docker log utilities:
+- **Docker Logging**: Retrieve standard output and error logs:
   ```bash
   docker compose logs -f lmsapp
   ```
-- **Prometheus Metrics**: The application exposes Prometheus-compatible metrics on `/api/metrics`. Enable `METRICS_TOKEN` in the environment variables to secure the endpoint from public access. External monitoring tools (e.g., Prometheus) should scrape this endpoint periodically.
-- **Server Health Check**: The endpoint `/api/health` returns database connectivity statuses for load balancer health probes.
+- **Prometheus Metrics**: Scrape application performance, HTTP requests, database latencies, and route errors from the `/api/metrics` endpoint (secured via `METRICS_TOKEN` header check).
+- **HTTP Health Probe**: Set up load balancer health checks to query `/api/health`.

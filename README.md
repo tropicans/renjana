@@ -1,195 +1,68 @@
+<!-- generated-by: gsd-doc-writer -->
 # Renjana LMS
 
-**Learning Management System** untuk Justitia Training Center — platform pelatihan hukum profesional.
+A multi-role Learning Management System (LMS) designed for Justitia Training Center to manage legal professional training programs.
 
-Built with **Next.js 16**, **Prisma**, **PostgreSQL**, **NextAuth.js**, dan **React Query**.
+## Installation
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16.1.6 (App Router) |
-| Database | PostgreSQL 16 + Prisma ORM |
-| Auth | NextAuth.js v5 (Credentials + JWT) |
-| State | React Query (TanStack Query) |
-| PDF | jsPDF |
-| Styling | Tailwind CSS |
-| Deploy | Docker + Docker Compose |
-
----
-
-## Quick Start (Docker)
+Ensure you have Node.js and Docker installed.
 
 ```bash
-# 1. Clone
+# Clone the repository
 git clone https://github.com/tropicans/renjana.git
 cd renjana
-
-# 2. Setup environment
-cp .env.example .env
-# Edit DATABASE_URL and NEXTAUTH_SECRET
-
-# 3. Start containers
-docker compose up -d --build
-
-# 4. Seed database (first time)
-docker exec -it renjana-lmsapp npx prisma db push
-docker exec -it renjana-lmsapp npx prisma db seed
-
-# 5. Open
-open http://localhost:3214
-```
-
-### Default Users
-
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@example.com` | `password123` | ADMIN |
-| `instructor@example.com` | `password123` | INSTRUCTOR |
-| `ahmad@example.com` | `password123` | LEARNER |
-
----
-
-## Development
-
-```bash
 # Install dependencies
 npm install
-
-# Generate Prisma client
+# Generate database client
 npx prisma generate
-
-# Run migrations
-npx prisma db push
-
-# Seed data
-npx prisma db seed
-
-# Start dev server
-npm run dev
-# → http://localhost:3214
 ```
+<!-- VERIFY: git repository remote URL -->
 
----
+## Quick Start
 
-## Environment Variables
+1. **Start Database Services**:
+   ```bash
+   docker compose up -d postgres adminer
+   ```
+2. **Apply DB Schema & Seed Mock Data**:
+   ```bash
+   npx prisma db push
+   npm run db:seed
+   ```
+3. **Start Local Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3214](http://localhost:3214) to view the portal. <!-- VERIFY: App port is 3214 -->
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `NEXTAUTH_URL` | ✅ | Application URL |
-| `NEXTAUTH_SECRET` | ✅ | JWT signing secret |
-| `AUTH_TRUST_HOST` | ✅ | Set `true` for Docker/proxy |
-| `NEXT_PUBLIC_PAYMENT_PROVIDER` | — | Set `MIDTRANS` to enable Midtrans checkout flow |
-| `MIDTRANS_SERVER_KEY` | — | Midtrans server key for backend API and webhook verification |
-| `MIDTRANS_CLIENT_KEY` | — | Midtrans client key if frontend Snap embed is introduced later |
-| `MIDTRANS_API_BASE_URL` | — | Midtrans Snap API base URL |
-| `MIDTRANS_CORE_API_BASE_URL` | — | Midtrans Core API base URL for status verification |
-| `NODE_ENV` | — | `development` or `production` |
+## Default Users
 
----
-
-## API Endpoints
-
-### Public
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/courses` | List published courses |
-| GET | `/api/courses/:id` | Course detail with modules |
-
-### Auth Required
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/enrollments` | My enrollments |
-| POST | `/api/enrollments` | Enroll in course |
-| GET | `/api/dashboard/stats` | Dashboard statistics |
-| PUT | `/api/progress` | Mark lesson complete |
-| GET | `/api/progress/:enrollmentId` | Get progress |
-| POST | `/api/attendance` | Check-in (GPS) |
-| GET | `/api/attendance` | Attendance records |
-| POST | `/api/evidence` | Upload evidence |
-| GET | `/api/evidence` | Evidence list |
-| GET | `/api/certificates/:enrollmentId` | Generate/get certificate PDF |
-
-### Admin Only
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/users` | List all users |
-| POST | `/api/admin/users` | Create user |
-| PUT | `/api/admin/users/:id` | Update user |
-| DELETE | `/api/admin/users/:id` | Deactivate user |
-
----
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── api/              # API routes
-│   ├── admin/            # Admin dashboard
-│   ├── course/[id]/      # Course detail
-│   ├── courses/          # Course catalog
-│   ├── dashboard/        # Learner dashboard
-│   │   ├── checkin/      # Attendance check-in
-│   │   ├── evidence/     # Evidence upload
-│   │   └── certificates/ # Certificate download
-│   ├── instructor/       # Instructor views
-│   └── learn/[courseId]/ # Learning interface
-├── components/           # React components
-├── lib/
-│   ├── api.ts           # API client (fetch + types)
-│   ├── auth.ts          # NextAuth config
-│   ├── auth-utils.ts    # Auth helpers (requireAuth/requireRole)
-│   └── db.ts            # Prisma singleton
-└── proxy.ts             # Middleware (RBAC)
-```
-
----
-
-## Sprint Reports
-
-| Sprint | Focus | Report |
-|--------|-------|--------|
-| 1 | Database, Auth, Docker | `docs/sprint1_report.md` |
-| 2 | API Routes, React Query | `docs/sprint2_report.md` |
-| 3 | Learning Engine | `docs/sprint3_report.md` |
-| 4 | Attendance & Evidence | `docs/sprint4_report.md` |
-| 5 | Certificate Generator | `docs/sprint5_report.md` |
-| 6 | Testing & Go-Live | `docs/sprint6_report.md` |
+Log in using these seeded credentials for various roles:
+- **Admin**: `admin@renjana.com` / `admin123`
+- **Instructor**: `budi@example.com` / `password123`
+- **Learner**: `ahmad@example.com` / `password123`
+- **Manager**: `diana@example.com` / `password123`
+- **Finance**: `eko@example.com` / `password123`
 
 ## Usage Examples
 
-Here are the main user journeys in the Renjana LMS:
+Here are the main workflows in the platform:
 
-### 1. Public Event Discovery & Registration
-1. Visit the homepage to view the event and course catalog (`/courses` or `/events`).
-2. Select a course and click **Register**.
-3. Fill in the registration form, upload the required document evidence (KTP, diploma, photo), and submit.
-4. After submitting, access your pending registration via `/my-registrations`.
+### 1. Course Registration & Payment Review
+1. A learner registers for a hybrid course at `/courses` and uploads document evidence (KTP, diploma).
+2. The learner submits proof of payment invoice.
+3. Finance reviews the invoice at `/finance` and verifies the registration status.
+4. The admin assigns the learner to a Class Group.
 
-### 2. Finance Review & Payment Verification
-1. Log in as a `FINANCE` or `ADMIN` user.
-2. Navigate to the finance portal (`/finance`) to view pending course registrations.
-3. Review the uploaded invoice/payment proof and approve or reject the payment.
-4. Once verified, the learner status transitions to `APPROVED`, enabling class-group assignment.
+### 2. Interactive Learning & Progress
+1. The learner views lessons, plays video materials, and marks lessons complete via `/learn/[courseId]`.
+2. Progress percentage updates in real-time.
+3. The learner completes quizzes, submits lesson attendance check-ins, and uploads module evidence.
 
-### 3. Class Group & Learner Activation
-1. Log in as an `ADMIN` or `MANAGER` user.
-2. Navigate to the class-group settings and assign the learner to an active class group.
-3. Set up instructors for the class group so they can track progress and grade evidence.
-
-### 4. Interactive Learning & Evaluation
-1. Log in as a `LEARNER`.
-2. Navigate to your dashboard (`/dashboard`) to view your enrolled courses.
-3. Use the **Continue Learning** interface to watch videos, read lessons, and mark items complete.
-4. Complete any required quizzes (`/api/progress` will track completions).
-5. Submit lesson attendance (GPS-based check-in) and upload module evidence.
-6. Upon fulfilling all course requirements, download your generated A4 certificate PDF.
-
----
+### 3. Grading & Certificate Issuance
+1. The instructor logs into `/instructor` to review the learner's evidence uploads.
+2. The instructor approves and grades the submissions.
+3. Upon 100% course progress completion, the platform automatically generates a landscape A4 PDF certificate downloadable at `/dashboard/certificates`.
 
 ## License
 
