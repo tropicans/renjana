@@ -45,14 +45,14 @@ Ensure instructors can securely grade learner evidence and view scoped metrics w
 - ✓ AUDIT-05: Audit and fix any bugs/issues in the LEARNER portal flows (v3.0)
 - ✓ LANG-01: Audit public pages and headers for mixed language usage (v4.0)
 - ✓ LANG-02: Audit and resolve mixed English/Indonesian strings in the Learner dashboard (v4.0)
+- ✓ AUDIT-06: Audit and fix course/event registration and checkout flows (v5.0)
+- ✓ AUDIT-07: Verify GPS-based attendance check-in coordinates validation logic (v5.0)
+- ✓ AUDIT-08: Test and resolve evidence upload and instructor grading flows (v5.0)
+- ✓ AUDIT-09: Validate landscape A4 certificate PDF generation and download triggers (v5.0)
+- ✓ AUDIT-10: Verify NextAuth session redirects and middleware RBAC route gating (v5.0)
 
 ### Active
 
-- [ ] **AUDIT-06**: Audit and fix course/event registration and checkout flows.
-- [ ] **AUDIT-07**: Verify GPS-based attendance check-in coordinates validation logic.
-- [ ] **AUDIT-08**: Test and resolve evidence upload and instructor grading flows.
-- [ ] **AUDIT-09**: Validate landscape A4 certificate PDF generation and download triggers.
-- [ ] **AUDIT-10**: Verify NextAuth session redirects and middleware RBAC route gating.
 
 ### Out of Scope
 
