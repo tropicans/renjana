@@ -124,7 +124,7 @@ export default function InstructorFeedbackPage() {
                                     <p className="text-sm text-gray-500">{selectedItem.user?.fullName ?? selectedItem.user?.email}</p>
                                 </div>
                                 <a
-                                    href={selectedItem.fileUrl}
+                                    href={`/api/evidence/${selectedItem.id}/file`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-xl text-sm font-semibold transition-all border border-emerald-100 dark:border-emerald-900/30"

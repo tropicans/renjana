@@ -600,6 +600,17 @@ export async function gradeEvidence(id: string, rating: number, comment: string)
     return res.json() as Promise<{ evidence: ApiEvidence }>;
 }
 
+export async function deleteEvidence(id: string) {
+    const res = await fetch(`/api/evidence/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Delete failed ${res.status}`);
+    }
+    return res.json() as Promise<{ success: boolean }>;
+}
+
 export async function uploadAdminLessonMaterial(file: File) {
     const form = new FormData();
     form.append("file", file);

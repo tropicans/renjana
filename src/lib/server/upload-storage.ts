@@ -5,7 +5,7 @@ type UploadBucket = "evidence" | "registration-documents" | "lesson-materials" |
 
 const bucketRoots: Record<UploadBucket, { disk: string[]; url: string[] }> = {
     evidence: {
-        disk: ["public", "uploads", "evidence"],
+        disk: ["uploads", "evidence"],
         url: ["uploads", "evidence"],
     },
     "registration-documents": {

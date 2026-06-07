@@ -36,6 +36,7 @@ describe("observability routes", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         resetMetrics();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (process.env as any).NODE_ENV = originalNodeEnv;
         if (originalMetricsToken === undefined) {
             delete process.env.METRICS_TOKEN;
@@ -78,6 +79,7 @@ describe("observability routes", () => {
 
     it("returns prometheus metrics when token absent outside production", async () => {
         delete process.env.METRICS_TOKEN;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (process.env as any).NODE_ENV = "development";
 
         const response = await getMetrics(new Request("http://localhost/api/metrics"));
@@ -102,6 +104,7 @@ describe("observability routes", () => {
 
     it("returns not found for metrics in production without token", async () => {
         delete process.env.METRICS_TOKEN;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (process.env as any).NODE_ENV = "production";
 
         const response = await getMetrics(new Request("http://localhost/api/metrics"));
