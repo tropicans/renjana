@@ -160,6 +160,35 @@ src/
 | 5 | Certificate Generator | `docs/sprint5_report.md` |
 | 6 | Testing & Go-Live | `docs/sprint6_report.md` |
 
+## Usage Examples
+
+Here are the main user journeys in the Renjana LMS:
+
+### 1. Public Event Discovery & Registration
+1. Visit the homepage to view the event and course catalog (`/courses` or `/events`).
+2. Select a course and click **Register**.
+3. Fill in the registration form, upload the required document evidence (KTP, diploma, photo), and submit.
+4. After submitting, access your pending registration via `/my-registrations`.
+
+### 2. Finance Review & Payment Verification
+1. Log in as a `FINANCE` or `ADMIN` user.
+2. Navigate to the finance portal (`/finance`) to view pending course registrations.
+3. Review the uploaded invoice/payment proof and approve or reject the payment.
+4. Once verified, the learner status transitions to `APPROVED`, enabling class-group assignment.
+
+### 3. Class Group & Learner Activation
+1. Log in as an `ADMIN` or `MANAGER` user.
+2. Navigate to the class-group settings and assign the learner to an active class group.
+3. Set up instructors for the class group so they can track progress and grade evidence.
+
+### 4. Interactive Learning & Evaluation
+1. Log in as a `LEARNER`.
+2. Navigate to your dashboard (`/dashboard`) to view your enrolled courses.
+3. Use the **Continue Learning** interface to watch videos, read lessons, and mark items complete.
+4. Complete any required quizzes (`/api/progress` will track completions).
+5. Submit lesson attendance (GPS-based check-in) and upload module evidence.
+6. Upon fulfilling all course requirements, download your generated A4 certificate PDF.
+
 ---
 
 ## License

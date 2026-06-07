@@ -218,3 +218,47 @@ Atau buat file `.env.production` dan mount ke container.
 | Vercel | Next.js Native | Free - $20/mo |
 
 > **Catatan:** Vercel adalah pilihan terbaik untuk Next.js jika tidak memerlukan Docker, karena terintegrasi langsung.
+
+---
+
+## Build Pipeline
+
+The application build is compiled via a multi-stage Docker build pipeline (`Dockerfile`):
+
+1. **Stage 1 (deps)**: Installs development dependencies using `npm ci` inside a `node:20-alpine` image to prepare for the build process.
+2. **Stage 2 (builder)**: Copies dependencies, runs `npx prisma generate` to generate the client type maps, and builds the standalone application via `npm run build`.
+3. **Stage 3 (runner)**: Copies build artifacts (`.next/standalone`, `.next/static`, and `public` folders) into a lightweight runner stage. It configures a non-root `nextjs` user for security and exposes port `3214`.
+
+The production container runs `docker-entrypoint.sh` at startup, which automatically applies schema migrations (`prisma migrate deploy`) before launching the standalone Node.js server (`node server.js`).
+
+## Rollback Procedure
+
+If a deployed version experiences issues, execute the following rollback steps:
+
+### VPS Rollback
+1. Revert to the previous working Git commit:
+   ```bash
+   git checkout <previous-stable-commit-hash>
+   ```
+2. Rebuild and restart the container services:
+   ```bash
+   docker compose up -d --build
+   ```
+
+### Platform (Railway / DigitalOcean) Rollback
+1. Open the platform control panel dashboard.
+2. Navigate to the deployment history list.
+3. Select the previous stable deployment and trigger the **Rollback** or **Redeploy** action.
+
+### Database Rollback
+If a database migration was applied but needs to be undone:
+1. Revert the schema migration in the database or restore the PostgreSQL instance from the latest automated database backup snapshot.
+
+## Monitoring
+
+- **Container Logs**: Application errors and server startup logs can be examined using standard Docker log utilities:
+  ```bash
+  docker compose logs -f lmsapp
+  ```
+- **Prometheus Metrics**: The application exposes Prometheus-compatible metrics on `/api/metrics`. Enable `METRICS_TOKEN` in the environment variables to secure the endpoint from public access. External monitoring tools (e.g., Prometheus) should scrape this endpoint periodically.
+- **Server Health Check**: The endpoint `/api/health` returns database connectivity statuses for load balancer health probes.
