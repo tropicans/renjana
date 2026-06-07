@@ -20,7 +20,7 @@ This roadmap defines the phases required to audit and fix core platform features
 - [x] **Phase 12: Public Pages & Header Localization Audit/Fix** - Audit and fix dynamic localization/translations in headers, catalog, and public pages. (completed v4.0)
 - [x] **Phase 13: Learner Dashboard Localization Audit/Fix** - Audit and resolve mixed-language strings in the Learner dashboard modules, timeline, stats cards, and charts. (completed v4.0)
 - [x] **Phase 14: Registration & Checkout Flow Audit** - Audit and fix course/event registration and checkout flows. (completed v5.0)
-- [ ] **Phase 15: GPS Attendance Validation Audit** - Verify and fix GPS-based attendance check-in coordinates validation logic.
+- [x] **Phase 15: GPS Attendance Validation Audit** - Verify and fix GPS-based attendance check-in coordinates validation logic. (completed v5.0)
 - [ ] **Phase 16: Evidence Upload & Instructor Grading Audit** - Test and resolve evidence upload and instructor grading capabilities.
 - [ ] **Phase 17: Certificate PDF Generation Audit** - Test and resolve landscape A4 certificate PDF generation and download triggers.
 - [ ] **Phase 18: NextAuth & Middleware Gating Audit** - Verify and fix NextAuth session redirects and middleware RBAC route gating.
@@ -83,7 +83,7 @@ Phases execute in numeric order: 14 → 15 → 16 → 17 → 18
 | 12. Public Pages & Header Localization Audit/Fix | 1/1 | Completed | 2026-06-07 |
 | 13. Learner Dashboard Localization Audit/Fix | 1/1 | Completed | 2026-06-07 |
 | 14. Registration & Checkout Flow Audit | 1/1 | Completed | 2026-06-07 |
-| 15. GPS Attendance Validation Audit | 0/1 | Not Started | — |
+| 15. GPS Attendance Validation Audit | 1/1 | Completed | 2026-06-07 |
 | 16. Evidence Upload & Instructor Grading Audit | 0/1 | Not Started | — |
 | 17. Certificate PDF Generation Audit | 0/1 | Not Started | — |
 | 18. NextAuth & Middleware Gating Audit | 0/1 | Not Started | — |
