@@ -1,12 +1,13 @@
 ---
 gsd_state_version: 1.0
 milestone: v5.0
-milestone_name: Feature Health Audit & Fixes
-status: planning
-last_updated: "2026-06-07T01:14:34.964Z"
-last_activity: 2026-06-07
+milestone_name: milestone
+status: Defining requirements
+stopped_at: Phase 14 context gathered
+last_updated: "2026-06-07T03:40:58.958Z"
+last_activity: 2026-06-07 — Milestone v5.0 started
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -83,9 +84,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-06T22:32:42.122Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-learner-dashboard-visual-progress-timeline/05-CONTEXT.md
+Last session: 2026-06-07T03:40:58.951Z
+Stopped at: Phase 14 context gathered
+Resume file: .planning/phases/14-registration-checkout-flow-audit/14-CONTEXT.md
 
 ## Operator Next Steps
 
