@@ -74,7 +74,68 @@ Sistem menggunakan Next.js 16 terbaru dengan pemisahan modul NextAuth v5 yang am
 
 ---
 
-## **3. ESTIMASI BIAYA & INVESTASI**
+## **3. GARIS WAKTU IMPLEMENTASI PROYEK (PROJECT TIMELINE)**
+
+Pengembangan dan kustomisasi penuh Renjana LMS diperkirakan memakan waktu **14 minggu (3,5 bulan)** dengan jadwal kerja sebagai berikut:
+
+```mermaid
+gantt
+    title Jadwal Implementasi Renjana LMS (14 Minggu)
+    dateFormat  X
+    axisFormat W%W
+    
+    section Inisiasi & Desain
+    Analisis Sistem & Desain Database    :active, des1, 0, 2
+    Desain UI/UX & Wireframing           :des2, 2, 4
+    
+    section Pengembangan Backend (API)
+    Integrasi Auth & Manajemen Peran     :api1, 4, 6
+    Integrasi Midtrans & Webhook         :api2, 6, 8
+    Sistem Absensi GPS & PDF Generator   :api3, 7, 9
+    
+    section Pengembangan Frontend (UI)
+    Dashboard Peserta (Timeline & Card)  :fe1, 6, 9
+    Dashboard Instruktur & Penilaian     :fe2, 8, 10
+    Dashboard Admin & Keuangan           :fe3, 9, 11
+    
+    section QA & Peluncuran
+    Unit & Integration Testing           :qa1, 10, 12
+    User Acceptance Testing (UAT)        :qa2, 12, 13
+    Migrasi Data, Setup Docker & Go-Live :qa3, 13, 14
+```
+
+- **Minggu 1 - 4 (Fase Desain & Analisis)**: Finalisasi skema database, penentuan parameter validasi koordinat GPS, serta persetujuan *mockup* antarmuka.
+- **Minggu 5 - 8 (Fase Backend & Integrasi)**: Integrasi NextAuth, Midtrans API, dan pembatasan keamanan upload file.
+- **Minggu 9 - 11 (Fase Frontend & Dashboard)**: Implementasi antarmuka untuk 5 jenis portal pengguna.
+- **Minggu 12 - 14 (Fase QA, UAT, & Deployment)**: Pengujian otomatis (170+ test cases), pelatihan operator internal Renjana, dan *deployment* kontainer Docker ke server produksi.
+
+---
+
+## **4. HAK KEPEMILIKAN & LISENSI (SOURCE CODE OWNERSHIP)**
+
+Berbeda dengan sistem berbasis SaaS (Software-as-a-Service) yang mengharuskan pembayaran lisensi bulanan per peserta, model penawaran Renjana LMS adalah **Self-Hosted Custom Enterprise**:
+- **Kepemilikan Penuh (*Full Source Code Ownership*)**: Setelah pelunasan proyek selesai, seluruh *source code* (kode program) dan hak kelola database diserahkan penuh kepada Renjana Training Center.
+- **Bebas Biaya Berlangganan (*No SaaS Lock-in*)**: Tidak ada biaya lisensi bulanan atau tahunan berdasarkan jumlah peserta. Sistem dapat melayani 100 maupun 10.000+ peserta tanpa ada biaya lisensi tambahan.
+- **Fleksibilitas Masa Depan**: Tim IT Renjana Training Center memiliki kebebasan mutlak untuk mengembangkan fitur baru secara mandiri tanpa terikat dengan vendor awal.
+
+---
+
+## **5. SPESIFIKASI MAINTENANCE & SERVICE LEVEL AGREEMENT (SLA)**
+
+Paket pemeliharaan tahunan senilai **Rp 41.250.000/tahun** memberikan jaminan stabilitas sistem dengan parameter kualitas sebagai berikut:
+
+### **A. Respons Kendala Teknis (Support SLA)**
+- **Critical Blockers (Server Down/Pembayaran Macet)**: Respons awal dalam **< 2 jam** dengan perbaikan darurat (*hotfix*) langsung diterapkan.
+- **Medium Issue (Tampilan Error/Gagal Download Berkas)**: Respons dalam **< 12 jam**, penyelesaian dalam waktu maksimal 24 jam kerja.
+- **Minor Issue (Perubahan Teks/Penyesuaian Kecil)**: Respons dalam **< 24 jam**, diselesaikan pada jadwal *maintenance* mingguan.
+
+### **B. Backup & Keamanan**
+- **Automated Backup**: Backup database PostgreSQL otomatis setiap hari pukul 02:00 WIB ke Cloud Object Storage terpisah (aman jika server utama bermasalah).
+- **Security Patching**: Pemindaian keamanan berkala dan penerapan patch pengaman Docker/Node.js secara rutin setiap akhir bulan (pukul 23:00 - 01:00 WIB guna meminimalisir gangguan pengguna).
+
+---
+
+## **6. ESTIMASI BIAYA & INVESTASI**
 
 | Komponen Proyek | Keterangan | Nilai Investasi (IDR) |
 |---|---|---|
@@ -87,7 +148,7 @@ Sistem menggunakan Next.js 16 terbaru dengan pemisahan modul NextAuth v5 yang am
 
 ---
 
-## **4. VALUE PROPOSITION (MENGAPA MEMILIH RENJANA LMS)**
+## **7. VALUE PROPOSITION (MENGAPA MEMILIH RENJANA LMS)**
 
 1.  **Siap Pakai & Bebas Bug (100% Test Coverage)**: Seluruh modul vital telah diuji dengan **170 test integration otomatis** untuk menjamin tidak ada alur yang macet di tengah jalan saat diakses ribuan peserta secara bersamaan.
 2.  **Keamanan Kelas Enterprise**: Penggunaan enkripsi data sensitif, audit log aktivitas admin/keuangan (security audit logging), dan isolasi direktori file menjamin data peserta aman dari serangan siber.
